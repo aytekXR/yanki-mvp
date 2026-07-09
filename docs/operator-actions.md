@@ -2,7 +2,9 @@
 
 *Maintained by the orchestrator. Check this file at the start of every session.
 Nothing here blocks local development — `make dev` + `make test` work today with
-zero keys and zero cost (DRY_RUN). Items are ordered by when you'll want them.*
+zero keys and zero cost (DRY_RUN). Items are ordered by when you'll want them.
+For the tick-list-only version, see
+[operator-expected.md](operator-expected.md).*
 
 Last updated: 2026-07-09 (session 2).
 

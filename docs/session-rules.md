@@ -29,7 +29,7 @@ agent mechanics are the master SPEC.
       `deploy/.env.example`.
 - [ ] Stay inside your file-ownership set; never edit another agent's files.
 
-## 3. Session end deliverables (all six — this is the handoff)
+## 3. Session end deliverables (all eight — this is the handoff)
 
 1. [ ] **Session summary** written to `sessions/YYYY-MM-DD-NN.md` (what/what changed/why).
 2. [ ] **Documentation updates** — every affected doc in `docs/` brought in sync.
@@ -41,6 +41,15 @@ agent mechanics are the master SPEC.
 6. [ ] **Next-session prompt** at the end of the session log, and the previous brief
        archived to [`past-prompt.md`](past-prompt.md). The next agent should need
        nothing beyond the repo + that prompt.
+7. [ ] **Docs inventory audit** — every repo `.md` (excluding dependency/build
+       artifacts) is live, updated, and required; informative docs live under
+       `docs/` (README/SECURITY/CONTRIBUTING/PR template stay at root/`.github`);
+       deprecated/superseded files deleted (session logs, `past-prompt.md`, and
+       the numbered `00-`/`01-` source docs are archives, not candidates).
+       Record the audit in the session log.
+8. [ ] **Operator checklists refreshed** — [`operator-expected.md`](operator-expected.md)
+       (tick-list) and [`operator-actions.md`](operator-actions.md) (full context)
+       both reflect exactly what's expected from the human next; if nothing, say so.
 
 ## 4. Definition of done (per task)
 

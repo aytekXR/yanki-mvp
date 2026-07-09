@@ -209,6 +209,35 @@ The next agent should not need additional context beyond the repository and this
 
 ---
 
+## 7. Documentation Inventory Audit (Required)
+
+Before ending the session, audit every markdown file in the repository
+(ignore dependency/build artifacts such as `.venv`, `node_modules`,
+`.pytest_cache`, `test-results`):
+
+* Is it **live** — accurate against the current code?
+* Is it **required** — still serving a purpose?
+* Is it **in the right place** — informative documentation belongs under
+  `docs/`; only community/repo-standard files (README, SECURITY,
+  CONTRIBUTING, PR template) stay at the root / `.github/`.
+
+Deprecated or superseded files must be **deleted** (historical inputs —
+`docs/sessions/`, `docs/past-prompt.md`, the numbered `docs/00-…`/`01-…`
+source documents — are archives, not deprecation candidates).
+
+Record the audit result (files checked, anything moved/deleted) in the
+session log.
+
+## 8. Operator Checklist Refresh (Required)
+
+[`docs/operator-expected.md`](operator-expected.md) is the operator's
+on-the-go tick-list; [`docs/operator-actions.md`](operator-actions.md) is the
+full-context version. Refresh **both** at session close so the operator always
+knows exactly what only a human can do next. If nothing is expected from the
+operator, say so explicitly in both files.
+
+---
+
 # Roadmap Format
 
 Organize work into:
@@ -300,7 +329,9 @@ At all times maintain:
 * pending tasks
 * assumptions
 * architecture decisions
-* documentation health
+* documentation health (incl. the markdown inventory — no stale, misplaced,
+  or deprecated .md files)
+* the operator checklists (`docs/operator-expected.md` + `docs/operator-actions.md`)
 * technical debt
 * risks
 * blockers
