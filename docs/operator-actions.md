@@ -24,8 +24,12 @@ and merge risks). Planning only — no code changed; `make test` stayed green
 production readiness ≈ 70%, **unchanged** — the missing ~30% is entirely the
 outside-world proof only you can trigger. The session is closed and the
 next-session brief is ready in
-[sessions/2026-07-10-01.md](sessions/2026-07-10-01.md) §6. **There is no
-key-free work left** — the two items below gate everything:
+[sessions/2026-07-10-01.md](sessions/2026-07-10-01.md) §6 (+ the §9 CI
+addendum). **Post-close update: you did item 2** — the push landed on
+`github.com/aytekXR/yanki-mvp` and the first CI run went **4/5 green**
+(backend / frontend / contract / secrets); the e2e job failed on a CI-job
+ownership/order bug (diagnosed in tech-debt item 2 — the agent fixes it next
+session, nothing needed from you). Item 1 below is now the only thing gating:
 
 1. **Provide real API keys, then decide `DRY_RUN=0` (unblocks P4.1 → P4.2).**
    Put real `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` into `deploy/.env`. See
@@ -54,16 +58,17 @@ key-free work left** — the two items below gate everything:
    make dev                             # submit a URL at the web port
    ```
 
-2. **Push to GitHub (publishing decision).** No remote is configured, so CI
-   (`.github/workflows/ci.yml`) has never executed. README assumes
-   `github.com/Beyond-Kaira/yanki`. Once pushed, check that all **five** CI
-   jobs go green on the first run:
-   - **backend** — ruff + mypy + pytest (Postgres service).
-   - **frontend** — typecheck + lint + vitest + build.
-   - **contract** — OpenAPI + generated-types drift gate.
-   - **secrets** — gitleaks full-history secret scan.
-   - **e2e** — Playwright happy path against the DRY_RUN docker stack (this
-     one has never run anywhere yet — see item 3).
+2. **Push to GitHub — ✅ done (2026-07-10).** `main` is on
+   `github.com/aytekXR/yanki-mvp` (README clone URL updated from the assumed
+   `Beyond-Kaira/yanki`). First-run results (run 29058049101):
+   - **backend** — ruff + mypy + pytest (Postgres service): ✅ green.
+   - **frontend** — typecheck + lint + vitest + build: ✅ green.
+   - **contract** — OpenAPI + generated-types drift gate: ✅ green.
+   - **secrets** — gitleaks full-history scan (binary download path proven): ✅ green.
+   - **e2e** — ❌ red at `npm ci`: the job boots the bind-mounting compose
+     stack first and the root container owns `frontend/node_modules` before
+     the runner installs. Agent-side fix, next session's first task
+     (tech-debt item 2); the Playwright spec itself still hasn't run.
 
 3. **Playwright e2e on this machine needs root once (optional).** The e2e CI
    job now exists (P4.4 authored — `frontend/e2e/happy-path.spec.ts`), so after

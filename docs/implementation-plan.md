@@ -61,18 +61,24 @@ risks, P5.1–P5.11). Produced by a 3-proposal / 3-judge / 3-lens
 adversarial-verify orchestration; no code changed and `make test` stayed green
 (64 backend + 20 frontend).
 
-➡️ **Next up (all operator-gated): P4.1 — real-key smoke + Week-1 invoice
-check**, then **P4.2 — deploy to test.beyondkaira.com.** Both need real
-secrets / a server, so they wait on the founder-operator. **No key-free work
-remains** — P4.6 was the last of it; Phase 5 is decomposed but frozen behind
-its build gate (P4.1 + P4.2 + first green CI).
-Pushing this branch to a GitHub remote is what first exercises all five CI jobs
-(and the Playwright e2e, which has never run anywhere — chromium needs a root
-`install-deps`).
+📣 **Post-close update (2026-07-10): the operator pushed to GitHub**
+(`github.com/aytekXR/yanki-mvp`) **and the first-ever CI run executed: 4 of 5
+jobs green on the first attempt** (backend / frontend / contract-drift /
+secrets-gitleaks). The **e2e job is red** — it died at `npm ci`, before
+Playwright: the job boots the bind-mounting compose stack first, the web
+container (root) writes `frontend/node_modules` into the checkout, and the
+runner user then gets `EACCES`. Diagnosis in tech-debt item 2.
+
+➡️ **Next up: (1) fix the e2e CI job** (order/ownership fix in
+`.github/workflows/ci.yml` — the first code task of session 4, no operator
+input needed), then the operator-gated pair: **P4.1 — real-key smoke + Week-1
+invoice check** (needs keys in `deploy/.env`), then **P4.2 — deploy to
+test.beyondkaira.com** (supervised). Phase 5 is decomposed but frozen behind
+its build gate (P4.1 + P4.2 + all-five-green CI).
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 3).
+Last updated: 2026-07-10 (session 3 + post-close CI addendum).
 
 - **MVP plan completion (Phases 0–4): 29.5 / 32 tasks ≈ 92%.** Phases 0–3:
   26/26 done. Phase 4: P4.3 + P4.5 + P4.6 done, P4.4 authored (counted ½ —
@@ -82,14 +88,14 @@ Last updated: 2026-07-10 (session 3).
   is the P5.1–P5.11 breakdown below — planning only; its build gate (P4.1 +
   P4.2 + first green CI) is unmet. Counting Phase 5, the enlarged plan stands
   at 29.5 / 43 ≈ 69%.
-- **Production readiness: ~70% (unchanged from session 2).** Session 3 was a
-  planning session — no code changed, so no new production proof. Code, tests
-  (64 backend + 20 frontend), docs, CI config, secret scanning, and
-  accessibility remain done and verified locally. The missing ~30% is still
-  entirely outside-world proof, all operator-gated: real-key cost validation
-  (P4.1), first CI execution (push), first supervised deploy (P4.2) — plus
-  rate limiting before any public URL (accepted debt, now a concrete planned
-  task: P5.6).
+- **Production readiness: ~72%** (session 3 closed at ~70%; nudged by the
+  post-close first CI run). Code, tests (64 backend + 20 frontend), docs, CI
+  config, secret scanning, and accessibility are done and verified locally —
+  and **4 of the 5 CI jobs are now proven on a real runner** (first push,
+  2026-07-10). Still missing, in order: the e2e CI job green (diagnosed fix,
+  agent-side), real-key cost validation (P4.1, operator), first supervised
+  deploy (P4.2, operator) — plus rate limiting before any public URL
+  (accepted debt, planned task P5.6).
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate). No new
   deviation this session — P4.6 ran exactly per the session-2 brief's
@@ -590,9 +596,11 @@ happy path renders a score.**
   `.gitleaks.toml` was written — the clean full-history scan needed no allowlist;
   add one only if a future false positive demands it. Everything provable locally
   was proven, including both the RED path (planted secret flagged, direct scan
-  and via the pre-commit hook) and the GREEN path (clean 5-commit history). The
-  acceptance line — "CI runs green on a clean PR" — is provable only once the
-  operator pushes to a remote; no CI job has executed on a real runner yet.
+  and via the pre-commit hook) and the GREEN path (clean 5-commit history).
+  **First-push proof landed 2026-07-10** (run 29058049101 on
+  `aytekXR/yanki-mvp`): backend, frontend, contract-drift, and secrets all
+  green on the first-ever real-runner execution — the P4.3 jobs are proven.
+  (The fifth job, P4.4's e2e, failed pre-Playwright; see P4.4.)
 
 ### P4.4 — Playwright in CI
 - **Goal:** a CI job that boots the `DRY_RUN=1` stack, sets `E2E_BASE_URL`, and
@@ -607,10 +615,14 @@ happy path renders a score.**
   the stack up (`docker compose up -d --build`), waits on api `:8141/healthz`
   and web `:8140`, `npm ci`, `npx playwright install --with-deps chromium`, runs
   `e2e/happy-path.spec.ts` with `E2E_BASE_URL=http://localhost:8140`, dumps
-  compose logs on failure, and tears down (`down -v`, always). It is **authored
-  but has never executed** — the Playwright browser cannot launch on this host
-  (needs a root `install-deps`), so the run stays unproven anywhere until the
-  first push to a GitHub runner.
+  compose logs on failure, and tears down (`down -v`, always). **Executed once
+  and failed (2026-07-10, first push, run 29058049101):** the stack booted and
+  both health waits passed on the runner, but `npm ci` died with `EACCES` —
+  the compose boot (bind mount, root container) precedes the install and
+  root-owns `frontend/node_modules`. The Playwright spec itself still has
+  never run anywhere. **Fix is session 4's first task:** install deps before
+  booting the stack and/or `chown` the mount (diagnosis in tech-debt item 2);
+  status stays *authored, unproven* until the job goes green.
 
 ### P4.5 — Accessibility + polish audit
 - **Goal:** audit the three screens against [frontend-brandkit.md](frontend-brandkit.md)

@@ -6,15 +6,17 @@ Maintained by the orchestrator at every session close. Tick items as you do
 them; the next session re-checks `deploy/.env`, the git remote, and CI status
 at start regardless.*
 
-Last updated: 2026-07-10 (session 3 close).
+Last updated: 2026-07-10 (post-close addendum — you pushed! CI observed).
 
-**Session 3 re-checked both gates: still closed — nothing NEW is blocking.**
-Items 1–2 are the same two things as last session and still gate everything.
-Session 3 spent the wait on P4.6 (the public-checker Phase-5 plan, P5.1–P5.11) —
-that was the **last key-free task**, so from here every session opens by
-checking items 1–2.
+**Update: you completed item 2** — `main` is on `github.com/aytekXR/yanki-mvp`
+and the first-ever CI run executed: **4 of 5 jobs green on the first attempt**
+(backend / frontend / contract / secrets-gitleaks). The **e2e job is red**, as
+predicted — cause diagnosed (a file-ownership/order bug in the CI job itself,
+not in the app), **fix is the agent's first task next session, nothing needed
+from you**. Session 3 also delivered P4.6 (the public-checker Phase-5 plan,
+P5.1–P5.11) — the last key-free task.
 
-## Do now — everything else waits on these
+## Do now — the one thing everything else waits on
 
 - [ ] **1. Real API keys → unblocks P4.1 (cost validation), then P4.2 (deploy).**
   Spends real money, so timing is your call.
@@ -22,11 +24,10 @@ checking items 1–2.
   cp deploy/.env.example deploy/.env
   # then edit: ANTHROPIC_API_KEY=…, OPENAI_API_KEY=…, DRY_RUN=0
   ```
-- [ ] **2. Push to GitHub → first-ever CI run.**
-  Create the repo (README assumes `github.com/Beyond-Kaira/yanki`), add the
-  remote, push `main`. Then verify **all five** CI jobs go green:
-  backend / frontend / contract / **secrets (gitleaks)** / **e2e (playwright)**.
-  The e2e job has never run anywhere yet — expect it to be the most fragile.
+- [x] **2. Push to GitHub → first-ever CI run.** ✅ Done (2026-07-10,
+  `aytekXR/yanki-mvp`). Result: backend / frontend / contract / secrets green;
+  **e2e red — agent-side fix queued, no action needed from you.** README's
+  clone URL updated to the real remote.
 
 ## Optional
 

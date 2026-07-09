@@ -4,9 +4,11 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (session 3 — planning-only session; no new debt, no
-repayments. Items 5 and 9 gained concrete planned repayments in the new Phase 5
-breakdown; they stay open until built.)
+Last updated: 2026-07-10 (session 3 close + post-close addendum: the operator
+pushed to GitHub and the first-ever CI run executed — items 2 and 3 rewritten:
+4/5 jobs proven green on the first attempt, e2e red with a diagnosed cause.
+Session 3 itself was planning-only: no new debt; items 5 and 9 gained planned
+repayments in the new Phase 5 breakdown.)
 
 ## Untested / never exercised
 
@@ -14,18 +16,31 @@ breakdown; they stay open until built.)
    Written to the ams-pulse pattern, `bash -n`-clean, logic reviewed (rollback
    rebuilds the last-good SHA via `git checkout`; check_env gate wired), but
    the first `make deploy` must be supervised. Cleared by P4.2.
-2. **CI has never executed.** No GitHub remote is configured, so
-   `.github/workflows/ci.yml` (five jobs: backend / frontend / contract-drift /
-   secrets / e2e) is unproven — no job has ever run on a real runner. Cleared by
-   pushing the repo (operator) + P4.3.
-3. **Playwright e2e has never executed anywhere.** Chromium installs on this
-   machine but can't launch without root `playwright install-deps`. The spec
-   (`frontend/e2e/happy-path.spec.ts`) is written and gated on `E2E_BASE_URL`;
-   the same flow passes via API-level curl e2e. The P4.4 `e2e` CI job is now
-   authored (boots the DRY_RUN stack, `playwright install --with-deps chromium`,
-   runs the spec against `:8140`) but has likewise never run. Cleared by pushing
-   (CI runs it) or the operator's sudo (see
-   [operator-actions.md](operator-actions.md)).
+2. **CI e2e job is red on the real runner** (was: "CI has never executed" —
+   partially repaid 2026-07-10). The operator pushed to
+   `github.com/aytekXR/yanki-mvp` and the first-ever run (id 29058049101)
+   proved **4 of 5 jobs green on the first attempt**: backend / frontend /
+   contract-drift / secrets-gitleaks. The **e2e job failed** at
+   `Install frontend deps`: the job boots the compose stack **before**
+   `npm ci`, the dev compose bind-mounts `frontend/`, the web container
+   (root) writes `node_modules` into the checkout, and the runner user then
+   gets `EACCES: mkdir frontend/node_modules/@adobe`. Fix (session 4, first
+   task): run `npm ci` before the stack boot, and/or `sudo chown -R
+   "$(id -u):$(id -g)" frontend/node_modules` before installing, and/or give
+   the container an anonymous volume for `node_modules`. Also: GitHub
+   annotates `actions/*@v4` + `setup-uv@v5` as Node-20-deprecated — bump
+   action majors opportunistically.
+3. **Playwright e2e spec has never executed anywhere.** Chromium installs on
+   this machine but can't launch without root `playwright install-deps`. The
+   spec (`frontend/e2e/happy-path.spec.ts`) is written and gated on
+   `E2E_BASE_URL`; the same flow passes via API-level curl e2e. The P4.4 `e2e`
+   CI job **has now run once** (first push, 2026-07-10) but died at `npm ci`
+   (see item 2), so the job never reached `playwright install` — the spec
+   itself remains unexecuted. Cleared by fixing item 2 (the spec then runs in
+   CI) or the operator's sudo locally (see
+   [operator-actions.md](operator-actions.md)). Encouragingly, the run proved
+   the DRY_RUN compose stack boots green on the runner (api + web health
+   checks passed).
 4. **Real Anthropic/OpenAI providers never called.** No live run, no cost
    validation (NFR-1 Week-1 invoice check pending — P4.1), and no
    respx-style contract tests asserting the real adapters' request/response

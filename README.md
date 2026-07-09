@@ -19,8 +19,8 @@ Prerequisites: **Docker + Compose v2**, **Python 3.12**, **Node 20+ (22 LTS reco
 
 ```bash
 # 1. Clone
-git clone https://github.com/Beyond-Kaira/yanki.git
-cd yanki
+git clone https://github.com/aytekXR/yanki-mvp.git
+cd yanki-mvp
 
 # 2. Install the toolchain + dependencies + git hooks
 make setup
