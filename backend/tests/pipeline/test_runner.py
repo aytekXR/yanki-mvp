@@ -46,3 +46,38 @@ def test_run_pipeline_walks_all_steps_and_scores(db_session, models, settings, m
     assert result.footprint_count == hits
     assert result.geo_score == (hits / len(responses))
     assert 0.0 <= result.geo_score <= 1.0
+
+
+def test_rerun_replaces_rows_and_does_not_double_counts(
+    db_session, models, settings, monkeypatch
+):
+    # NFR-3: a stale-claim re-run must replace prior partial rows, not accumulate
+    # them (else total_responses / footprint_count double).
+    from app.pipeline import discovery, runner
+
+    monkeypatch.setattr(
+        discovery, "discover", lambda url: "Acme builds warehouse robots and tools."
+    )
+
+    analysis = models.Analysis(url="https://example.com", status="running")
+    db_session.add(analysis)
+    db_session.flush()
+
+    first = runner.run_pipeline(db_session, analysis.id, settings)
+    first_total = first.total_responses
+    first_footprints = first.footprint_count
+
+    # Re-run the same analysis (as the stale-claim reaper would).
+    second = runner.run_pipeline(db_session, analysis.id, settings)
+
+    prompts = db_session.execute(
+        select(models.Prompt).where(models.Prompt.analysis_id == analysis.id)
+    ).scalars().all()
+    responses = db_session.execute(
+        select(models.Response).where(models.Response.analysis_id == analysis.id)
+    ).scalars().all()
+
+    assert len(prompts) == settings.prompt_count
+    assert len(responses) == first_total
+    assert second.total_responses == first_total
+    assert second.footprint_count == first_footprints

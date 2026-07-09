@@ -18,12 +18,16 @@ the parallel build. When in doubt, don't write; report the blocker instead.
 
 | Zone | Owner | Paths |
 |---|---|---|
-| **Backend spine** | backend-spine agent | `backend/pyproject.toml`, `backend/Dockerfile`, `backend/alembic/**`, `backend/app/{__init__,config.py,worker.py}`, `backend/app/api/**`, `backend/app/db/**`, `backend/app/jobs/**`, `backend/app/services/**`, `backend/tests/conftest.py`, `backend/tests/test_api.py`, `backend/tests/test_queue.py` |
+| **Backend spine** | backend-spine agent | `backend/pyproject.toml`, `backend/Dockerfile`, `backend/alembic/**`, `backend/app/{__init__,config.py,worker.py}`, `backend/app/api/**`, `backend/app/db/**`, `backend/app/jobs/**`, `backend/app/services/**`, `backend/tests/conftest.py`, `backend/tests/test_api.py`, `backend/tests/test_queue.py`, `backend/tests/test_queue_postgres.py` |
 | **Pipeline + providers** | pipeline agent | `backend/app/pipeline/**`, `backend/app/providers/**`, `backend/tests/pipeline/**` (incl. its own `tests/pipeline/conftest.py`) |
 | **Frontend** | frontend agent | `frontend/**` |
 | **Infra** | infra agent | `Makefile`, `deploy/**`, `scripts/**`, `.github/**`, `.gitignore`, `CONTRIBUTING.md`, `SECURITY.md`, plus README.md link fixes |
 | **Docs** | doc agents | `docs/**` — **one file per agent** |
 | **Generated (nobody hand-edits)** | `make gen-types` | `shared/contracts/openapi.json`, `frontend/lib/types.ts` |
+
+`frontend/lib/contracts.ts` is **not** generated — it's the hand-maintained
+friendly-name seam over `types.ts` (owned by the frontend agent). Edit it only
+when the API contract changes; see §2 and §5.
 
 Rule of thumb from the README still holds: a file's owner is the owner of the
 directory it lives in. The table above is the authority where that's ambiguous.
@@ -43,6 +47,12 @@ for each is non-negotiable.
 - **`shared/contracts/openapi.json` + `frontend/lib/types.ts`** — **generated,
   never hand-edited.** They come out of `make gen-types`. Editing them by hand
   guarantees drift and a red CI (NFR-6). See §5.
+- **`frontend/lib/contracts.ts`** — the exception to the rule above: it's
+  **hand-maintained**, the friendly-name seam that re-exports the generated
+  `types.ts` schemas under the app's names and narrows the loosely-typed fields
+  (`status`, `current_step`, `kyc`) to their locked SPEC shapes. Do edit it —
+  but only when the API contract changes, and update it in lockstep with that
+  change: it serializes with the contract, same as `make gen-types`. See §5.
 - **`Makefile` and `deploy/**`** — infra owns them. Backend/frontend/pipeline
   agents ask infra for changes; they do not edit them.
 - **`docs/*`** — one file, one agent. Don't touch another doc agent's file even
@@ -113,10 +123,11 @@ in flight:
 
 - A change to request/response shapes (`backend/app/api/schemas.py`, routes, or
   any field in the SPEC contract) forces a `make gen-types` regeneration of
-  `openapi.json` + `frontend/lib/types.ts`. The frontend depends on those
-  types, so **the contract change lands and types regenerate before dependent
-  frontend work starts.** Don't have two agents editing the API surface in the
-  same window.
+  `openapi.json` + `frontend/lib/types.ts`, and — if the shape or the narrowed
+  fields changed — a matching hand-edit of `frontend/lib/contracts.ts`. The
+  frontend depends on those types, so **the contract change lands and types
+  regenerate (and `contracts.ts` updates) before dependent frontend work
+  starts.** Don't have two agents editing the API surface in the same window.
 - DB schema / migration changes (backend-spine, `backend/alembic/**`) serialize
   against anything reading those columns.
 

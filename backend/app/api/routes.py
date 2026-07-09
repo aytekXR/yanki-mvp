@@ -15,6 +15,7 @@ from app.api.schemas import (
 )
 from app.db.models import Analysis
 from app.db.session import get_session
+from app.net_guard import is_public_url
 from app.services.analyses import create_analysis, get_analysis
 
 router = APIRouter(prefix="/api/v1", tags=["analyses"])
@@ -48,6 +49,10 @@ def submit_analysis(
     payload: CreateAnalysisRequest,
     session: Session = Depends(get_session),
 ) -> CreateAnalysisResponse:
+    # Reject SSRF targets (loopback/private/link-local/metadata) up front; the
+    # worker's discovery step re-checks every redirect hop as defence in depth.
+    if not is_public_url(str(payload.url)):
+        raise HTTPException(status_code=422, detail="URL host is not allowed")
     analysis = create_analysis(session, str(payload.url))
     return CreateAnalysisResponse(id=analysis.id)
 

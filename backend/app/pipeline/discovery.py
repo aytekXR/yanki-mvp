@@ -12,6 +12,7 @@ from urllib.parse import urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
+from app.net_guard import is_public_host
 from app.pipeline.errors import PipelineError
 
 USER_AGENT = "YankiBot/0.1"
@@ -25,6 +26,16 @@ def _clean_text(html: str) -> str:
     for tag in soup(["script", "style", "nav", "noscript"]):
         tag.decompose()
     return " ".join(soup.get_text(separator=" ", strip=True).split())
+
+
+def _guard_request(request: httpx.Request) -> None:
+    """Block SSRF: refuse to fetch a host that resolves to a non-public address.
+
+    Registered as an httpx ``request`` event hook so it also fires on every
+    redirect hop — a public URL cannot 302 the worker into internal space.
+    """
+    if not is_public_host(request.url.host):
+        raise PipelineError("could not read the site")
 
 
 def _same_domain(base: str, link: str) -> bool:
@@ -62,7 +73,10 @@ def discover(url: str) -> str:
     headers = {"User-Agent": USER_AGENT}
     parts: list[str] = []
     with httpx.Client(
-        timeout=TIMEOUT_SECONDS, headers=headers, follow_redirects=True
+        timeout=TIMEOUT_SECONDS,
+        headers=headers,
+        follow_redirects=True,
+        event_hooks={"request": [_guard_request]},
     ) as client:
         home_html = _fetch(client, url)
         if home_html is None:

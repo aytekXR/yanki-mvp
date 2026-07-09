@@ -49,8 +49,10 @@ export async function getAnalysis(id: string): Promise<Analysis> {
     cache: 'no-store',
   })
   if (!res.ok) {
+    // 422 = the path id is not a valid UUID (malformed URL). Treat it like 404
+    // so the user sees the friendly not-found copy, not a raw Pydantic string.
     const message =
-      res.status === 404
+      res.status === 404 || res.status === 422
         ? "We couldn't find that analysis."
         : await readErrorMessage(res)
     throw new ApiError(message, res.status)

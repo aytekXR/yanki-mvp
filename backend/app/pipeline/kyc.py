@@ -60,6 +60,13 @@ def _strip_fences(raw: str) -> str:
     return "\n".join(lines).strip()
 
 
+# Second-level labels that are part of a public suffix, not a registrable name
+# (e.g. the "co" in example.co.uk, the "com" in example.com.tr). When one of
+# these is the second-to-last label we skip it, so ".co.uk"/".com.tr" domains
+# yield the real brand (e.g. "globex") rather than a garbage "co"/"com" alias.
+_SECOND_LEVEL_SUFFIXES = {"co", "com", "org", "net", "gov", "edu", "ac", "gob", "mil"}
+
+
 def _registrable_name(url: str) -> str:
     parsed = urlparse(url)
     host = parsed.netloc or parsed.path
@@ -67,6 +74,8 @@ def _registrable_name(url: str) -> str:
     if host.startswith("www."):
         host = host[4:]
     labels = [label for label in host.split(".") if label]
+    if len(labels) >= 3 and labels[-2] in _SECOND_LEVEL_SUFFIXES:
+        return labels[-3]
     if len(labels) >= 2:
         return labels[-2]
     return labels[0] if labels else ""

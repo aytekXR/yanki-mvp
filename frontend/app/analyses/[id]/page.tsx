@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { getAnalysis } from '@/lib/api'
+import { getAnalysis, ApiError } from '@/lib/api'
 import type { Analysis } from '@/lib/contracts'
 import StepProgress from '@/components/StepProgress'
 import ScoreGauge from '@/components/ScoreGauge'
@@ -39,6 +39,11 @@ export default function AnalysisPage() {
       } catch (err) {
         if (cancelled) return
         setLoadError(err instanceof Error ? err.message : 'Something went wrong.')
+        // A 404/422 will never self-resolve (unknown or malformed id), so stop
+        // polling; transient errors keep retrying.
+        if (err instanceof ApiError && (err.status === 404 || err.status === 422)) {
+          stop()
+        }
       }
     }
 
@@ -79,6 +84,15 @@ export default function AnalysisPage() {
             <p className="break-all text-sm text-surface-subtle">{analysis.url}</p>
           ) : null}
         </header>
+        {/* Persistent live region: StepProgress (and its own live region) unmounts
+            on completion, so announce the terminal outcome here instead. */}
+        <p aria-live="polite" className="sr-only">
+          {analysis?.status === 'done'
+            ? 'Analysis complete. Your GEO score is ready.'
+            : analysis?.status === 'failed'
+              ? 'Analysis failed.'
+              : ''}
+        </p>
         {content}
       </div>
     </main>

@@ -60,6 +60,9 @@ services:
     image: yanki-web:${GIT_SHA:-latest}
     build:
       context: ../frontend
+      # Prod serves the optimized `next start` build, not `next dev` (the default
+      # Dockerfile's CMD, used only by the hot-reload dev stack).
+      dockerfile: Dockerfile.prod
     ports:
       - "127.0.0.1:8140:8140"
     environment:

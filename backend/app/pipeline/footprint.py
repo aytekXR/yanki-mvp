@@ -1,11 +1,15 @@
 """Binary footprint detection: does the company appear in a raw answer?
 
-Pure, deterministic, case-insensitive string matching over the company name,
-its aliases (which include the registrable domain name) — no LLM. On a hit it
-returns a short snippet of context around the first match.
+Pure, deterministic, case-insensitive matching over the company name and its
+aliases (which include the registrable domain name) — no LLM. Terms are matched
+on word boundaries (``\\b``), not raw substrings, so a short term like ``GE`` or
+``Co`` never counts as a hit inside an unrelated word (``general``, ``compare``).
+On a hit it returns a short snippet of context around the first match.
 """
 
 from __future__ import annotations
+
+import re
 
 _SNIPPET_RADIUS = 60
 _MIN_TERM_LEN = 2
@@ -28,14 +32,16 @@ def detect(raw_text: str, kyc) -> tuple[bool, str | None]:
     if not raw_text:
         return False, None
 
-    haystack = raw_text.lower()
     best_index: int | None = None
     best_len = 0
     for term in _terms(kyc):
-        index = haystack.find(term.lower())
-        if index != -1 and (best_index is None or index < best_index):
-            best_index = index
-            best_len = len(term)
+        # Match on word boundaries so a short term never hits inside a longer
+        # word (e.g. "Co" must not match "compare"/"companies").
+        pattern = re.compile(r"\b" + re.escape(term) + r"\b", re.IGNORECASE)
+        match = pattern.search(raw_text)
+        if match and (best_index is None or match.start() < best_index):
+            best_index = match.start()
+            best_len = match.end() - match.start()
 
     if best_index is None:
         return False, None

@@ -89,8 +89,8 @@ Intentionally primitive and fully transparent:
 GEO Score = footprint_count / total_responses
 ```
 
-Example: 10 prompts × 2 engines = 20 responses; the company appears in 9 →
-`9 / 20 = 0.45 = 45%`.
+Example: 10 prompts × 4 engines = 40 responses; the company appears in 24 →
+`24 / 40 = 0.6 = 60%`.
 
 The score is a **pure function** in `pipeline/scoring.py` (ADR-11), so it is
 unit-tested and defensible. The weighted version (mention × position × sentiment)
@@ -113,7 +113,7 @@ is roadmap, not MVP.
 - **FR-6** The frontend has two routes: landing (submit) and
   `/analyses/{id}` (live progress → results / error).
 - **FR-7** A failed job shows a clear error state; partial results remain queryable.
-- **FR-8** Cost controls are enforced: `PROMPT_COUNT`, `PANEL_MODELS`,
+- **FR-8** Cost controls are enforced: `PROMPT_COUNT`, `PANEL_ENGINES`,
   `MAX_RESPONSES_PER_JOB`, the `llm_cache` table, and `DRY_RUN` for zero-cost runs.
 
 ## 7. Non-functional requirements

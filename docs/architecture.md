@@ -104,7 +104,7 @@ queryable (FR-7).
 ┌───────────────┐  execute: for each prompt × each panel engine
 │ 4. execute    │  consult llm_cache (fresh <24h) else provider.generate()
 │               │  insert responses row + llm_cache row; persist per response
-│               │  stop at MAX_RESPONSES_PER_JOB (log, don't error)
+│               │  stop at MAX_RESPONSES_PER_JOB (cap, don't error)
 └──────┬────────┘  ── progress = 80
        ▼
 ┌───────────────┐  footprint.detect(raw_text, kyc) -> (bool, snippet|None)
@@ -147,11 +147,19 @@ which providers the worker uses. `providers/registry.py`:
   panel engines. **DRY_RUN=0**: maps `PANEL_ENGINES` to real
   (anthropic, openai) / stub (gemini, perplexity) providers.
 - `get_analysis_provider(settings)` → the single provider used for the KYC call
-  (mock when DRY_RUN).
+  (`MockProvider("mock")` when DRY_RUN).
 
-`MockProvider` is deterministic: it mentions the company name iff
-`sha256(prompt).digest()[0] % 2 == 0`, adds filler brands, and costs **$0**. So
-the entire 6-step flow — and the whole test suite — runs offline at zero spend
+`MockProvider` serves both prompt kinds deterministically at **$0**:
+
+- **KYC call** (prompt contains "JSON object") → a **fixed fictional profile for
+  the company `Yanki Demo Co`** (`MOCK_COMPANY`; aliases include "Yanki"). So
+  **every DRY_RUN analysis, whatever URL you submit, comes back *about* Yanki
+  Demo Co** — this is expected and shows up verbatim in the UI's KYC/results.
+- **Execution prompts** → mentions that company iff
+  `sha256(prompt).digest()[0] % 2 == 0` (≈half the answers), otherwise names
+  only filler brands (Acme/Globex/Initech/…).
+
+So the entire 6-step flow — and the whole test suite — runs offline at zero spend
 and produces a stable, non-trivial score. Stub engines (gemini/perplexity) also
 cost $0 and return a canned answer that *sometimes mentions nothing*, so
 footprint detection sees both outcomes even outside DRY_RUN.
@@ -159,9 +167,11 @@ footprint detection sees both outcomes even outside DRY_RUN.
 ### llm_cache behavior
 
 `execute` consults `llm_cache` before every provider call. Key =
-`sha256("engine:model:prompt_text")`. A row **fresh within 24h** is reused (no
-provider call, cost counted from the cached row); a **stale** row is ignored and
-overwritten. This is a **within-job / cross-job cost guard**, not a cross-account
+`sha256("engine:model:prompt_text")` where `engine`/`model` come from the
+provider. A row **fresh within 24h** is reused (no provider call, and the reused
+`responses` row is recorded at **`cost_usd=0.0`** — a cache hit is free, it does
+*not* re-bill the cached row's cost); a **stale** row is ignored and replaced
+(delete + insert with a fresh timestamp). This is a **within-job / cross-job cost guard**, not a cross-account
 product cache (that's out of scope — see 02-mvp.md §4). TTL is enforced at read
 time, not by a sweeper.
 
@@ -265,11 +275,18 @@ State-transition summary:
 
 ### Dev (`make dev`)
 
-`docker compose -f deploy/docker-compose.yml up --build` brings up **db + api +
-worker + web** with bind-mounts for hot reload. **No CORS**: the frontend always
-fetches relative paths, and Next.js `rewrites()` proxies `/api/:path*` and
-`/healthz` to the api (`API_ORIGIN`, default `http://localhost:8141`). Postgres
-publishes 5432 for local psql only.
+`docker compose -f deploy/docker-compose.yml up --build` (compose project name
+`yanki`) brings up **db + api + worker + web** with bind-mounts for hot reload.
+The api container command runs **`alembic upgrade head` before uvicorn**, so
+schema migrations apply automatically on every api boot (same in prod). **No
+CORS**: the frontend always fetches relative paths, and Next.js `rewrites()`
+proxies `/api/:path*` and `/healthz` to the api (`API_ORIGIN`, default
+`http://localhost:8141`). Postgres publishes 5432 for local psql only.
+
+The three published **host** ports are overridable to dodge local conflicts
+(container ports stay fixed): `YANKI_WEB_PORT` (→8140), `YANKI_API_PORT` (→8141),
+`YANKI_DB_PORT` (→5432). Prod does **not** parameterize these — it hard-binds
+8140/8141 to `127.0.0.1`.
 
 ```
  laptop

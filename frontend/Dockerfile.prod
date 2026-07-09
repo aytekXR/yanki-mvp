@@ -1,0 +1,21 @@
+# Production image: build an optimized bundle and serve it with `next start`
+# (NOT `next dev`). Used by deploy/docker-compose.prod.yml's web service.
+FROM node:20-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Install dependencies first for better layer caching. Fall back to `npm install`
+# when there is no lockfile yet.
+COPY package.json package-lock.json* ./
+RUN npm ci || npm install
+
+COPY . .
+
+# Produce the optimized production build.
+RUN npm run build
+
+EXPOSE 8140
+
+CMD ["npm", "run", "start"]

@@ -75,6 +75,20 @@ def test_follows_same_domain_links():
     assert not external.called  # only same-domain links are followed
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://127.0.0.1:8000/",
+        "http://169.254.169.254/latest/meta-data/",  # cloud metadata (link-local)
+        "http://[::1]:5432/",
+    ],
+)
+def test_ssrf_private_and_metadata_hosts_are_blocked(url):
+    # The guard raises before any request is sent, so no respx mock is needed.
+    with pytest.raises(PipelineError):
+        discover(url)
+
+
 @respx.mock
 def test_caps_text_length():
     big = "word " * 10_000  # ~50k chars

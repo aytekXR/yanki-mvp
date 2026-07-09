@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Yanki prod deploy (ams-pulse pattern):
-#   build -> tag by git SHA -> compose up -> migrate -> /healthz -> record
+#   check env -> build -> tag by git SHA -> compose up -> /healthz -> record
 #   last-good SHA, auto-rollback on failure.
+#
+#   Migrations run inside the api container command (`alembic upgrade head &&
+#   uvicorn ...`); deploy.sh does NOT run a second concurrent alembic — two
+#   un-locked migrations against one DB would race on first deploy.
 #
 #   !!! UNTESTED — validate on the first server deploy. Marked tech debt. !!!
 # =============================================================================
@@ -21,6 +25,12 @@ if [ ! -f "$HERE/.env" ]; then
   exit 1
 fi
 
+# 1b. Fail fast if this is a live (DRY_RUN=0) deploy with missing LLM keys —
+#     /healthz never calls a provider, so without this the deploy reports OK and
+#     then every real job fails at runtime.
+echo ">> checking deploy/.env"
+python3 "$HERE/../scripts/check_env.py" "$HERE/.env"
+
 # 2. Tag everything by the current git SHA.
 GIT_SHA="$(git rev-parse --short HEAD)"
 export GIT_SHA
@@ -29,13 +39,11 @@ echo ">> deploying yanki @ ${GIT_SHA}"
 echo ">> building images (yanki-api:${GIT_SHA}, yanki-web:${GIT_SHA})"
 $COMPOSE build
 
-echo ">> starting stack"
+echo ">> starting stack (api container migrates on boot: alembic upgrade head)"
 $COMPOSE up -d
 
-echo ">> running migrations (alembic upgrade head)"
-$COMPOSE run --rm api alembic upgrade head
-
-# 3. Health-check loop against the api.
+# 3. Health-check loop against the api. /healthz only answers after the api
+#    container finishes `alembic upgrade head`, so this also waits out migrations.
 echo ">> health check: http://127.0.0.1:8141/healthz"
 healthy=0
 for _ in $(seq 1 30); do

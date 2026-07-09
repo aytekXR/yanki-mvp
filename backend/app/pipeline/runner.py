@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.db.models import Analysis, Prompt, Response
 from app.pipeline import discovery
@@ -54,6 +54,14 @@ def run_pipeline(session, analysis_id, settings) -> Analysis:
     analysis = session.execute(
         select(Analysis).where(Analysis.id == analysis_id)
     ).scalar_one()
+
+    # Idempotency (NFR-3): a stale-claim re-run restarts from step 1 and only
+    # ever appends prompts/responses, so clear any partial rows a prior crashed
+    # attempt committed — otherwise they accumulate and double total_responses /
+    # footprint_count. Responses first (they reference prompts).
+    session.execute(delete(Response).where(Response.analysis_id == analysis.id))
+    session.execute(delete(Prompt).where(Prompt.analysis_id == analysis.id))
+    session.commit()
 
     # 1. discovery
     _start_step(session, analysis, "discovery")

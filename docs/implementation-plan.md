@@ -36,11 +36,20 @@ Related: [architecture.md](architecture.md) (how it's built),
 
 ### Current Priority
 
-➡️ **Session 1 (2026-07-09): land Phase 0 → Phase 3 in one orchestrated pass.**
-Definition of done for the session: `make dev` boots the stack; submitting
-`https://example.com` on `:8140` walks the six pipeline steps and renders a GEO
-score under `DRY_RUN=1`; `make test` is green; docs match the code. Once that
-holds, Phase 4 begins in later sessions, starting at **P4.1**.
+✅ **Session 1 (2026-07-09) is complete: Phase 0 → Phase 3 landed and verified in
+one orchestrated pass.** The DRY_RUN stack boots and was driven end-to-end —
+`POST` a URL → `202` → the six pipeline steps run → a GEO score renders
+(`geo_score=0.6`, `total_responses=40` = 10 prompts × 4 mock engines); the
+failure and `422` paths hold; `make lint`/`typecheck`/`test` are green (54
+backend tests incl. real-Postgres `SKIP LOCKED` queue tests on `:5433`, 9
+vitest). Default ports stay web `8140` / api `8141`, now overridable via
+`YANKI_WEB_PORT`/`YANKI_API_PORT`/`YANKI_DB_PORT`.
+
+➡️ **Next up: P4.1 — real-key smoke test + Week-1 invoice check.** Phase 4 is the
+path from the working DRY_RUN loop to a live, cost-validated, CI-guarded deploy.
+Still pending: the real-key cost run (P4.1), the server deploy (P4.2, scripts
+untested), CI hardening (P4.3), Playwright-in-CI (P4.4 — the spec exists but the
+automated run was skipped in this env: chromium needs a root `install-deps`).
 
 ### Agent lanes (parallelism map)
 
@@ -49,7 +58,7 @@ contracts between them.
 
 | Lane | Owns | Phase-1/2/3 tasks |
 |---|---|---|
-| **backend-spine** | `backend/` (config, db, api, jobs, services, worker, alembic, `tests/{conftest,test_api,test_queue}.py`, `pyproject.toml`, `Dockerfile`) | P1.1–P1.6, P2.10a |
+| **backend-spine** | `backend/` (config, db, api, jobs, services, worker, alembic, `tests/{conftest,test_api,test_queue,test_queue_postgres}.py`, `pyproject.toml`, `Dockerfile`) | P1.1–P1.6, P2.10a |
 | **pipeline** | `backend/app/pipeline/**`, `backend/app/providers/**`, `backend/tests/pipeline/**` | P2.1–P2.9, P2.10b |
 | **frontend** | `frontend/**` | P1.7, P3.1–P3.5 |
 | **infra** | `Makefile`, `deploy/**`, `scripts/**`, `.github/**`, `.gitignore`, `CONTRIBUTING.md`, `SECURITY.md`, README link fixes | P0.2, P1.8, P4.2–P4.4 |
@@ -58,7 +67,8 @@ contracts between them.
 **Shared-contract merge risks (coordinate before editing):**
 - The **API envelope** (`GET /api/v1/analyses/{id}`) binds backend-spine ↔
   frontend. It is generated into `shared/contracts/openapi.json` →
-  `frontend/lib/types.ts` by `make gen-types` (P3.1) — never hand-edit those.
+  `frontend/lib/types.ts` by `make gen-types` (P3.1) — never hand-edit those; the
+  frontend imports through the hand-maintained `frontend/lib/contracts.ts` seam.
 - The **`KYC` / `PromptSpec` / `ProviderResult`** shapes bind pipeline ↔
   backend-spine (the worker calls the pipeline).
 - **Config env vars** bind all lanes; the locked list lives in
@@ -93,7 +103,7 @@ Goal: a clean, documented, ignorable-noise-free repo a new agent can navigate.
   `node_modules`, `.next`, coverage, `deploy/.env`), README link fixes.
 - **Acceptance:** `git status` is clean after a build; every README doc link
   resolves to an existing file; no `deploy/.env` is trackable.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P0.3 — Author the doc set
 - **Goal:** author/refresh the docs so no doc drifts from the planned build:
@@ -106,7 +116,7 @@ Goal: a clean, documented, ignorable-noise-free repo a new agent can navigate.
 - **Deliverables:** the docs above (one agent per file).
 - **Acceptance:** every doc cross-links correctly; no empty non-placeholder files
   remain; scope authority and contracts are consistent across docs.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ---
 
@@ -127,7 +137,7 @@ logic yet.
 - **Deliverables:** `backend/app/config.py`, `backend/app/__init__.py`.
 - **Acceptance:** importing `settings` with no env set yields the documented
   defaults; `DRY_RUN` defaults **true** (safe by default).
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P1.2 — DB base, models, session
 - **Goal:** SQLAlchemy 2.0 models for `analyses`, `prompts`, `responses`,
@@ -139,7 +149,7 @@ logic yet.
 - **Deliverables:** `backend/app/db/{base.py,models.py,session.py}`.
 - **Acceptance:** models create cleanly on both SQLite and Postgres; UUID pks
   default to `uuid4`; timestamps are timezone-aware.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P1.3 — Alembic initial migration
 - **Goal:** one migration creating all four tables + the `llm_cache.cache_key`
@@ -150,7 +160,7 @@ logic yet.
 - **Deliverables:** `backend/alembic/**` (env + one revision).
 - **Acceptance:** `alembic upgrade head` on a fresh Postgres creates the four
   tables; `downgrade base` drops them.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P1.4 — Postgres-as-queue
 - **Goal:** `app/jobs/queue.py` — claim one job in a single transaction
@@ -166,7 +176,7 @@ logic yet.
 - **Acceptance:** two concurrent claimers never grab the same row; a stale
   `running` row is reclaimed; `attempts>3` flips to `failed` with
   `error='max retries exceeded'`.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P1.5 — API layer + service glue
 - **Goal:** `app/api/{main,routes,schemas}.py` + `app/services/analyses.py`
@@ -183,7 +193,7 @@ logic yet.
 - **Acceptance:** matches the API contract exactly (see
   [architecture.md](architecture.md)); `app.openapi()` is exportable for
   `make gen-types`.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P1.6 — Worker skeleton
 - **Goal:** `app/worker.py` — `while True` loop: claim a job (P1.4), run the
@@ -197,7 +207,7 @@ logic yet.
 - **Acceptance:** worker starts, claims a queued row, marks it `running` then
   `done` (stub), sleeps, repeats; a raised exception marks the job `failed`
   without crashing the loop.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P1.7 — Frontend scaffold + brand tokens
 - **Goal:** Next.js 15 App Router + TS + Tailwind scaffold; copy the
@@ -212,7 +222,7 @@ logic yet.
   `package.json` with the locked deps.
 - **Acceptance:** `npm run dev` serves a themed placeholder on `:8140`;
   `/healthz` proxies to the api; brand tokens resolve in Tailwind classes.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P1.8 — Compose + Makefile + Dockerfile + env example
 - **Goal:** the single control panel. `deploy/docker-compose.yml` (db + api +
@@ -229,7 +239,7 @@ logic yet.
 - **Acceptance:** `make dev` boots all four services with hot reload; `make help`
   lists every target in the README table; `make migrate` runs against the db
   container.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ---
 
@@ -252,7 +262,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Deliverables:** `backend/app/providers/{base.py,mock.py,registry.py}`.
 - **Acceptance:** `DRY_RUN=1` yields four mocks named after the panel engines; the
   mock is deterministic and free; registry is the single provider entry point.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.2 — Real + stub providers
 - **Goal:** `anthropic_provider.py` (real, `claude-haiku-4-5-20251001`, anthropic
@@ -267,7 +277,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Deliverables:** `backend/app/providers/{anthropic_provider,openai_provider,gemini_provider,perplexity_provider}.py`.
 - **Acceptance:** each satisfies the `Provider` protocol; real adapters unit-test
   their HTTP shape under `respx`; stubs return `cost_usd=0`, model `"stub"`.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.3 — Discovery
 - **Goal:** `pipeline/discovery.py` `discover(url) -> str`: httpx GET (15s timeout,
@@ -281,7 +291,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
   (`PipelineError`).
 - **Acceptance:** reachable page → non-empty text; unreachable → `PipelineError`,
   no crash (test-suite §3.2, via `respx`).
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.4 — KYC
 - **Goal:** `pipeline/kyc.py` `generate_kyc(text, url, provider) -> KYC`: one LLM
@@ -295,7 +305,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Deliverables:** `backend/app/pipeline/kyc.py`, the `KYC` model.
 - **Acceptance:** given canned model output, parses + validates; `aliases`
   contains the company name and the domain name (test-suite §3.2).
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.5 — Prompts (deterministic templates)
 - **Goal:** `pipeline/prompts.py` `generate_prompts(kyc, count) ->
@@ -308,7 +318,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Deliverables:** `backend/app/pipeline/prompts.py`, `PromptSpec`.
 - **Acceptance:** exactly `count` specs, each non-empty with a category, no dupes
   (test-suite §3.2). Aim ~100% branch coverage.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.6 — Execute (fan-out + llm_cache)
 - **Goal:** `pipeline/execute.py`: for each prompt × each panel engine, consult
@@ -321,7 +331,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Deliverables:** `backend/app/pipeline/execute.py`.
 - **Acceptance:** one `responses` row per engine per prompt; a warm cache means no
   second provider call; `MAX_RESPONSES_PER_JOB` never exceeded (test-suite §3.2).
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.7 — Footprint
 - **Goal:** `pipeline/footprint.py` `detect(raw_text, kyc) -> (bool, snippet|None)`:
@@ -333,7 +343,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Deliverables:** `backend/app/pipeline/footprint.py`.
 - **Acceptance:** present → `(True, snippet)`; absent → `(False, None)`;
   deterministic (test-suite §3.2). Aim ~100% branch coverage.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.8 — Scoring
 - **Goal:** `pipeline/scoring.py` `geo_score(footprints, total) -> float`: pure;
@@ -345,10 +355,10 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Deliverables:** `backend/app/pipeline/scoring.py`.
 - **Acceptance:** `score == footprints/total`; `total==0` → `0.0` (test-suite
   §3.2). Aim 100% coverage.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.9 — Pipeline orchestrator (wire into worker)
-- **Goal:** a `run_pipeline(analysis_id, session, settings)` entry point that runs
+- **Goal:** a `run_pipeline(session, analysis_id, settings)` entry point that runs
   discovery → kyc → prompts → execute → footprint → scoring in order, updating
   `status`/`progress`/`current_step` per the SPEC mapping (15/30/45/80/90/100),
   heart-beating `claimed_at`, persisting each step's output; the P1.6 worker calls
@@ -357,17 +367,20 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
   backend-spine must agree on.
 - **Dependencies:** P2.3–P2.8, P1.6.
 - **Complexity:** M
-- **Deliverables:** `backend/app/pipeline/__init__.py` (or `runner.py`); worker
+- **Deliverables:** `backend/app/pipeline/runner.py` (`run_pipeline`); worker
   wiring (backend-spine imports it).
 - **Acceptance:** a claimed job walks all six steps, advances progress correctly,
   and lands `done` at 100 under `DRY_RUN=1`; any step exception → `failed`, partial
   rows kept (FR-7).
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P2.10 — Backend tests
 - **Goal (a, backend-spine):** `tests/conftest.py` (client, db_session, pg_engine
   auto-skip, mock_provider fixtures), `tests/test_api.py` (Submit + Results rows),
-  `tests/test_queue.py` (claim / stale-reaper / `attempts>3`).
+  `tests/test_queue.py` (claim / stale-reaper / `attempts>3` on SQLite), and
+  `tests/test_queue_postgres.py` (the Postgres-only `FOR UPDATE SKIP LOCKED`
+  concurrency guard — runs only when `TEST_DATABASE_URL` points at a live
+  Postgres, else skips).
   **Goal (b, pipeline):** `tests/pipeline/conftest.py` (sample_kyc, sample_html) +
   one test file per step per the acceptance→test map.
 - **Why now:** TDD is how each step is built; `make test` must be green at
@@ -378,7 +391,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 - **Acceptance:** a test exists for every [02-mvp.md §8](02-mvp.md) acceptance row
   ([test-suite.md](test-suite.md) §9); `make test` green; DB tests auto-skip with
   no Postgres.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ---
 
@@ -389,18 +402,23 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
 
 ### P3.1 — API client + generated types (contract)
 - **Goal:** `lib/api.ts` (thin fetch wrapper over relative `/api/v1/...`);
-  `make gen-types` exports `app.openapi()` → `shared/contracts/openapi.json` →
-  `npx openapi-typescript` → `frontend/lib/types.ts` (checked in, never
-  hand-edited).
+  `make gen-types` runs `scripts/gen_openapi.py` to export `app.openapi()` →
+  `shared/contracts/openapi.json`, then `openapi-typescript` →
+  `frontend/lib/types.ts` (both checked in, never hand-edited). The app never
+  imports `types.ts` directly: `lib/contracts.ts` is a hand-maintained seam that
+  re-exports the generated `components['schemas']` under friendly names
+  (`Analysis`, `Prompt`, …) and narrows the free-form fields (`status`,
+  `current_step`, `kyc`) to their locked SPEC shapes.
 - **Why now:** the FE/BE contract cannot silently drift (NFR-6); the screens type
-  against generated types.
+  against `contracts.ts`, which is anchored to the generated types.
 - **Dependencies:** P1.5 (openapi export), P1.7.
 - **Complexity:** M
-- **Deliverables:** `frontend/lib/{api.ts,types.ts}`, `scripts/gen-openapi.*`,
-  `shared/contracts/openapi.json`.
-- **Acceptance:** `make gen-types` regenerates both artifacts; a contract change
-  shows up as a diff (CI drift gate is P4.3).
-- **Status:** in progress — session 1
+- **Deliverables:** `frontend/lib/{api.ts,types.ts,contracts.ts}`,
+  `scripts/gen_openapi.py`, `shared/contracts/openapi.json`.
+- **Acceptance:** `make gen-types` regenerates both artifacts byte-stably; a
+  contract change shows up as a diff (CI drift gate is P4.3); `contracts.ts`
+  compiles against the regenerated `types.ts`.
+- **Status:** done (session 1)
 
 ### P3.2 — Landing page + UrlForm
 - **Goal:** `/` with headline "See how AI answers talk about your brand." and a
@@ -413,7 +431,7 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
   `frontend/components/{Button,UrlForm}.tsx`.
 - **Acceptance:** blank/malformed URL rejected client-side (no submit fires); a
   valid `https://…` submits and navigates.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P3.3 — Progress + results screen
 - **Goal:** `/analyses/[id]` polls `GET` every 2s. queued/running →
@@ -427,18 +445,21 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
   `frontend/components/{StepProgress,ScoreGauge,ResultsTable}.tsx`.
 - **Acceptance:** all three states render from the real envelope; the gauge
   exposes an aria-label describing the score.
-- **Status:** in progress — session 1
+- **Status:** done (session 1)
 
 ### P3.4 — Frontend component tests
 - **Goal:** vitest + testing-library for `UrlForm` validation, `ScoreGauge`
-  aria-label, and the score→color scale helper (mock `lib/api.ts`, no network).
+  aria-label, and the `lib/score.ts` score→color-band helper (mock `lib/api.ts`,
+  no network).
 - **Why now:** the UI rows of the acceptance→test map (test-suite §9).
 - **Dependencies:** P3.2, P3.3.
 - **Complexity:** S
-- **Deliverables:** `frontend/components/*.test.tsx`.
-- **Acceptance:** `npm test -- --run` green; the three logic-bearing components
-  have a test each.
-- **Status:** in progress — session 1
+- **Deliverables:** `frontend/tests/{UrlForm,ScoreGauge}.test.tsx`,
+  `frontend/tests/score.test.ts`, and `frontend/lib/score.ts` (the color-band
+  helper under test).
+- **Acceptance:** `npm test -- --run` green (9 vitest tests); the three
+  logic-bearing units have a test each.
+- **Status:** done (session 1)
 
 ### P3.5 — Playwright happy path + DRY_RUN e2e verification
 - **Goal:** `e2e/happy-path.spec.ts` (submit `https://example.com` against a
@@ -449,10 +470,14 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
   session's definition of done.
 - **Dependencies:** P2.9, P3.3, P1.8.
 - **Complexity:** M
-- **Deliverables:** `frontend/e2e/happy-path.spec.ts`, Playwright config.
+- **Deliverables:** `frontend/e2e/happy-path.spec.ts`,
+  `frontend/playwright.config.ts`.
 - **Acceptance:** with a booted DRY_RUN stack and `E2E_BASE_URL` set, the spec
   passes; unset → skipped (keeps `make test` fast + hermetic).
-- **Status:** in progress — session 1
+- **Status:** done (session 1) — spec authored and the full loop **manually**
+  verified end-to-end against a live DRY_RUN stack. The automated Playwright run
+  was skipped in this env (chromium needs a root `install-deps`); running it in
+  CI is P4.4.
 
 ---
 
@@ -560,8 +585,6 @@ decisions.
   cost lever) is roadmap 2d.
 - **Real-key cost is unvalidated** until P4.1 — the biggest open risk to the
   pricing story.
-- **Empty placeholder docs** (`session-rules.md`, `agent-workflows.md`) must be
-  filled or removed in P0.3 — do not leave them empty.
 - **Assumption:** SQLite covers unit tests and Postgres covers queue/jsonb
   tests; if a model needs a Postgres-only type in a hot path, revisit P1.2.
 </content>

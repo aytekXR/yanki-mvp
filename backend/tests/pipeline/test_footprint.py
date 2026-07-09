@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.pipeline.footprint import detect
+from app.pipeline.kyc import KYC
 
 
 def test_footprint_true_with_matched_snippet_when_brand_present(sample_kyc):
@@ -34,7 +35,7 @@ def test_footprint_matches_on_domain_alias(sample_kyc):
 
 
 def test_footprint_snippet_is_bounded(sample_kyc):
-    text = ("x" * 500) + "Acme Robotics" + ("y" * 500)
+    text = ("x" * 500) + " Acme Robotics " + ("y" * 500)
     hit, snippet = detect(text, sample_kyc)
     assert hit is True
     # +-60 chars of context around a 13-char match -> at most ~133 chars.
@@ -50,3 +51,22 @@ def test_footprint_is_deterministic(sample_kyc):
 
 def test_footprint_empty_text_is_false(sample_kyc):
     assert detect("", sample_kyc) == (False, None)
+
+
+def test_short_alias_does_not_match_inside_a_longer_word():
+    # A short domain-suffix alias like "co" must NOT match inside "compare" /
+    # "companies" / "recommend" — word boundaries, not raw substrings.
+    kyc = KYC(company="Globex", aliases=["Globex", "co"])
+    text = "How do the leading providers compare? I would recommend several companies."
+    hit, snippet = detect(text, kyc)
+    assert hit is False
+    assert snippet is None
+
+
+def test_two_letter_brand_matches_only_as_a_whole_word():
+    kyc = KYC(company="GE", aliases=["GE"])
+    # "general" / "large" must not count as a GE footprint...
+    assert detect("A general contractor handling large jobs.", kyc) == (False, None)
+    # ...but a standalone mention still does.
+    hit, _ = detect("For appliances, GE is a solid pick.", kyc)
+    assert hit is True

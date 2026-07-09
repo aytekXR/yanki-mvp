@@ -77,7 +77,7 @@ gen-types: ## Regenerate shared/contracts/openapi.json + frontend/lib/types.ts
 	cd frontend && npm run gen-types
 
 e2e: ## Run the Playwright happy-path against a running stack (needs `make dev` up)
-	E2E_BASE_URL=http://localhost:8140 npx --prefix frontend playwright test
+	E2E_BASE_URL=http://localhost:$${YANKI_WEB_PORT:-8140} npx --prefix frontend playwright test
 
 deploy: ## Build, deploy, migrate + health-check on the server (auto-rollback)
 	./deploy/deploy.sh
