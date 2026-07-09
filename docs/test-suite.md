@@ -189,16 +189,25 @@ def pg_sessionmaker():
 
 ```
 frontend/
-├── tests/                    # vitest picks up tests/**/*.test.{ts,tsx}
-│   ├── UrlForm.test.tsx
-│   ├── ScoreGauge.test.tsx
-│   └── score.test.ts
-└── e2e/happy-path.spec.ts    # Playwright
+├── tests/                        # vitest picks up tests/**/*.test.{ts,tsx}
+│   ├── UrlForm.test.tsx          # behaviour: validation + submit
+│   ├── ScoreGauge.test.tsx       # behaviour: aria-label wording + colour band
+│   ├── score.test.ts             # behaviour: scoreBand boundaries
+│   ├── UrlForm.a11y.test.tsx     # axe: default + invalid-URL error state
+│   ├── ScoreGauge.a11y.test.tsx  # axe: danger / primary / success bands
+│   ├── StepProgress.a11y.test.tsx # axe: running (progressbar) + queued
+│   ├── ResultsTable.a11y.test.tsx # axe: footprint yes/no + null snippet
+│   ├── AnalysisPage.a11y.test.tsx # axe: running / failed (alert) / results
+│   ├── a11y.ts                   # shared axeCheck() helper (not a test file)
+│   └── vitest-axe.d.ts           # Vitest-2 matcher type augmentation
+├── vitest.setup.ts               # jest-dom + vitest-axe matchers, cleanup
+└── e2e/happy-path.spec.ts        # Playwright
 ```
 
 Vitest + `@testing-library/react` render components into **jsdom** (config in
 `vitest.config.ts`, `include: ['tests/**/*.test.{ts,tsx}']`) — no browser, no
-network. Three units with real logic get real tests:
+network. Three units with real logic get behaviour tests, and a parallel
+**axe accessibility layer** (§4.1) asserts no violations on the same components:
 
 - **`UrlForm`** (`UrlForm.test.tsx`) — validation: a malformed URL shows an inline
   `role="alert"` and never calls `createAnalysis`; a valid `https://…` URL calls
@@ -214,6 +223,44 @@ network. Three units with real logic get real tests:
 
 Anything that talks to the API is tested by mocking `lib/api.ts`, never by
 hitting a backend. Fast, deterministic, offline.
+
+### 4.1 Accessibility layer (vitest-axe + axe-core)
+
+The P4.5 a11y acceptance ("no critical axe violations") is **automated**. Five
+`*.a11y.test.tsx` files render each component under jsdom and run
+[`axe-core`](https://github.com/dequelabs/axe-core) via
+[`vitest-axe`](https://github.com/chaance/vitest-axe), asserting
+`expect(results).toHaveNoViolations()`. The matchers are registered in
+`vitest.setup.ts` (`expect.extend(axeMatchers)`, because vitest-axe's
+extend-expect entry is inert under Vitest 2), and `tests/vitest-axe.d.ts`
+re-declares the matcher types against the `vitest` module's `Assertion`
+interface so the assertion type-checks. All axe calls go through one shared
+helper, `tests/a11y.ts`:
+
+```ts
+export function axeCheck(container: Element) {
+  return axe(container, { rules: { 'color-contrast': { enabled: false } } })
+}
+```
+
+Each file exercises the states that change the DOM, not just the default render:
+`UrlForm` (default **and** the invalid-URL error state — `aria-invalid` +
+`aria-describedby` + `role="alert"`), `ScoreGauge` (all three colour bands),
+`StepProgress` (running with a progressbar, and queued), `ResultsTable`
+(footprint yes/no with a null snippet), and `AnalysisPage` (running, the
+`role="alert"` failure card, and the results screen). Between them they cover
+**roles, accessible names, label association, landmarks, heading order,
+list/table markup, `aria-*` validity, and duplicate ids**.
+
+**Caveat — contrast is not checked here.** jsdom performs no layout or paint, so
+`getComputedStyle` returns no real colours and axe's `color-contrast` rule can
+only ever return "incomplete". It is therefore **explicitly disabled** in
+`axeCheck` (see the comment in `tests/a11y.ts`). Colour contrast is instead
+verified out-of-band as **computed WCAG ratios recorded in the brandkit / P4.5
+audit** (e.g. the `success-700` / `danger-700` text-on-`*-soft` fills at
+4.57:1 and 5.30:1). The future upgrade path is a real-browser
+`@axe-core/playwright` pass on the running stack, where `color-contrast` *can*
+run — the same reason the e2e (§5) is browser-based.
 
 ---
 
@@ -266,9 +313,11 @@ What `make test` does under the hood (see the `test` target in `Makefile`):
 `playwright test`, so it assumes a `make dev` stack is already up (and that
 chromium + its deps are installed — see §5).
 
-`make test` is the same command CI runs, so "green on my machine" means "green in
-CI" (modulo `test_queue_postgres.py`, which CI always exercises because it always
-has Postgres).
+`make test` runs the same underlying pytest + vitest commands CI runs — CI just
+runs them as two separate jobs (`uv run pytest`; `npm test -- --run`), each with
+its own Postgres service, rather than through this Makefile wrapper — so "green on
+my machine" means "green in CI" (modulo `test_queue_postgres.py`, which CI always
+exercises because it always has Postgres).
 
 To run one slice while developing (pytest is run from `backend/`):
 
@@ -355,6 +404,7 @@ gate (§10).
 | **Scoring** | `tests/pipeline/test_scoring.py` | `score == footprints/total`; `total==0` safe |
 | **Results (API)** | `tests/test_api.py` | `GET` returns KYC + prompts + responses + score; `result` always present |
 | **Results (UI)** | `frontend/tests/ScoreGauge.test.tsx`, `UrlForm.test.tsx`, `score.test.ts` | gauge aria-label + color band; form validation; `scoreBand` boundaries |
+| **Results (UI) — a11y (P4.5)** | `frontend/tests/{UrlForm,ScoreGauge,StepProgress,ResultsTable,AnalysisPage}.a11y.test.tsx` (helper `tests/a11y.ts`) | axe: no violations across each component's DOM-changing states (roles, names, labels, landmarks, aria validity); contrast checked out-of-band (§4.1) |
 | **Whole-MVP happy path** | `frontend/e2e/happy-path.spec.ts` | submit → wait for gauge → a percentage renders (DRY_RUN=1); gated on `E2E_BASE_URL` |
 | *(supporting)* Full pipeline walk | `tests/pipeline/test_runner.py` | `run_pipeline` reaches `done`/progress 100; prompts + `prompt_count×4` responses; `geo_score == hits/total` |
 | *(supporting)* Queue reliability (NFR-3) | `tests/test_queue.py`, `test_queue_postgres.py` | portable claim / stale-reaper / `attempts>3 → failed` (SQLite); `FOR UPDATE SKIP LOCKED` no-double-claim (real PG) |

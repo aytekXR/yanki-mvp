@@ -1,0 +1,31 @@
+# Pre-commit hooks — CHECK-ONLY, never auto-fixing.
+#
+# Formatting lives in `make fmt` (ruff format + prettier). These hooks only
+# *detect* problems and fail; they must never rewrite files, because multiple
+# people/agents edit this tree concurrently and a silent rewrite would clobber
+# their work.
+#
+# `make setup` runs `pre-commit install` when this file exists. Every rev below
+# is pinned to an exact tag — no floating refs.
+repos:
+  # Secret scanning (NFR-5). The gitleaks hook runs `gitleaks git --pre-commit
+  # --staged`, i.e. it scans the staged diff and fails the commit on a leak.
+  # pre-commit bootstraps its own Go toolchain for this hook, so no system Go is
+  # required. Keep this rev in step with the pinned version in ci.yml's `secrets`
+  # job (currently 8.28.0).
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Block accidental commit of an unresolved merge (leftover <<<<<<< markers).
+      - id: check-merge-conflict
+      # A committed private key is the worst-case leak; fail hard on one.
+      - id: detect-private-key
+      # Guard against a giant blob sneaking in. 1 MB leaves headroom over the
+      # current lock files (package-lock.json ~316 KB, uv.lock ~240 KB).
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]

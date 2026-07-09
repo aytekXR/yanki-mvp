@@ -69,7 +69,7 @@ export default function UrlForm() {
           disabled={submitting}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? ERROR_ID : undefined}
-          className="w-full rounded-lg border border-surface-border bg-white px-4 py-3 text-base text-surface-foreground placeholder:text-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+          className="w-full rounded-lg border border-surface-subtle bg-white px-4 py-3 text-base text-surface-foreground placeholder:text-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
         />
         <Button type="submit" loading={submitting} className="shrink-0">
           Run analysis

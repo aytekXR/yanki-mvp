@@ -76,13 +76,13 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
 function FootprintBadge({ value }: { value: boolean | null }) {
   if (value) {
     return (
-      <span className="inline-flex items-center rounded-full bg-success-soft px-2 py-1 text-xs font-medium text-success">
+      <span className="inline-flex items-center rounded-full bg-success-soft px-2 py-1 text-xs font-medium text-success-700">
         Yes
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center rounded-full bg-danger-soft px-2 py-1 text-xs font-medium text-danger">
+    <span className="inline-flex items-center rounded-full bg-danger-soft px-2 py-1 text-xs font-medium text-danger-700">
       No
     </span>
   )

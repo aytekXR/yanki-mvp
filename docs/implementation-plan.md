@@ -36,22 +36,31 @@ Related: [architecture.md](architecture.md) (how it's built),
 
 ### Current Priority
 
-✅ **Session 1 (2026-07-09) is complete: Phase 0 → Phase 3 landed and verified in
-one orchestrated pass.** The DRY_RUN stack boots and was driven end-to-end —
+✅ **Session 1 (2026-07-09): Phase 0 → Phase 3 landed and verified in one
+orchestrated pass.** The DRY_RUN stack boots and was driven end-to-end —
 `POST` a URL → `202` → the six pipeline steps run → a GEO score renders
 (`geo_score=0.6`, `total_responses=40` = 10 prompts × 4 mock engines); the
-failure and `422` paths hold; `make lint`/`typecheck`/`test` are green (62
-backend tests incl. real-Postgres `SKIP LOCKED` queue tests on `:5433`, 9
-vitest). A 5-dimension adversarial review pass confirmed and fixed 16 findings
-(SSRF guard, footprint word boundaries, idempotent re-runs, prod Dockerfile,
-deploy-script fixes) with the live smoke re-verified afterwards. Default ports stay web `8140` / api `8141`, now overridable via
+failure and `422` paths hold. A 5-dimension adversarial review pass confirmed
+and fixed 16 findings (SSRF guard, footprint word boundaries, idempotent
+re-runs, prod Dockerfile, deploy-script fixes) with the live smoke re-verified
+afterwards. Default ports stay web `8140` / api `8141`, overridable via
 `YANKI_WEB_PORT`/`YANKI_API_PORT`/`YANKI_DB_PORT`.
 
-➡️ **Next up: P4.1 — real-key smoke test + Week-1 invoice check.** Phase 4 is the
-path from the working DRY_RUN loop to a live, cost-validated, CI-guarded deploy.
-Still pending: the real-key cost run (P4.1), the server deploy (P4.2, scripts
-untested), CI hardening (P4.3), Playwright-in-CI (P4.4 — the spec exists but the
-automated run was skipped in this env: chromium needs a root `install-deps`).
+✅ **Session 2 (2026-07-09): the key-free CI + accessibility polish landed.**
+P4.3 (CI hardening) and P4.5 (a11y audit) are done and P4.4's Playwright e2e job
+is authored — but none of it has run on a real GitHub runner yet (there is still
+no remote). Locally, `make lint`/`typecheck`/`test` are green (**64** backend
+tests incl. real-Postgres `SKIP LOCKED` queue tests on `:5433`, **20** vitest
+across 8 files) and a fresh DRY_RUN smoke re-verified the whole loop. See the
+per-task notes below for exactly what was proven vs. authored-but-unproven.
+
+➡️ **Next up (operator-gated): P4.1 — real-key smoke + Week-1 invoice check**,
+then **P4.2 — deploy to test.beyondkaira.com.** Both need real secrets / a
+server, so they wait on the founder-operator. The only key-free remainder is
+**P4.6** — decompose the roadmap **Next** slice into a Phase-5 task breakdown.
+Pushing this branch to a GitHub remote is what first exercises all five CI jobs
+(and the Playwright e2e, which has never run anywhere — chromium needs a root
+`install-deps`).
 
 ### Agent lanes (parallelism map)
 
@@ -459,8 +468,10 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
 - **Deliverables:** `frontend/tests/{UrlForm,ScoreGauge}.test.tsx`,
   `frontend/tests/score.test.ts`, and `frontend/lib/score.ts` (the color-band
   helper under test).
-- **Acceptance:** `npm test -- --run` green (9 vitest tests); the three
-  logic-bearing units have a test each.
+- **Acceptance:** the three P3.4 vitest files (`UrlForm.test.tsx`,
+  `ScoreGauge.test.tsx`, `score.test.ts`) are green with 9 tests; the three
+  logic-bearing units have a test each. (P4.5 later grew the full
+  `npm test -- --run` suite to 20 tests across 8 files.)
 - **Status:** done (session 1)
 
 ### P3.5 — Playwright happy path + DRY_RUN e2e verification
@@ -483,7 +494,7 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
 
 ---
 
-## Phase 4 — Polish (pending — later sessions)
+## Phase 4 — Polish (in progress — key-free tasks landed session 2)
 
 Goal: take the working DRY_RUN loop to a live, cost-validated, CI-guarded deploy,
 then start the first [roadmap.md](roadmap.md) **Next** items. Each task is sized
@@ -533,7 +544,20 @@ happy path renders a score.**
   gitleaks config.
 - **Acceptance:** CI runs the full suite green on a clean PR, red on a contract
   drift or a planted secret.
-- **Status:** todo
+- **Status:** done (session 2). The workflow now has **five** jobs: `backend`
+  (ruff + mypy + pytest against a Postgres service), `frontend` (typecheck +
+  lint + vitest + build), `contract` (OpenAPI drift gate), `secrets` (gitleaks
+  `8.28.0`, checksum-verified binary, full-history `gitleaks git .` scan), and
+  the P4.4 `e2e` job. Pre-commit adds a gitleaks hook plus basic hygiene checks
+  (`check-merge-conflict`, `detect-private-key`, `check-added-large-files`) in
+  `.pre-commit-config.yaml`; `gitleaks/gitleaks-action` was deliberately avoided
+  (it requires a `GITLEAKS_LICENSE` for org repos). **Deliverable deviation:** no
+  `.gitleaks.toml` was written — the clean full-history scan needed no allowlist;
+  add one only if a future false positive demands it. Everything provable locally
+  was proven, including both the RED path (planted secret flagged, direct scan
+  and via the pre-commit hook) and the GREEN path (clean 5-commit history). The
+  acceptance line — "CI runs green on a clean PR" — is provable only once the
+  operator pushes to a remote; no CI job has executed on a real runner yet.
 
 ### P4.4 — Playwright in CI
 - **Goal:** a CI job that boots the `DRY_RUN=1` stack, sets `E2E_BASE_URL`, and
@@ -543,7 +567,15 @@ happy path renders a score.**
 - **Complexity:** S
 - **Deliverables:** an e2e job in `.github/workflows/`.
 - **Acceptance:** the happy path runs (not skipped) and passes in CI.
-- **Status:** todo
+- **Status:** done pending first-push proof (operator). The `e2e` job exists in
+  `.github/workflows/ci.yml`: it writes `deploy/.env` with `DRY_RUN=1`, brings
+  the stack up (`docker compose up -d --build`), waits on api `:8141/healthz`
+  and web `:8140`, `npm ci`, `npx playwright install --with-deps chromium`, runs
+  `e2e/happy-path.spec.ts` with `E2E_BASE_URL=http://localhost:8140`, dumps
+  compose logs on failure, and tears down (`down -v`, always). It is **authored
+  but has never executed** — the Playwright browser cannot launch on this host
+  (needs a root `install-deps`), so the run stays unproven anywhere until the
+  first push to a GitHub runner.
 
 ### P4.5 — Accessibility + polish audit
 - **Goal:** audit the three screens against [frontend-brandkit.md](frontend-brandkit.md)
@@ -556,7 +588,17 @@ happy path renders a score.**
 - **Deliverables:** frontend fixes; a short audit note.
 - **Acceptance:** the §7 checklist passes; no critical axe violations on the three
   screens.
-- **Status:** todo
+- **Status:** done (session 2). The audit produced 9 findings (A1–A9); **8 are
+  fixed, A8** (per-state `document.title`) **deferred as MVP gold-plating.**
+  Fixes: new `success-700` (`#15803d`) / `danger-700` (`#b91c1c`) token shades
+  for text/glyphs on the `-soft` fills (badges/headings/checks raised to
+  ≥4.5:1), a stronger `UrlForm` input border (`surface-subtle #64748b`) for WCAG
+  1.4.11, `role="alert"` on the failure card and `role="status"` on the loading
+  paragraph, a 40px-min "Try another URL" target, and an empty-responses guard.
+  New axe smoke tests cover all three screens (`tests/*.a11y.test.tsx`).
+  **Caveat:** axe's `color-contrast` rule cannot run under jsdom (no
+  layout/paint), so the contrast fixes are guarded by manually computed ratios,
+  not automated tests.
 
 ### P4.6 — Kick off roadmap "Next" (free public checker)
 - **Goal:** the first [roadmap.md](roadmap.md) **Next** slice — begin 2a (public

@@ -34,10 +34,14 @@ const config: Config = {
         success: {
           DEFAULT: '#16a34a',
           soft: '#dcfce7',
+          // Darker green for text/glyphs on `success-soft` (4.57:1, WCAG 1.4.3).
+          700: '#15803d',
         },
         danger: {
           DEFAULT: '#dc2626',
           soft: '#fee2e2',
+          // Darker red for text/headings on `danger-soft` (5.30:1, WCAG 1.4.3).
+          700: '#b91c1c',
         },
       },
       fontFamily: {

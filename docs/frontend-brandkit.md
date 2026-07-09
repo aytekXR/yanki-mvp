@@ -39,9 +39,17 @@ Tokens are single (light) values today; a dark theme is a roadmap item.
 | `surface-foreground` | Primary text (`text-surface-foreground`) | `#0f172a` (slate-900) |
 | `surface-subtle` | Secondary text, labels, captions | `#64748b` (slate-500) |
 | `success` / `success-soft` | Footprint = yes, healthy score, deploy ok | `#16a34a` / `#dcfce7` |
+| `success-700` (`text-success-700`) | Accessible green for text/glyphs sitting on a `success-soft` fill — `ResultsTable` "Yes" badge, `StepProgress` done check | `#15803d` |
 | `danger` / `danger-soft` | Footprint = no, failed job, errors | `#dc2626` / `#fee2e2` |
+| `danger-700` (`text-danger-700`) | Accessible red for text/headings sitting on a `danger-soft` fill — `ResultsTable` "No" badge, failure-card heading | `#b91c1c` |
 
 Button text on `bg-primary` is `text-white` (there is no dedicated on-primary token).
+
+The `-700` shades exist because the base hues fail small-text contrast on their own
+`-soft` fills: `text-success` on `success-soft` is only **3.00:1** and `text-danger`
+on `danger-soft` only **3.95:1** — both below the 4.5:1 floor. So for *any* text or
+glyph on a `-soft` background, use `text-success-700` / `text-danger-700`. The base
+`success` / `danger` remain correct for solid fills, borders, and the gauge arc.
 
 **GEO score color scale** (drives `ScoreGauge`): 0–29% → `danger` (red), 30–59% →
 `primary` (indigo), 60–100% → `success` (green). Never rely on color alone —
@@ -183,8 +191,13 @@ Turkish brand matching must handle suffixes (e.g. *Marka'nın*, *Markayı*) — 
 
 Non-negotiable, checked in review:
 
-- **Contrast:** text ≥ 4.5:1, large text/UI ≥ 3:1, in **both** themes. The token
-  pairs above are chosen to pass.
+- **Contrast:** text ≥ 4.5:1, large text/UI ≥ 3:1, in **both** themes. Verified
+  pairings: `text-success-700` / `text-danger-700` on their `-soft` fills measure
+  **4.57:1** / **5.30:1**; form-control boundaries use `surface-subtle` `#64748b`
+  (**4.76:1** vs white) to meet WCAG 1.4.11, while `surface-border` `#e2e8f0` is
+  kept for decorative dividers and card outlines only (exempt from 1.4.11). The
+  bare `text-success` / `text-danger` must **not** carry small text on a `-soft`
+  fill (see §2).
 - **Never color-only:** footprint yes/no, score bands, and step states always carry
   text or an icon in addition to color.
 - **Keyboard:** every interactive element is focusable with a visible
@@ -194,3 +207,9 @@ Non-negotiable, checked in review:
   `aria-live="polite"` on the status region so screen readers hear progress updates.
 - **Motion:** honor `prefers-reduced-motion` for the animated step + gauge.
 - **Target size:** interactive targets ≥ 40×40px.
+
+This checklist is now *partially* enforced by automated tests: the
+`frontend/tests/*.a11y.test.tsx` suites run `axe-core` over each component and catch
+missing roles, names, labels, and ARIA. Contrast is the exception — jsdom does no
+layout or paint, so axe's `color-contrast` rule is disabled in the shared
+`tests/a11y.ts` helper; the ratios above are verified by computed values instead.

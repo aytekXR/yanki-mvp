@@ -60,7 +60,11 @@ export default function AnalysisPage() {
   if (!analysis && loadError) {
     content = <FailureCard reason={loadError} />
   } else if (!analysis) {
-    content = <p className="text-sm text-surface-subtle">Loading…</p>
+    content = (
+      <p role="status" className="text-sm text-surface-subtle">
+        Loading…
+      </p>
+    )
   } else if (analysis.status === 'failed') {
     content = <FailureCard reason={analysis.error ?? 'The analysis failed.'} />
   } else if (analysis.status === 'done') {
@@ -84,14 +88,14 @@ export default function AnalysisPage() {
             <p className="break-all text-sm text-surface-subtle">{analysis.url}</p>
           ) : null}
         </header>
-        {/* Persistent live region: StepProgress (and its own live region) unmounts
-            on completion, so announce the terminal outcome here instead. */}
+        {/* Persistent live region for the success outcome: StepProgress (and its
+            own live region) unmounts on completion, so announce "done" here. The
+            failure outcome is announced by FailureCard's role="alert", which fires
+            on every entry path (transition, direct load, and network error). */}
         <p aria-live="polite" className="sr-only">
           {analysis?.status === 'done'
             ? 'Analysis complete. Your GEO score is ready.'
-            : analysis?.status === 'failed'
-              ? 'Analysis failed.'
-              : ''}
+            : ''}
         </p>
         {content}
       </div>
@@ -101,14 +105,17 @@ export default function AnalysisPage() {
 
 function FailureCard({ reason }: { reason: string }) {
   return (
-    <div className="space-y-3 rounded-lg border border-danger bg-danger-soft p-6">
-      <h2 className="text-xl font-semibold text-danger">
+    <div
+      role="alert"
+      className="space-y-3 rounded-lg border border-danger bg-danger-soft p-6"
+    >
+      <h2 className="text-xl font-semibold text-danger-700">
         {"We couldn't finish this analysis."}
       </h2>
       <p className="text-sm text-surface-foreground">{reason}</p>
       <Link
         href="/"
-        className="inline-block rounded text-sm font-medium text-primary hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex min-h-[40px] items-center rounded text-sm font-medium text-primary hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         Try another URL
       </Link>
@@ -164,7 +171,13 @@ function Results({ analysis }: { analysis: Analysis }) {
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold text-surface-foreground">Responses</h2>
-        <ResultsTable responses={result.responses} prompts={result.prompts} />
+        {result.responses.length > 0 ? (
+          <ResultsTable responses={result.responses} prompts={result.prompts} />
+        ) : (
+          <p className="text-sm text-surface-subtle">
+            No engine responses were recorded for this analysis.
+          </p>
+        )}
       </section>
     </div>
   )

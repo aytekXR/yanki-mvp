@@ -44,7 +44,7 @@ jobs:
         run: uv run pytest
 
   frontend:
-    name: frontend (typecheck + vitest + build)
+    name: frontend (typecheck + lint + vitest + build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,6 +57,9 @@ jobs:
       - name: Typecheck
         working-directory: frontend
         run: npx tsc --noEmit
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
       - name: Test
         working-directory: frontend
         run: npm test -- --run
@@ -86,3 +89,85 @@ jobs:
           cd frontend && npm run gen-types
       - name: Fail on drift
         run: git diff --exit-code shared/contracts frontend/lib/types.ts
+
+  secrets:
+    name: secret scan (gitleaks, full history)
+    runs-on: ubuntu-latest
+    env:
+      # Pin gitleaks to an exact release + verify its checksum. Do NOT switch to
+      # gitleaks/gitleaks-action: that action requires a GITLEAKS_LICENSE for
+      # org repos. Running the release binary directly has no such gate.
+      GITLEAKS_VERSION: "8.28.0"
+      GITLEAKS_SHA256: "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the scan covers every commit, not just the tip.
+          fetch-depth: 0
+      - name: Install gitleaks (pinned + checksum-verified)
+        run: |
+          set -euo pipefail
+          url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL -o gitleaks.tar.gz "$url"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks version
+      - name: Scan full git history
+        # `gitleaks git` scans every commit by default; --exit-code 1 fails the
+        # job on any finding. --redact keeps a matched secret out of the logs.
+        run: ./gitleaks git . --no-banner --redact --exit-code 1 -v
+
+  e2e:
+    name: e2e (playwright happy path, DRY_RUN stack)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Pin the stack to DRY_RUN (mock providers, no keys)
+        # deploy/.env is gitignored; the compose file reads it via env_file.
+        # DRY_RUN=1 is already the backend default, but set it explicitly so the
+        # e2e stack never depends on that default drifting.
+        run: printf 'DRY_RUN=1\n' > deploy/.env
+      - name: Boot the DRY_RUN stack
+        run: docker compose -f deploy/docker-compose.yml up -d --build
+      - name: Wait for API health
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8141/healthz >/dev/null 2>&1; then
+              echo "api healthy after ${i} tries"; exit 0
+            fi
+            sleep 5
+          done
+          echo "api /healthz never came up"; exit 1
+      - name: Wait for web
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8140/ >/dev/null 2>&1; then
+              echo "web up after ${i} tries"; exit 0
+            fi
+            sleep 5
+          done
+          echo "web never came up"; exit 1
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci || npm install
+      - name: Install Playwright chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run happy-path e2e
+        working-directory: frontend
+        env:
+          # The spec skips itself unless E2E_BASE_URL is set; point it at the web
+          # container so the run is real, not skipped.
+          E2E_BASE_URL: http://localhost:8140
+        run: npx playwright test e2e/happy-path.spec.ts
+      - name: Dump stack logs on failure
+        if: failure()
+        run: docker compose -f deploy/docker-compose.yml logs
+      - name: Tear down stack
+        if: always()
+        run: docker compose -f deploy/docker-compose.yml down -v

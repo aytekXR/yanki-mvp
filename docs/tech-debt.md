@@ -4,7 +4,7 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-09 (session 1).
+Last updated: 2026-07-09 (session 2).
 
 ## Untested / never exercised
 
@@ -13,13 +13,17 @@ Last updated: 2026-07-09 (session 1).
    rebuilds the last-good SHA via `git checkout`; check_env gate wired), but
    the first `make deploy` must be supervised. Cleared by P4.2.
 2. **CI has never executed.** No GitHub remote is configured, so
-   `.github/workflows/ci.yml` (backend / frontend / contract-drift jobs) is
-   unproven. Cleared by pushing the repo (operator) + P4.3.
-3. **Playwright e2e blocked on this machine.** Chromium installs but can't
-   launch without root `playwright install-deps`. The spec
+   `.github/workflows/ci.yml` (five jobs: backend / frontend / contract-drift /
+   secrets / e2e) is unproven — no job has ever run on a real runner. Cleared by
+   pushing the repo (operator) + P4.3.
+3. **Playwright e2e has never executed anywhere.** Chromium installs on this
+   machine but can't launch without root `playwright install-deps`. The spec
    (`frontend/e2e/happy-path.spec.ts`) is written and gated on `E2E_BASE_URL`;
-   the same flow passes via API-level curl e2e. Cleared by P4.4 (CI) or the
-   operator's sudo (see [operator-actions.md](operator-actions.md)).
+   the same flow passes via API-level curl e2e. The P4.4 `e2e` CI job is now
+   authored (boots the DRY_RUN stack, `playwright install --with-deps chromium`,
+   runs the spec against `:8140`) but has likewise never run. Cleared by pushing
+   (CI runs it) or the operator's sudo (see
+   [operator-actions.md](operator-actions.md)).
 4. **Real Anthropic/OpenAI providers never called.** No live run, no cost
    validation (NFR-1 Week-1 invoice check pending — P4.1), and no
    respx-style contract tests asserting the real adapters' request/response
@@ -52,11 +56,29 @@ Last updated: 2026-07-09 (session 1).
 
 ## Hygiene / small
 
-11. **gitleaks not yet wired** (SECURITY.md promises it; no
-    `.pre-commit-config.yaml` exists). Part of P4.3.
-12. **`next lint` is deprecated** (removed in Next 16); migrate to the ESLint
-    CLI when bumping Next.
-13. **Node 20 on the dev host vs README's recommended 22 LTS** — everything
+11. **`next lint` is deprecated (removed in Next 16) and now CI-blocking.** The
+    frontend CI job's Lint step runs `npm run lint`, i.e. `next lint` (Next is
+    pinned at `^15.1.0`). Migrating to the ESLint CLI is no longer optional: a
+    Next 16 bump must land it in the same change or CI breaks.
+12. **Node 20 on the dev host vs README's recommended 22 LTS** — everything
     green on 20; upgrade opportunistically.
-14. **StepProgress / ResultsTable have no dedicated unit tests** (reviewed,
-    judged low-value now; the e2e covers them). Add when they grow logic.
+13. **StepProgress / ResultsTable still have no behavior unit tests.** Partially
+    repaid: both now carry axe a11y tests
+    (`tests/StepProgress.a11y.test.tsx`, `tests/ResultsTable.a11y.test.tsx`), but
+    nothing exercises their rendering logic. Add when they grow logic.
+14. **gitleaks is pinned in two places that must move in lockstep.** `ci.yml`'s
+    `secrets` job (`GITLEAKS_VERSION` + `GITLEAKS_SHA256`) and
+    `.pre-commit-config.yaml` (`rev: v8.28.0`). Bump both together — and
+    recompute the SHA256 from the release `checksums.txt` — or the CI layer and
+    the local hook run different scanner versions.
+15. **The pre-commit gitleaks hook is `language: golang`.** pre-commit
+    auto-provisions its own Go toolchain to build it, so the first
+    `pre-commit run` (or first commit) is heavy and needs network; an offline or
+    otherwise constrained first run will stall. No system Go is required, and
+    later runs are fast.
+16. **Contrast fixes are guarded only by manually computed ratios.** axe's
+    `color-contrast` rule is disabled under jsdom (it has no layout or paint —
+    see `tests/a11y.ts`), so the P4.5 WCAG ratios are verified by hand, not by a
+    running test. A token/color change that regresses contrast would pass CI.
+    Re-check the ratios manually when touching the `*-soft` fills or the text
+    tokens layered on them.

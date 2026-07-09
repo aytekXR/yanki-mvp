@@ -14,12 +14,18 @@ Yanki is a public repository. The single most important rule:
 If you believe a secret was committed, treat it as compromised: rotate the key
 immediately, then remove it from history. Notify us (below) so we can help.
 
-### Planned hardening (tech debt)
+### Automated secret scanning
 
-Automated secret scanning with **gitleaks** (pre-commit hook + CI job) is
-planned but not yet wired up — tracked in `docs/tech-debt.md`. Until then,
-secret hygiene is enforced by review and `.gitignore`. Do not rely on tooling to
-catch a leak for you.
+Automated secret scanning with **gitleaks** is wired up on two layers:
+
+- **Pre-commit hook** (`.pre-commit-config.yaml`) — the `gitleaks` hook scans
+  the staged diff and fails the commit on a leak. Installed by `make setup`.
+- **CI job** (`.github/workflows/ci.yml`, the `secrets` job) — a
+  checksum-pinned gitleaks scans the **full git history** on every push and
+  pull request and fails the build on any finding.
+
+Both are still a backstop, not a substitute for care: keep secrets in the
+gitignored `deploy/.env` and never paste one into a tracked file.
 
 ## Reporting a vulnerability
 

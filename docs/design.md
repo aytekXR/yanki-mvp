@@ -355,4 +355,63 @@ decision → consequences**, with one line on why the alternative was rejected.
   runtime.)
 - **Rejected:** relying on `COPY` globs alone (easy to get wrong, and doesn't
   shrink the context) or no ignore file (slow builds, broken native binaries).
+
+### ADR-17 — Secret scanning via a directly-pinned gitleaks (P4.3)
+- **Context:** NFR-5 requires secret scanning, and we want it on two layers —
+  in CI over the full git history and locally before a commit lands — without a
+  licensing gate and with reproducible, pinned versions.
+- **Decision:** the CI `secrets` job downloads a checksum-verified gitleaks
+  `8.28.0` release binary (`GITLEAKS_VERSION` + `GITLEAKS_SHA256` pinned, checked
+  with `sha256sum -c`) and runs `gitleaks git . --no-banner --redact
+  --exit-code 1 -v` over every commit (checkout `fetch-depth: 0`). Locally,
+  `.pre-commit-config.yaml` uses the official gitleaks **golang** hook pinned to
+  `rev: v8.28.0` (modern pre-commit auto-provisions its own Go toolchain, so no
+  system Go is needed) to scan the staged diff, plus check-only hygiene hooks
+  from `pre-commit-hooks` v5.0.0 (`check-merge-conflict`, `detect-private-key`,
+  `check-added-large-files --maxkb=1024`). No auto-formatting hooks — `make fmt`
+  stays the one formatter, so a hook can never silently rewrite a file under a
+  concurrent editor. No `.gitleaks.toml`: the clean scan needed no allowlist.
+- **Consequences:** two-layer coverage with no license requirement, but the
+  pinned version now lives in **two** places that must move in lockstep — the
+  `secrets` job's `GITLEAKS_VERSION`/`GITLEAKS_SHA256` in `ci.yml` and the `rev`
+  in `.pre-commit-config.yaml`. The pre-commit gitleaks hook also has a heavy,
+  network-requiring first run while pre-commit provisions the Go toolchain.
+- **Rejected:** `gitleaks/gitleaks-action` — it requires a `GITLEAKS_LICENSE`
+  for organization repos; running the release binary directly has no such gate.
+  Unpinned `:latest` images or floating refs — non-reproducible and a
+  supply-chain surface; every ref here is an exact tag with a verified checksum.
+- **Migration (bump procedure):** update `GITLEAKS_VERSION` **and**
+  `GITLEAKS_SHA256` in `ci.yml`'s `secrets` job and the `rev` in
+  `.pre-commit-config.yaml` **together in one commit**; take the new SHA256 from
+  the release's `checksums.txt`. (CLI note: v8 removed the old `detect`
+  subcommand — full-history scans are `gitleaks git <path>`.)
+
+### ADR-18 — Darker `-700` token shades for text on soft fills, and jsdom axe tests (P4.5)
+- **Context:** the P4.5 accessibility audit found that text and glyphs rendered
+  on the `success-soft`/`danger-soft` fills (ResultsTable badges, the FailureCard
+  heading, the StepProgress done-check) did not clear WCAG 4.5:1, and the UrlForm
+  input border did not clear the 1.4.11 component-boundary 3:1 threshold. We also
+  had no automated accessibility check anywhere in the suite.
+- **Decision:** add darker `success-700` (`#15803d`) and `danger-700`
+  (`#b91c1c`) tokens used **only** for text/glyphs on the `*-soft` backgrounds —
+  ResultsTable badges land at 4.57:1 / 5.30:1, the FailureCard heading at 5.30:1,
+  the StepProgress done-check at 4.57:1 — which keeps the brandkit's soft-fill
+  look while clearing 4.5:1. The UrlForm input boundary switches to the existing
+  `surface-subtle` token (`#64748b`, 4.76:1 on white). Add a vitest-axe +
+  axe-core a11y test layer running under jsdom (`tests/*.a11y.test.tsx` + a shared
+  `tests/a11y.ts` `axeCheck` helper) with axe's `color-contrast` rule **disabled**
+  because jsdom does no layout or paint and cannot compute it; contrast is
+  enforced instead by the computed ratios documented alongside the tokens.
+- **Consequences:** the axe layer covers roles, names, label association,
+  landmarks, heading order, list/table markup and `aria-*` validity, but contrast
+  regressions are **not** auto-caught — they are guarded only by the manually
+  computed ratios. vitest-axe's `extend-expect` entry is inert under Vitest 2, so
+  its matchers are registered manually via `expect.extend(axeMatchers)` in
+  `vitest.setup.ts`, with a local `tests/vitest-axe.d.ts` augmentation so
+  `expect(...).toHaveNoViolations()` type-checks against the `vitest` module.
+- **Rejected:** solid `success`/`danger` fills with white text — fails the
+  contrast math on our brand hues. A `@axe-core/playwright` browser pass — would
+  catch contrast, but the browser cannot launch on this host; it is a future CI
+  upgrade, not an MVP gate. A jest-axe fallback — unnecessary once vitest-axe's
+  matchers are wired via `expect.extend`.
 </content>
