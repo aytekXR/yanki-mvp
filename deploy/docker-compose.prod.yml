@@ -1,0 +1,75 @@
+# Yanki — PROD stack. Driven by deploy/deploy.sh (project name: yanki-prod).
+#   Same shape as dev, but: no bind-mounts/reload, restart: unless-stopped,
+#   images tagged by git SHA, and ports bound to 127.0.0.1 only so ONLY the
+#   shared pulse-prod Caddy (which terminates TLS on test.beyondkaira.com and
+#   path-routes /api/* + /healthz -> 8141, else -> 8140) can reach them.
+# Requires POSTGRES_PASSWORD (and, when deploying, GIT_SHA) — see deploy/.env.
+name: yanki-prod
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: yanki
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      POSTGRES_DB: yanki
+    volumes:
+      - yanki_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yanki -d yanki"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: yanki-api:${GIT_SHA:-latest}
+    build:
+      context: ../backend
+    command: sh -c "alembic upgrade head && uvicorn app.api.main:app --host 0.0.0.0 --port 8141"
+    ports:
+      - "127.0.0.1:8141:8141"
+    environment:
+      DATABASE_URL: postgresql+psycopg://yanki:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}@db:5432/yanki
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    image: yanki-api:${GIT_SHA:-latest}
+    build:
+      context: ../backend
+    command: python -m app.worker
+    environment:
+      DATABASE_URL: postgresql+psycopg://yanki:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}@db:5432/yanki
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+  web:
+    image: yanki-web:${GIT_SHA:-latest}
+    build:
+      context: ../frontend
+    ports:
+      - "127.0.0.1:8140:8140"
+    environment:
+      API_ORIGIN: http://api:8141
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  yanki_pgdata:

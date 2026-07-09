@@ -14,7 +14,7 @@ running local stack in about five minutes. Deeper docs live in [`docs/`](#docume
 
 ## Quickstart (about 5 minutes)
 
-Prerequisites: **Docker + Compose v2**, **Python 3.12**, **Node 22 LTS**.
+Prerequisites: **Docker + Compose v2**, **Python 3.12**, **Node 20+ (22 LTS recommended)**.
 (`make setup` installs everything else — `uv`, backend/frontend deps, pre-commit.)
 
 ```bash
@@ -145,7 +145,7 @@ publishes only 8140/8141 (bound so only the shared Caddy reaches them).
 | ------------------------------------------------------- | --------------------- | ------------------------------------------------------- |
 | [docs/design.md](docs/design.md)                        | Whole team            | Repo structure, folder rationale, ownership, ADR log.   |
 | [docs/architecture.md](docs/architecture.md)            | Engineers / on-call   | System + data-flow diagrams, job lifecycle, deploy topology. |
-| [docs/mvp.md](docs/mvp.md)                              | PM / QA / founders    | MVP PRD: scope, users, flow, acceptance criteria, out-of-scope. |
+| [docs/02-mvp.md](docs/02-mvp.md)                        | PM / QA / founders    | MVP PRD: scope, users, flow, acceptance criteria, out-of-scope. |
 | [docs/roadmap.md](docs/roadmap.md)                      | Leadership / engineers| Phased path from MVP to the Semrush alternative.        |
 | [docs/frontend-brandkit.md](docs/frontend-brandkit.md)  | Frontend              | Colors, type, spacing, components, voice/tone (EN + TR).|
 | [docs/test-suite.md](docs/test-suite.md)                | Every engineer        | Test pyramid, TDD workflow, fixtures, coverage targets. |

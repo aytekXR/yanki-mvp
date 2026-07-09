@@ -1,0 +1,48 @@
+[project]
+name = "yanki-backend"
+version = "0.1.0"
+description = "Yanki backend: FastAPI api + worker + GEO engine (one image)."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy>=2.0",
+    "alembic",
+    "psycopg[binary]",
+    "pydantic>=2",
+    "pydantic-settings",
+    "httpx",
+    "beautifulsoup4",
+    "anthropic",
+    "openai",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "respx",
+    "ruff",
+    "mypy",
+    "types-beautifulsoup4",
+]
+
+# This is an application, not a library: don't build/install the project itself,
+# just its dependencies. The `app` package is importable via cwd (see pytest
+# pythonpath below, uvicorn --app-dir default, and alembic prepend_sys_path).
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

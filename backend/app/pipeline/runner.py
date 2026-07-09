@@ -1,0 +1,119 @@
+"""Orchestrate the six pipeline steps for one analysis.
+
+``run_pipeline`` walks discovery -> kyc -> prompts -> execute -> footprint ->
+scoring, advancing ``current_step`` and ``progress`` and heartbeating
+``claimed_at`` after each step, and persisting each step's output as it goes so
+partial results stay queryable. On success it marks the analysis ``done``.
+The worker owns claiming the job and turning any raised exception into a
+``failed`` status.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from sqlalchemy import select
+
+from app.db.models import Analysis, Prompt, Response
+from app.pipeline import discovery
+from app.pipeline import execute as execute_step
+from app.pipeline import footprint as footprint_step
+from app.pipeline import kyc as kyc_step
+from app.pipeline import prompts as prompts_step
+from app.pipeline import scoring as scoring_step
+from app.providers import registry
+
+# progress % set when each step COMPLETES (see the master SPEC).
+_DISCOVERY_DONE = 15
+_KYC_DONE = 30
+_PROMPTS_DONE = 45
+_EXECUTE_DONE = 80
+_FOOTPRINT_DONE = 90
+_SCORING_DONE = 100
+
+
+def _now():
+    return datetime.now(UTC)
+
+
+def _start_step(session, analysis: Analysis, step: str) -> None:
+    analysis.current_step = step
+    analysis.claimed_at = _now()  # heartbeat
+    # Commit so each step's output (and progress) survives a later-step failure:
+    # the worker rolls back only the in-flight step's uncommitted work (FR-7).
+    session.commit()
+
+
+def _complete_step(session, analysis: Analysis, progress: int) -> None:
+    analysis.progress = progress
+    analysis.claimed_at = _now()  # heartbeat between steps
+    session.commit()
+
+
+def run_pipeline(session, analysis_id, settings) -> Analysis:
+    analysis = session.execute(
+        select(Analysis).where(Analysis.id == analysis_id)
+    ).scalar_one()
+
+    # 1. discovery
+    _start_step(session, analysis, "discovery")
+    text = discovery.discover(analysis.url)
+    _complete_step(session, analysis, _DISCOVERY_DONE)
+
+    # 2. kyc
+    _start_step(session, analysis, "kyc")
+    kyc = kyc_step.generate_kyc(
+        text, analysis.url, registry.get_analysis_provider(settings)
+    )
+    analysis.kyc = kyc.model_dump()
+    _complete_step(session, analysis, _KYC_DONE)
+
+    # 3. prompts
+    _start_step(session, analysis, "prompts")
+    specs = prompts_step.generate_prompts(
+        kyc, getattr(settings, "prompt_count", 10)
+    )
+    prompt_rows = []
+    for spec in specs:
+        row = Prompt(analysis_id=analysis.id, text=spec.text, category=spec.category)
+        session.add(row)
+        prompt_rows.append(row)
+    session.flush()
+    _complete_step(session, analysis, _PROMPTS_DONE)
+
+    # 4. execute
+    _start_step(session, analysis, "execute")
+    execute_step.run_execute(
+        session, analysis.id, prompt_rows, registry.get_panel(settings), settings
+    )
+    _complete_step(session, analysis, _EXECUTE_DONE)
+
+    # 5. footprint
+    _start_step(session, analysis, "footprint")
+    responses = (
+        session.execute(select(Response).where(Response.analysis_id == analysis.id))
+        .scalars()
+        .all()
+    )
+    footprint_count = 0
+    for response in responses:
+        hit, snippet = footprint_step.detect(response.raw_text, kyc)
+        response.footprint = hit
+        response.matched_snippet = snippet
+        if hit:
+            footprint_count += 1
+    session.flush()
+    _complete_step(session, analysis, _FOOTPRINT_DONE)
+
+    # 6. scoring
+    _start_step(session, analysis, "scoring")
+    total = len(responses)
+    analysis.footprint_count = footprint_count
+    analysis.total_responses = total
+    analysis.geo_score = scoring_step.geo_score(footprint_count, total)
+    analysis.status = "done"
+    analysis.current_step = None
+    analysis.progress = _SCORING_DONE
+    analysis.claimed_at = _now()
+    session.commit()
+    return analysis
