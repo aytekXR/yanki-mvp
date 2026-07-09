@@ -12,9 +12,15 @@ Session 2 is **complete**. It found **no keys in `deploy/.env` and no GitHub
 remote**, so P4.1 (real-key smoke test) was skipped and the session did the
 key-free tasks instead: P4.3 (CI hardening + gitleaks) done, P4.4 (e2e-in-CI)
 authored, P4.5 (accessibility audit) done — all local gates (lint / typecheck /
-test / contract-drift) and a live DRY_RUN smoke test are green. To unblock the
-rest of Phase 4, the two items below are what's needed from you — everything
-else can wait:
+test / contract-drift) and a live DRY_RUN smoke test are green.
+
+**Where we stand:** plan completion ≈ 89% (28.5 of 32 tasks; full snapshot in
+[implementation-plan.md](implementation-plan.md) §Readiness snapshot);
+production readiness ≈ 70% — the missing ~30% is entirely the outside-world
+proof only you can trigger. The session is closed and the next-session brief
+is ready in [sessions/2026-07-09-02.md](sessions/2026-07-09-02.md) §6. To
+unblock the rest of Phase 4, the two items below are what's needed from you —
+everything else can wait:
 
 1. **Provide real API keys, then decide `DRY_RUN=0` (unblocks P4.1 → P4.2).**
    Put real `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` into `deploy/.env`. See

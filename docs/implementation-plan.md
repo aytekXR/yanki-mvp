@@ -62,6 +62,26 @@ Pushing this branch to a GitHub remote is what first exercises all five CI jobs
 (and the Playwright e2e, which has never run anywhere — chromium needs a root
 `install-deps`).
 
+### Readiness snapshot (updated at each session close)
+
+Last updated: 2026-07-09 (session 2).
+
+- **Plan completion: 28.5 / 32 tasks ≈ 89%.** Phases 0–3: 26/26 done.
+  Phase 4: P4.3 + P4.5 done, P4.4 authored (counted ½ — proof needs the first
+  push), P4.1 + P4.2 operator-gated, P4.6 not started (planning-only task).
+- **Production readiness: ~70%** (session 1 closed at ~60%). Code, tests
+  (64 backend + 20 frontend), docs, CI config, secret scanning, and
+  accessibility are done and verified locally. The missing ~30% is entirely
+  outside-world proof, all operator-gated: real-key cost validation (P4.1),
+  first CI execution (push), first supervised deploy (P4.2) — plus rate
+  limiting on the anonymous endpoint before any public URL (accepted debt,
+  roadmap "Next").
+- **On track vs. original plan: yes, with sequencing changes only.** Scope is
+  unchanged (02-mvp.md §4 frozen). Deviations, all recorded in task notes:
+  P4.3/P4.5 executed before P4.1 (per the session-1 brief's key-blocked
+  fallback), P4.4 split into authored vs. proven, and P4.3 shipped without a
+  `.gitleaks.toml` (clean scan needed no allowlist).
+
 ### Agent lanes (parallelism map)
 
 The session runs these lanes in parallel; the merge risks are the shared
