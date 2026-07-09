@@ -1,4 +1,4 @@
-import type { Analysis, CreateAnalysisResponse } from './types'
+import type { Analysis, CreateAnalysisResponse } from './contracts'
 
 // Thin fetch wrapper. All paths are relative — Next rewrites proxy them to the
 // backend (see next.config.ts), so there is no CORS and no base URL to configure.

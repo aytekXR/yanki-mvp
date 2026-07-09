@@ -1,0 +1,12 @@
+# Keep the build context small. The image builds its own environment at
+# /opt/venv via `uv sync`; the host .venv and caches must never be copied in.
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.git
+.gitignore
+Dockerfile
+.dockerignore

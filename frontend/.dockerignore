@@ -1,0 +1,14 @@
+# Keep the build context small and, crucially, never copy the host's
+# node_modules / .next into the image — the image installs its own via `npm ci`
+# (COPY . . would otherwise overwrite them with host-platform binaries, breaking
+# Next's native SWC when host and container OS/arch differ). The dev compose also
+# masks these paths with anonymous volumes at runtime.
+node_modules
+.next
+playwright-report
+test-results
+npm-debug.log*
+.git
+.gitignore
+Dockerfile
+.dockerignore

@@ -1,4 +1,4 @@
-import type { AnalysisStatus, PipelineStep } from '@/lib/types'
+import type { AnalysisStatus, PipelineStep } from '@/lib/contracts'
 
 type StepState = 'done' | 'active' | 'pending'
 

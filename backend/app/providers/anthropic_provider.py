@@ -33,7 +33,7 @@ class AnthropicProvider:
             messages=[{"role": "user", "content": prompt}],
         )
         text = "".join(
-            block.text
+            getattr(block, "text", "")
             for block in message.content
             if getattr(block, "type", None) == "text"
         )

@@ -34,8 +34,10 @@ class OpenAIProvider:
         )
         text = completion.choices[0].message.content or ""
         usage = completion.usage
+        prompt_tokens = usage.prompt_tokens if usage else 0
+        completion_tokens = usage.completion_tokens if usage else 0
         cost = (
-            usage.prompt_tokens * INPUT_PRICE_PER_TOKEN
-            + usage.completion_tokens * OUTPUT_PRICE_PER_TOKEN
+            prompt_tokens * INPUT_PRICE_PER_TOKEN
+            + completion_tokens * OUTPUT_PRICE_PER_TOKEN
         )
         return ProviderResult(text=text, model=self.model, cost_usd=round(cost, 6))

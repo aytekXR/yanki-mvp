@@ -11,7 +11,8 @@ services:
       POSTGRES_PASSWORD: yanki
       POSTGRES_DB: yanki
     ports:
-      - "5432:5432"
+      # Host port is parameterized to dodge conflicts; container port is fixed.
+      - "${YANKI_DB_PORT:-5432}:5432"
     volumes:
       - yanki_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -25,7 +26,7 @@ services:
       context: ../backend
     command: sh -c "alembic upgrade head && uvicorn app.api.main:app --host 0.0.0.0 --port 8141 --reload"
     ports:
-      - "8141:8141"
+      - "${YANKI_API_PORT:-8141}:8141"
     environment:
       DATABASE_URL: postgresql+psycopg://yanki:yanki@db:5432/yanki
     env_file:
@@ -61,7 +62,7 @@ services:
     build:
       context: ../frontend
     ports:
-      - "8140:8140"
+      - "${YANKI_WEB_PORT:-8140}:8140"
     environment:
       API_ORIGIN: http://api:8141
     env_file:

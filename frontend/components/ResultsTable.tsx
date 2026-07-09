@@ -1,4 +1,4 @@
-import type { AnalysisResponse, Prompt } from '@/lib/types'
+import type { AnalysisResponse, Prompt } from '@/lib/contracts'
 
 interface ResultsTableProps {
   responses: AnalysisResponse[]
@@ -73,7 +73,7 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
   )
 }
 
-function FootprintBadge({ value }: { value: boolean }) {
+function FootprintBadge({ value }: { value: boolean | null }) {
   if (value) {
     return (
       <span className="inline-flex items-center rounded-full bg-success-soft px-2 py-1 text-xs font-medium text-success">
