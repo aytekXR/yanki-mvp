@@ -31,3 +31,20 @@ audit, 8 fixed, axe test layer added). See
 lives at the end of that log (§6).
 
 ---
+
+## Session 3 — 2026-07-09 → 07-10
+
+**Prompt executed:** "Using workflows, continue implementation. Is anything
+expected from me? If so, log here and also to a operator expected md file.
+Start from @docs/resume-prompt.md" — resolved via the session-2 brief
+(sessions/2026-07-09-02.md §6): both operator gates still closed (no
+`deploy/.env` keys, no GitHub remote), so the neither-gate branch ran:
+**P4.6** — decompose roadmap "Next" 2a into a Phase-5 task breakdown
+(planning only).
+
+**Outcome:** P4.6 done — Phase 5 (P5.1–P5.11, the free public checker) added to
+implementation-plan.md with its build gate, lanes, and merge risks; no code
+changed. See [sessions/2026-07-10-01.md](sessions/2026-07-10-01.md); the
+next-session brief lives at the end of that log (§6).
+
+---

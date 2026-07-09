@@ -61,6 +61,10 @@ Ordered by the draft's Launch 1 → Launch 3 sequence.
 
 ### 2a. Free public checker — the launch wedge (weeks 3–4, ships first)
 
+*Engineering decomposition done (session 3): **Phase 5, P5.1–P5.11** in
+[implementation-plan.md](implementation-plan.md) — build stays frozen behind the
+MVP sign-off gate (P4.1 + P4.2 + first green CI).*
+
 | Item | Rationale |
 |---|---|
 | Public no-signup page: brand + category → 12 fixed prompts × 4 engines, live | Every run is a demand signal and a lead; Semrush has a checker, ours must be more generous and exist in Turkish (theirs doesn't). |

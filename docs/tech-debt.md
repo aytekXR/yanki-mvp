@@ -4,7 +4,9 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-09 (session 2).
+Last updated: 2026-07-10 (session 3 — planning-only session; no new debt, no
+repayments. Items 5 and 9 gained concrete planned repayments in the new Phase 5
+breakdown; they stay open until built.)
 
 ## Untested / never exercised
 
@@ -35,6 +37,8 @@ Last updated: 2026-07-09 (session 2).
    Per-job caps exist (`PROMPT_COUNT`, `MAX_RESPONSES_PER_JOB`), but nothing
    stops N parallel submissions. Fine while private; must land before any
    public URL with real keys (roadmap "Next": checker rate limits).
+   **Planned repayment: P5.6** (kill-switch + per-IP/per-brand limits + daily
+   cost cap; decomposed session 3, not yet built).
 6. **DRY_RUN always analyzes the fixed mock company "Yanki Demo Co"**,
    regardless of the submitted URL (documented in architecture.md). Deliberate:
    keeps the mock deterministic end-to-end.
@@ -49,7 +53,8 @@ Last updated: 2026-07-09 (session 2).
    approach 300s.
 9. **`llm_cache` read-then-insert race** under concurrent workers could raise
    on the unique key. Single-worker MVP → not reachable today; guard with
-   upsert when a second worker ships.
+   upsert when a second worker ships. **Planned repayment: P5.2**'s
+   `ON CONFLICT DO NOTHING` upsert (decomposed session 3, not yet built).
 10. **`docker-compose.prod.yml` host ports are hard-bound** (127.0.0.1:8140/8141,
     not parameterized like dev). Intentional for the shared-Caddy topology;
     revisit if the server ever hosts a second Yanki instance.

@@ -54,33 +54,48 @@ tests incl. real-Postgres `SKIP LOCKED` queue tests on `:5433`, **20** vitest
 across 8 files) and a fresh DRY_RUN smoke re-verified the whole loop. See the
 per-task notes below for exactly what was proven vs. authored-but-unproven.
 
-➡️ **Next up (operator-gated): P4.1 — real-key smoke + Week-1 invoice check**,
-then **P4.2 — deploy to test.beyondkaira.com.** Both need real secrets / a
-server, so they wait on the founder-operator. The only key-free remainder is
-**P4.6** — decompose the roadmap **Next** slice into a Phase-5 task breakdown.
+✅ **Session 3 (2026-07-10): P4.6 landed — Phase 5 decomposed (planning only).**
+The roadmap **Next** 2a slice (free public checker) is broken into 11
+session-sized tasks — see **Phase 5** below (preamble, build gate, lanes, merge
+risks, P5.1–P5.11). Produced by a 3-proposal / 3-judge / 3-lens
+adversarial-verify orchestration; no code changed and `make test` stayed green
+(64 backend + 20 frontend).
+
+➡️ **Next up (all operator-gated): P4.1 — real-key smoke + Week-1 invoice
+check**, then **P4.2 — deploy to test.beyondkaira.com.** Both need real
+secrets / a server, so they wait on the founder-operator. **No key-free work
+remains** — P4.6 was the last of it; Phase 5 is decomposed but frozen behind
+its build gate (P4.1 + P4.2 + first green CI).
 Pushing this branch to a GitHub remote is what first exercises all five CI jobs
 (and the Playwright e2e, which has never run anywhere — chromium needs a root
 `install-deps`).
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-09 (session 2).
+Last updated: 2026-07-10 (session 3).
 
-- **Plan completion: 28.5 / 32 tasks ≈ 89%.** Phases 0–3: 26/26 done.
-  Phase 4: P4.3 + P4.5 done, P4.4 authored (counted ½ — proof needs the first
-  push), P4.1 + P4.2 operator-gated, P4.6 not started (planning-only task).
-- **Production readiness: ~70%** (session 1 closed at ~60%). Code, tests
+- **MVP plan completion (Phases 0–4): 29.5 / 32 tasks ≈ 92%.** Phases 0–3:
+  26/26 done. Phase 4: P4.3 + P4.5 + P4.6 done, P4.4 authored (counted ½ —
+  proof needs the first push), P4.1 + P4.2 operator-gated. Nothing key-free
+  remains: every open item now needs the operator.
+- **Phase 5 (post-MVP checker): decomposed, 0 / 11 built.** P4.6's deliverable
+  is the P5.1–P5.11 breakdown below — planning only; its build gate (P4.1 +
+  P4.2 + first green CI) is unmet. Counting Phase 5, the enlarged plan stands
+  at 29.5 / 43 ≈ 69%.
+- **Production readiness: ~70% (unchanged from session 2).** Session 3 was a
+  planning session — no code changed, so no new production proof. Code, tests
   (64 backend + 20 frontend), docs, CI config, secret scanning, and
-  accessibility are done and verified locally. The missing ~30% is entirely
-  outside-world proof, all operator-gated: real-key cost validation (P4.1),
-  first CI execution (push), first supervised deploy (P4.2) — plus rate
-  limiting on the anonymous endpoint before any public URL (accepted debt,
-  roadmap "Next").
+  accessibility remain done and verified locally. The missing ~30% is still
+  entirely outside-world proof, all operator-gated: real-key cost validation
+  (P4.1), first CI execution (push), first supervised deploy (P4.2) — plus
+  rate limiting before any public URL (accepted debt, now a concrete planned
+  task: P5.6).
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
-  unchanged (02-mvp.md §4 frozen). Deviations, all recorded in task notes:
-  P4.3/P4.5 executed before P4.1 (per the session-1 brief's key-blocked
-  fallback), P4.4 split into authored vs. proven, and P4.3 shipped without a
-  `.gitleaks.toml` (clean scan needed no allowlist).
+  unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate). No new
+  deviation this session — P4.6 ran exactly per the session-2 brief's
+  neither-gate-unblocked branch. Prior recorded deviations stand: P4.3/P4.5
+  before P4.1 (key-blocked fallback), P4.4 split authored vs. proven, P4.3
+  without a `.gitleaks.toml`.
 
 ### Agent lanes (parallelism map)
 
@@ -514,7 +529,7 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
 
 ---
 
-## Phase 4 — Polish (in progress — key-free tasks landed session 2)
+## Phase 4 — Polish (P4.3 + P4.5 + P4.6 done, P4.4 authored; P4.1 + P4.2 operator-gated)
 
 Goal: take the working DRY_RUN loop to a live, cost-validated, CI-guarded deploy,
 then start the first [roadmap.md](roadmap.md) **Next** items. Each task is sized
@@ -632,7 +647,709 @@ happy path renders a score.**
   decomposed.
 - **Acceptance:** Phase 5 tasks exist, each session-sized; scope stays frozen per
   02-mvp.md §4 until the MVP is signed off.
+- **Status:** done (session 3) — planning only, per the acceptance: the **Phase 5**
+  section below (preamble + build gate + lanes/merge risks + P5.1–P5.11) is the
+  deliverable. Produced by a 3-proposal (lean-ship / abuse-cost-first /
+  wedge-first) → 3-judge → synthesis → 3-lens adversarial-verify orchestration,
+  with the final verifier findings hand-adjudicated (notably: leads/demand made
+  per-submit via `checker_submissions` so the 24h cache can't lose leads). No
+  build started. **Dependency deviation (recorded):** the *decomposition* ran
+  before P4.1/P4.2 per the session-2 brief's neither-gate-unblocked branch — the
+  listed dependencies gate the Phase-5 *build*, which stays frozen. See
+  [sessions/2026-07-10-01.md](sessions/2026-07-10-01.md).
+
+---
+
+## Phase 5 — Free public checker (roadmap 2a)
+
+**Phase goal.** Ship the free, no-signup public checker: a visitor types a
+**brand + category**, we run **12 fixed prompts × 4 engines** live, and they see a
+GEO score, an engine-by-engine presence map, the **competitors that showed up**,
+and at least one full raw answer — the full report costs an email address. English
+**and** Turkish. This is the demand test, the lead magnet, and the launch asset in
+one ([roadmap.md](roadmap.md) 2a; [00-first-mvp-draft.md](00-first-mvp-draft.md)
+"The free checker").
+
+**Design stance (why this is small).** The checker is a *thin variation of the loop
+we already run*, not a new product. It reuses the existing six-step pipeline, the
+`analyses`/`prompts`/`responses`/`llm_cache` tables, the Postgres-as-queue worker,
+the provider registry, the `GET /api/v1/analyses/{id}` envelope, and the
+`ScoreGauge`/`ResultsTable`/`StepProgress` components **unchanged**. Only four
+things vary: (1) the input is brand+category, so step 1 "discovery" builds a seed
+string instead of crawling a URL and step 2 KYC runs **as-is** (aliases fall out
+for free, and the reused KYC keeps the DRY_RUN score coherent — see below); (2)
+step 3 uses a **fixed, version-stamped** bilingual 12-prompt set instead of
+`PROMPT_COUNT` generated prompts; (3) two read-time results (presence map +
+competitors) are computed from rows we already store; (4) a public surface needs
+abuse guards and a lead capture. Net new persistence: nullable columns on
+`analyses` (`kind`, `brand`, `category`, `lang`) plus **one small append-only
+table**, `checker_submissions` — one row per checker submit (cache-served hits
+included) carrying `ip_hash`, `lang`, and a nullable lead `email`. The table
+exists because the 24h per-brand cache shares one `analyses` row across many
+visitors: leads and demand counting must be per-**submit**, or repeat visitors to
+a hot cached brand would overwrite each other's emails and cache hits would
+vanish from the demand numbers. Net new endpoints: **two**
+(`POST /api/v1/checker`, `POST /api/v1/checker/leads`), both extending the OpenAPI
+app through the `make gen-types` flow. No Redis, no queue, no new infrastructure —
+the boring stack stays boring (NFR-4, ADR-2).
+
+**Build-start GATE.** Phase 5 stays **frozen** until the MVP is signed off — the
+[02-mvp.md §3](02-mvp.md) in-scope flow, which that doc calls "the sole definition
+of done" — with the Phase-4 gate above: **P4.1** (real-key smoke + Week-1
+invoice check) **and** **P4.2** (deploy to `test.beyondkaira.com`) **and** the
+**first green CI run** (the
+first push to a GitHub remote, which is what first exercises all five CI jobs and
+the Playwright e2e). No P5 task starts before those three land. This preamble and
+the task list are the *decomposition* deliverable of **P4.6** — planning only.
+
+**How this handles the 2b/2c coupling.** The roadmap says the checker "needs both
+[engine depth 2b and Turkish 2c] to be credible." We take the **minimal slice of
+each and ruthlessly defer the rest** — we do **not** absorb 2b/2c/2d:
+
+- **2b (engine depth) — minimal slice INCLUDED:** make **Gemini (with search
+  grounding) + Perplexity real** (P5.7). A public "show your work" page cannot
+  display canned *stub* answers under a "Gemini"/"Perplexity" label — that would
+  break the one wedge the checker exists to prove. Per ADR-9 each is a single-file
+  swap behind the existing `Provider` protocol, so this is genuinely small.
+  **DEFERRED (ships degraded, honestly):** the weighted 0–100 score,
+  2-samples-per-prompt, and the sentiment/position extraction pass. The checker
+  ships with the **binary** score `footprints / total_responses` — which the
+  roadmap itself calls "the honest placeholder until [the weighted score] lands."
+  The methodology page (P5.10) says so out loud. These belong to the paid tracking
+  pipeline (2b/2d), not the free checker.
+- **2c (Turkish) — minimal slice INCLUDED:** a **native** (not translated)
+  bilingual fixed prompt set + **Turkish suffix-aware footprint matching with the
+  dotted/dotless-i (İ/ı) casefold guard** + Turkish UI copy (P5.8, P5.9). Because
+  the checker uses a *fixed* 12-prompt set, "native Turkish prompt generation"
+  collapses from an engine into a **curated bilingual list** — a fraction of 2c's
+  scope. **DEFERRED:** the full native prompt-*generation* engine and the
+  cheap-model extraction validated on a labelled corpus — those exist for the app's
+  30–60 site-derived prompts and the weighted score (2c/2d), neither of which the
+  binary checker uses. **Hard launch rule:** if a native speaker cannot sign off
+  the 12 TR prompts and the casefold fixtures, the checker **launches EN-only** (no
+  Turkish beats bad Turkish) — a P5.11 go/no-go condition.
+- **Sequencing of the coupling:** the English vertical (P5.1–P5.5) is built and
+  proven end-to-end under `DRY_RUN=1` first, so a working checker can go to the 5
+  design-partner agencies as a soft preview early. The **loud public launch is
+  gated** on real engines (P5.7), Turkish (P5.8/P5.9), the abuse guards (P5.6), and
+  the "show our work" methodology page (P5.10) all being done — enforced by P5.11.
+
+**Why KYC is reused as-is (not a synthesized "KYC-lite").** The checker keeps the
+existing KYC step rather than skipping it for a brand-derived stub, for two
+reasons. (1) It is **zero new code** — the smallest possible diff, the phase's
+whole stance. (2) It keeps the **DRY_RUN demo coherent**: the mock KYC returns the
+`Yanki Demo Co` profile (aliases include "Yanki") and the mock execution answers
+mention "Yanki Demo Co" ~half the time, so footprint matching yields a **meaningful
+~0.5 score** — exactly what a design-partner soft preview needs. A KYC-lite whose
+aliases are the *real* submitted brand would find nothing in the mock answers
+(which still name "Yanki Demo Co") and collapse the DRY_RUN score to ~0. Under
+**real** keys the real KYC call returns the real brand's profile, so the displayed
+brand is correct at launch; only the $0 DRY_RUN run shows "Yanki Demo Co"
+(tech-debt #6, expected). The one extra analysis-model call per uncached check is
+negligible against the 48 execution probes it accompanies.
+
+**Everything is $0-first.** Every task is buildable and testable under `DRY_RUN=1`
+on the deterministic `MockProvider` (a checker run comes back about "Yanki Demo
+Co", tech-debt #6 — fine and expected). Real-key and live steps are isolated into
+the one operator-gated task (P5.11), mirroring P4.1/P4.2. Real Gemini/Perplexity
+adapters (P5.7) are exercised only via `respx`, never a live call in CI (the P2.2
+pattern).
+
+**New ADRs this phase** (design.md ADR log continues from ADR-18; each recorded
+when its task lands — numbered by *planned* build order; the independent P5.6/P5.7
+may land early, so land order can differ from the numbering): **ADR-19** checker as
+a `kind` of analysis (reuse `analyses`) plus the append-only `checker_submissions`
+table for per-submit demand + lead capture — P5.1; **ADR-20** `llm_cache` upsert for concurrent-worker safety (repays
+tech-debt #9) — P5.2; **ADR-21** competitors computed from the raw answers via a
+deterministic proper-noun co-mention heuristic (not `kyc.competitors`, not an LLM
+pass) — P5.3; **ADR-22** Postgres-derived rate limiting + daily cost cap +
+`CHECKER_ENABLED` kill-switch + salted `ip_hash`, no Redis — P5.6; **ADR-23** real
+Gemini/Perplexity providers (supersedes ADR-9 for the checker panel) — P5.7;
+**ADR-24** Turkish suffix-aware + İ/ı-casefold footprint matching and the fixed
+native TR prompt set — P5.8; **ADR-25** a plain typed i18n dictionary (no
+`next-intl`) — P5.9.
+
+### Sequencing & lanes (parallelism map)
+
+Build order is P5.1 → P5.11. After **P5.1** lands the schema + submit endpoint, the
+pipeline and frontend lanes run in parallel against the contract; **P5.6**
+(hardening) and **P5.7** (real engines) are independent and can run any time;
+**P5.8/P5.9** (Turkish) layer onto the green English vertical; **P5.10**
+(methodology) renders the version-stamped **EN+TR** prompt module (P5.2/P5.8) and
+layers its copy onto the filled TR i18n dict, so it follows **P5.8/P5.9**. **P5.11**
+is the strictly-last operator go-live.
+
+| Task | Lane | Depends on | Can parallel with |
+|---|---|---|---|
+| P5.1 checker submit + leads + 24h reuse | backend-spine | P4.1/P4.2/CI (gate) | — (unblocks the rest) |
+| P5.2 checker pipeline branch + fixed EN prompts + cache upsert | pipeline | P5.1 | P5.6, P5.7 |
+| P5.3 presence map + competitors (read-time) | backend-spine | P5.1, P5.2 | P5.6, P5.7 |
+| P5.4 checker frontend (EN): landing + results | frontend | P5.1, P5.3 | P5.6, P5.7 |
+| P5.5 email gate + full-report reveal | frontend | P5.1, P5.4 | P5.6, P5.7 |
+| P5.6 hardening: kill-switch + rate limit + cost cap | backend-spine | P5.1 | P5.2, P5.3, P5.4, P5.5, P5.7 |
+| P5.7 real Gemini + Perplexity | pipeline | none (gate only) | all |
+| P5.8 Turkish prompts + TR footprint matching | pipeline | P5.2 | P5.6, P5.7 |
+| P5.9 Turkish UI + i18n | frontend | P5.4, P5.5, P5.8 | P5.6, P5.7 |
+| P5.10 methodology page ("show our work") | frontend + infra | P5.2, P5.4, P5.8, P5.9 | P5.6, P5.7 |
+| P5.11 operator: live 4-engine smoke + deploy | infra (operator-gated) | all of the above | — |
+
+**Shared-contract merge risks (coordinate before editing):**
+- **OpenAPI envelope.** P5.1 (new endpoints/request schemas) and P5.3 (`ResultOut`
+  gains nullable `engine_presence` + `competitors_appeared`) both regenerate
+  `shared/contracts/openapi.json` → `frontend/lib/types.ts` via `make gen-types`
+  (never hand-edited; +lead review). Land P5.1 then P5.3 **before** the frontend
+  (P5.4) locks its `contracts.ts` narrowings, or accept one regen.
+- **`backend/app/api/routes.py`** is hand-edited by **P5.1** (the two new routes),
+  **P5.3** (`_to_out` fills the new result fields), and **P5.6** (submit-handler
+  enforcement + IP hashing + kill-switch) — all backend-spine. P5.3 (`_to_out`) and
+  P5.6 (the submit handler) touch **different functions**, so parallel edits rarely
+  textually collide; still, coordinate/sequence the two if run in parallel (same
+  lane, one owner) to keep this shared file merge-clean.
+- **The `analyses` model + the one new Alembic migration** is owned by
+  **backend-spine** (P5.1). It adds *only nullable* columns (+extra-sensitive
+  `alembic/**` review). `ip_hash` lands in P5.1's migration so P5.6 is pure logic
+  with **no** second migration; the pipeline lane reads `analysis.kind` but must
+  not alter the migration.
+- **`runner.py` kind-branch stays in the pipeline lane (P5.2).** The worker
+  (`app/worker.py`, backend-spine) calls `run_pipeline` **unchanged** — the
+  `kind`-branch lives inside `run_pipeline`, so there is **no** worker-dispatch seam
+  and no separate `checker_runner` (deliberately more minimal than a parallel
+  runner). P5.2 only reads P5.1's `kind` column; sequence P5.1 → P5.2. **P5.8**
+  later edits the same file only to thread `analysis.lang` into the footprint step
+  (same pipeline lane; sequence P5.2 → P5.8).
+- **`checker_prompts.py`** (fixed set, `VERSION`-stamped) is edited by P5.2 (EN)
+  then P5.8 (TR) — same lane (pipeline), sequence them. P5.10 renders from a
+  generated JSON export of this same module (via `make gen-types`), never a
+  hand-copy.
+- **`footprint.py`** is edited only by P5.8 (TR suffix + İ/ı casefold). P5.3's
+  summary helper does **not** import it (presence uses the already-stored
+  `footprint` booleans; competitors use their own proper-noun scan), so P5.3 and
+  P5.8 do not collide.
+- **Config env vars** bind all lanes; the new vars (below) are added to
+  `app/config.py` **and** `deploy/.env.example` in the task that introduces them.
+- **`deploy/.env.example` is infra-owned and extra-sensitive (lead review).**
+  P5.1, P5.6, and P5.7 each append vars to it — every such edit gets the infra
+  lane's review. Likewise `app/config.py` is backend-spine-owned: P5.7 (pipeline
+  lane) adding its two keys coordinates with the spine owner.
+- **`Makefile` + `scripts/**` are infra-owned.** P5.10's generator
+  (`scripts/gen_methodology.py`) and its `make gen-types`/CI wiring are the
+  **infra half** of that task; the frontend half only renders the generated
+  artifact. Run P5.10 as one agent granted both ownerships or split the halves —
+  and the same task reconciles design.md §2's "two files are produced by
+  `make gen-types`" statement to name the third generated artifact.
+- **`CHECKER_ENABLED` defaults to `0`** (P5.6). `deploy/.env.example` ships it `0`
+  (prod stays dark); local dev and the CI e2e job set `CHECKER_ENABLED=1`; the
+  operator flips prod to `1` at go-live (P5.11).
+- **`lib/i18n.ts`** is scaffolded (EN) by P5.4, filled (TR) by P5.9, then extended
+  with the methodology copy keys by P5.10 — all frontend-lane, sequence
+  **P5.4 → P5.9 → P5.10** (P5.10 also **writes** it, so it is not merely a reader).
+
+**New env vars introduced this phase** (all with safe defaults; declared in
+`app/config.py` and `deploy/.env.example` — one var, one place — when their task
+lands):
+`CHECKER_RESULT_CACHE_HOURS=24` (P5.1); `CHECKER_ENABLED=0`,
+`CHECKER_RATE_LIMIT_PER_IP_HOUR=5`, `CHECKER_RATE_LIMIT_PER_BRAND_DAY=3`,
+`CHECKER_DAILY_USD_CAP=50`, `RATE_LIMIT_SALT` (P5.6); `GEMINI_API_KEY` +
+`PERPLEXITY_API_KEY` (P5.7, blank under `DRY_RUN`). The fixed prompt set is a
+constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
+`MAX_RESPONSES_PER_JOB=60`, so no cap change is needed.
+
+---
+
+### P5.1 — Checker submit endpoint + lead capture + per-brand 24h reuse
+- **Goal:** the checker's API surface, reusing the `analyses` table. One Alembic
+  migration (a) adds **nullable** columns to `analyses` (`kind` default `'mvp'`,
+  `brand`, `category`, `lang` default `'en'`) and (b) creates the append-only
+  **`checker_submissions`** table (`id`, `analysis_id` FK, `ip_hash` nullable,
+  `lang`, `email` nullable, `created_at`) — one row per accepted checker submit,
+  because the 24h cache shares one `analyses` row across visitors and leads/demand
+  must be counted per submit. New `POST /api/v1/checker {brand, category, lang}` →
+  validates; every accepted submit **inserts a `checker_submissions` row** (the
+  demand signal, cache hits included); if a `done`
+  checker analysis with the same normalized `(brand, category, lang)` exists and is
+  younger than `CHECKER_RESULT_CACHE_HOURS` (24) it **returns that analysis id**
+  (instant, $0 — the draft's "results cached 24h per brand" abuse mitigation);
+  otherwise it inserts a `kind='checker'` row `status='queued'`. Either way it
+  returns **202 `{id, submission_id}`**.
+  Because `analyses.url` is an existing MVP column with a `NOT NULL` constraint we
+  deliberately do **not** alter (the migration stays *nullable-columns-only*), a
+  checker row — which has no crawl target — stores a **deterministic synthetic**
+  `url` (`f"checker://{normalized_brand}/{category}"`) in `create_checker_analysis`,
+  so the insert satisfies the constraint with **no** schema/constraint change and no
+  MVP-column mutation under the `alembic/**` review. New
+  `POST /api/v1/checker/leads {submission_id, email}` sets `email` on **that
+  submission row** (the email gate) — append-only, so two visitors served the same
+  cached analysis each keep their own lead; a shared row never loses an email to an
+  overwrite. `ip_hash` stays null here (populated in P5.6,
+  which owns the salt); the column lands now so P5.6 needs no second migration.
+  Results are polled through the **existing** `GET /api/v1/analyses/{id}` (works for
+  checker rows unchanged).
+- **Why now:** it is the foundation every other P5 task builds on and the contract
+  the pipeline + frontend lanes code against in parallel.
+- **Dependencies:** the P5 build gate (P4.1 + P4.2 + first green CI).
+- **Complexity:** M
+- **Deliverables:** `backend/alembic/versions/<rev>_checker_fields.py` (migration
+  #2: nullable `analyses` columns + the `checker_submissions` table),
+  `backend/app/db/models.py`, `backend/app/api/schemas.py`
+  (`CheckerSubmitRequest`, `CheckerSubmitResponse`, `CheckerLeadRequest`),
+  `backend/app/api/routes.py` (two routes), `backend/app/services/analyses.py`
+  (`create_checker_analysis` with 24h reuse + per-submit recording, `attach_lead`),
+  `backend/app/config.py`
+  (`checker_result_cache_hours`), `deploy/.env.example`
+  (`CHECKER_RESULT_CACHE_HOURS=24`; infra-owned — lead review), regenerated
+  `shared/contracts/openapi.json`
+  + `frontend/lib/types.ts` (via `make gen-types`), ADR-19 recorded in
+  [design.md](design.md), `backend/tests/test_checker_api.py`.
+- **Acceptance:** `POST /api/v1/checker` with a non-empty brand+category → `202`
+  `{id, submission_id}` and the row has `kind='checker'` with a non-null synthetic
+  `url` (the
+  existing `NOT NULL` constraint satisfied, migration still additive-only);
+  a blank brand → `422` and records nothing; a repeat submit
+  within 24h returns the **same** analysis id with **no** new `analyses` row but a
+  **new** `checker_submissions` row (assert analyses count unchanged, submissions
+  count +1 — cache hits still count as demand); two **different** emails submitted
+  via `POST /api/v1/checker/leads` against two submissions of the **same** cached
+  analysis both persist and are both retrievable (no overwrite); existing MVP
+  `POST /api/v1/analyses` behaviour is unchanged (defaults preserve `kind='mvp'`);
+  `make gen-types` produces no drift after commit; `make test` green (DRY_RUN, $0).
 - **Status:** todo
+
+### P5.2 — Checker pipeline branch: seed KYC + versioned fixed 12-prompt set (EN)
+- **Goal:** teach the runner to walk the *same six steps* for a checker row without
+  a crawl. In `run_pipeline`, branch on `analysis.kind`: for `'checker'`, step 1
+  ("discovery") builds a seed string (`f"Brand: {brand}. Category: {category}."`)
+  instead of `discovery.discover(url)` — keeping `current_step='discovery'`,
+  `progress=15`, so the locked progress mapping and `StepProgress` contract are
+  untouched — then KYC (step 2) runs **as-is** on the seed. Step 3 uses a **fixed,
+  `VERSION`-stamped** bilingual 12-prompt set (`checker_prompts.generate(kyc, lang)`,
+  English wired here; Turkish added in P5.8) instead of the templated `PROMPT_COUNT`
+  generator. Steps 4–6 (execute, footprint, scoring) run unchanged. Also make
+  `execute._write_cache` an **upsert** (`INSERT … ON CONFLICT (cache_key) DO
+  NOTHING`, then re-read) so the public checker is safe with more than one worker
+  (repays tech-debt #9; SQLite supports `ON CONFLICT DO NOTHING`).
+- **Why now:** it turns the existing loop into the checker loop with the smallest
+  possible diff; the whole English vertical is DRY_RUN-green once this lands.
+- **Dependencies:** P5.1 (`kind`/`brand`/`category`/`lang` columns).
+- **Complexity:** M
+- **Deliverables:** `backend/app/pipeline/checker_prompts.py` (fixed EN set of 12,
+  keyed by `lang`, carrying a module `VERSION` constant),
+  `backend/app/pipeline/runner.py` (kind branch),
+  `backend/app/pipeline/execute.py` (upsert),
+  `backend/tests/pipeline/test_checker_prompts.py`,
+  `backend/tests/pipeline/test_checker_pipeline.py`,
+  `backend/tests/pipeline/test_execute_race.py` (Postgres-only concurrent-write
+  test, gated like `test_queue_postgres.py`); tech-debt.md #9 marked repaid;
+  ADR-20 recorded in [design.md](design.md).
+- **Acceptance:** a `kind='checker'` analysis under `DRY_RUN=1` walks all six steps
+  with **no** HTTP crawl, produces exactly **12** prompts and **48** responses
+  (12 × 4 mock engines) ≤ `MAX_RESPONSES_PER_JOB`, lands `done` at `progress=100`
+  with a meaningful non-zero `geo_score` and no divide-by-zero; `generate(kyc,'en')`
+  returns 12 non-empty, category-tagged, unique prompts and is byte-stable across
+  runs (version-stamped); a stale-claim re-run is idempotent (no doubled rows); two
+  workers inserting the same `cache_key` at once both succeed with no `IntegrityError`.
+  `make test` green.
+- **Status:** todo
+
+### P5.3 — Engine-presence map + competitors-that-showed-up (read-time aggregation)
+- **Goal:** surface the two checker-only results the draft promises, computed at
+  read time from rows we already store — no new column, no pipeline change. A pure
+  helper `services/checker_summary.py` takes the analysis' `responses` + `kyc` and
+  returns `engine_presence` (per engine: mentioned count / total, derived from the
+  existing `footprint` booleans) and `competitors_appeared` — a deterministic
+  **proper-noun co-mention heuristic over the raw answers**: scan each answer for
+  Title-Case brand tokens, **exclude** the searched brand + `kyc.aliases` + a small
+  EN/TR stoplist, count frequency across answers, return the top names with their
+  mention counts. This captures "brands that showed up" faithfully and at **$0** —
+  it does **not** intersect against `kyc.competitors` (which would miss brands the
+  KYC list never knew) and it makes no LLM call. `ResultOut` gains nullable
+  `engine_presence` + `competitors_appeared`; `_to_out` populates them only for
+  `kind='checker'` rows (null for MVP analyses).
+- **Why now:** these are core free-tier deliverables of 2a ("engine-by-engine
+  presence map + competitors that showed up") and they compose from data the
+  pipeline already writes, so no worker change is needed.
+- **Dependencies:** P5.1 (contract), P5.2 (checker rows to aggregate).
+- **Complexity:** M
+- **Deliverables:** `backend/app/services/checker_summary.py`,
+  `backend/app/api/schemas.py` (`ResultOut` additions + `EnginePresence`,
+  `CompetitorMention` models), `backend/app/api/routes.py` (`_to_out` fills them for
+  checker rows), regenerated `shared/contracts/openapi.json` +
+  `frontend/lib/types.ts`, ADR-21 recorded in [design.md](design.md),
+  `backend/tests/test_checker_summary.py`.
+- **Acceptance:** for a DRY_RUN checker analysis, `GET` returns `engine_presence`
+  with one entry per panel engine whose counts sum-consistently with
+  `total_responses`, and `competitors_appeared` listing the mock filler brands the
+  answers name (**Acme, Globex, Initech, Umbrella, Stark**) — with the searched
+  brand and its aliases excluded — derived from the answers alone, **not** from
+  `kyc.competitors`; for an MVP (`kind='mvp'`) analysis both fields are `null`; the
+  helper is pure and unit-tested; no `gen-types` drift.
+- **Status:** todo
+
+### P5.4 — Checker frontend: bilingual-ready landing + live results (EN)
+- **Goal:** the public checker screens, reusing the existing components. A new
+  `/checker` route with a `CheckerForm` (brand + category inputs + an EN/TR language
+  toggle; English strings wired, Turkish filled in P5.9) that calls a new
+  `createCheckerAnalysis()` and routes to `/checker/[id]` (carrying the response's
+  `submission_id` as a query param — P5.5's email gate posts against it). That
+  results route polls
+  the **existing** `getAnalysis(id)` and renders: the reused `StepProgress` while
+  running (checker step copy may be relabeled — the `current_step` values are
+  unchanged), then the reused `ScoreGauge`, a new `EnginePresenceMap`, a new
+  `CompetitorsList`, and the raw answers (all answers shown here; the email gate that
+  hides all-but-one lands in P5.5). A lightweight `lib/i18n.ts` dictionary (English
+  now; a plain typed dict, not `next-intl`) backs the copy. All new components use
+  [frontend-brandkit.md](frontend-brandkit.md) §2 tokens and honour §7 (never
+  color-only, `aria-live` on the polling status, ≥40px targets, reduced-motion).
+- **Why now:** stands up the English vertical so the whole checker runs end-to-end
+  under a DRY_RUN stack and can preview to design partners before the loud launch.
+- **Dependencies:** P5.1 (endpoints), P5.3 (result fields in the contract).
+- **Complexity:** M
+- **Deliverables:** `frontend/app/checker/page.tsx`,
+  `frontend/app/checker/[id]/page.tsx`,
+  `frontend/components/{CheckerForm,EnginePresenceMap,CompetitorsList}.tsx`,
+  `frontend/lib/i18n.ts` (EN dict + empty `tr` placeholder), `frontend/lib/api.ts`
+  (`createCheckerAnalysis`), `frontend/lib/contracts.ts` (friendly types +
+  narrowings for the new fields), `frontend/tests/CheckerForm.test.tsx`,
+  `frontend/tests/checker.a11y.test.tsx`.
+- **Acceptance:** against a running `DRY_RUN=1` stack, submitting a brand+category
+  navigates to a live progress screen that resolves into a score + presence map +
+  competitors + the raw answers; blank/invalid brand is rejected client-side (no
+  submit fires); the checker screens pass the axe smoke suite (no critical
+  violations) per [frontend-brandkit.md](frontend-brandkit.md) §7;
+  `npm test -- --run` green.
+- **Status:** todo
+
+### P5.5 — Email gate + full-report reveal
+- **Goal:** the checker's lead-capture conversion — the free view shows the score +
+  presence map + competitors + **one** full raw answer; the rest of the answers sit
+  behind an `EmailGate`. On email submit it POSTs `{submission_id, email}` to
+  `/api/v1/checker/leads`
+  (P5.1) — the `submission_id` from the submit response is carried to the results
+  route (query param) — stores the email on that submission, and reveals all
+  answers in place. The one free answer
+  defaults to the first answer that mentions the brand (falls back to the first
+  answer). Clear consent copy; success/error/loading states; a keyboard-accessible,
+  labelled input with an inline `danger` message on an invalid email (never an alert
+  box); locale-aware so P5.9 can fill TR.
+- **Why now:** "the full report costs an email address" is the entire lead-magnet
+  mechanic (roadmap 2a; the first-90-days target of 600 signups from 3000 runs);
+  splitting it from P5.4 keeps both tasks genuinely one-session-sized.
+- **Dependencies:** P5.1 (leads endpoint), P5.4 (results screen to gate).
+- **Complexity:** S
+- **Deliverables:** `frontend/components/EmailGate.tsx`,
+  `frontend/app/checker/[id]/page.tsx` (gate wiring + one-free-answer selection),
+  `frontend/lib/api.ts` (`submitLead`), `frontend/tests/EmailGate.test.tsx`,
+  `frontend/tests/EmailGate.a11y.test.tsx`.
+- **Acceptance:** against a `DRY_RUN=1` stack, before submit the full answer set is
+  hidden behind the gate and exactly one full answer is shown; a valid email reveals
+  the rest and stores it (that submission row's `email` is set — a second visitor's
+  email on the same cached analysis persists alongside, never overwrites); an
+  invalid email shows an
+  inline error and reveals nothing; the gate is keyboard-operable with a visible
+  focus ring and a ≥40px target; axe smoke passes; `npm test -- --run` green.
+- **Status:** todo
+
+### P5.6 — Public hardening: kill-switch + per-IP & per-brand rate limit + daily cost cap
+- **Goal:** make the anonymous endpoint safe to expose — the blocker called out in
+  tech-debt #5, required "before any public URL." All Postgres-backed, no new infra.
+  (a) A `CHECKER_ENABLED` master **kill-switch** (default `0`): while off,
+  `POST /api/v1/checker` returns a friendly parked **503** and enqueues nothing
+  (cached-brand hits from P5.1 still return, since they cost nothing) — the public
+  surface stays dark in every environment until the operator flips it at P5.11.
+  (b) A `services/rate_limit.py` counts this request's **`ip_hash`** rows in
+  `checker_submissions` over the last hour and rejects over
+  `CHECKER_RATE_LIMIT_PER_IP_HOUR`
+  with a **429**, and counts *fresh runs* (new `kind='checker'` rows) of this
+  normalized `(brand, category,
+  lang)` in the last day and rejects over `CHECKER_RATE_LIMIT_PER_BRAND_DAY` with a
+  **429** (a single hot brand hammered from many IPs). (c) It sums today's checker
+  `responses.cost_usd` and, over `CHECKER_DAILY_USD_CAP`, refuses new *runs* with a
+  friendly "the free checker is at capacity today" **503** (the draft's "daily cost
+  check"). `POST /api/v1/checker` derives `ip_hash = sha256(RATE_LIMIT_SALT +
+  X-Forwarded-For client IP)` into `checker_submissions.ip_hash`
+  (privacy-preserving behind
+  the shared Caddy) and enforces all guards before enqueuing.
+- **Why now:** hard prerequisite for a public URL with real keys; a public,
+  anonymous, LLM-spending endpoint without these is an open cost/abuse hole.
+- **Dependencies:** P5.1 (`ip_hash` column; the submit route).
+- **Complexity:** M
+- **Deliverables:** `backend/app/services/rate_limit.py`,
+  `backend/app/api/routes.py` (enforcement + IP hashing + kill-switch guard),
+  `backend/app/config.py` (`checker_enabled`, `checker_rate_limit_per_ip_hour`,
+  `checker_rate_limit_per_brand_day`, `checker_daily_usd_cap`, `rate_limit_salt`),
+  `deploy/.env.example` (all five vars; `CHECKER_ENABLED=0`), ADR-22 recorded in
+  [design.md](design.md); tech-debt.md #5 marked repaid;
+  `backend/tests/test_checker_ratelimit.py`.
+- **Acceptance:** with `CHECKER_ENABLED=0` a fresh submit → `503` parked and
+  nothing recorded, while a 24h cached-brand submit still returns its id; with it
+  `=1`, the
+  `(limit+1)`-th submit from one `ip_hash` within the hour → `429`, and the
+  `(limit+1)`-th distinct submit of one brand within the day → `429` (a
+  cache-served repeat does **not** count); once summed checker cost exceeds a
+  (monkeypatched-low) daily cap, a fresh brand+category submit → `503` while a 24h
+  cached-brand submit still `202`s the existing id; `ip_hash` is a salted hash, never
+  the raw IP; under `DRY_RUN` all costs are `0` so the cap never trips by default;
+  `make test` green.
+- **Status:** todo
+
+### P5.7 — Make Gemini + Perplexity real (the minimal 2b slice)
+- **Goal:** replace the two **stub** providers with real adapters so the public
+  panel shows four *real* engines — Gemini via the Google SDK **with search
+  grounding** (it also stands in for Google until AIO tracking, roadmap 2b/Later),
+  Perplexity via its API — each still satisfying the existing `Provider` protocol,
+  with `cost_usd` from a pinned price-table constant. `DRY_RUN` is unaffected (still
+  four mocks); real adapters are exercised **only** under `respx`, never a live call
+  in CI (the P2.2 pattern). This is the *only* 2b work in Phase 5 — weighted score,
+  2-samples, and sentiment/position stay deferred (the checker ships the honest
+  binary score).
+- **Why now:** a "show your work" page cannot display canned stub text under a real
+  engine's name; four credible engines is the checker's headline promise vs
+  Semrush. Per ADR-9 this is a single-file swap per engine.
+- **Dependencies:** none beyond the P5 gate (pure providers lane); land any time.
+- **Complexity:** M
+- **Deliverables:** `backend/app/providers/gemini_provider.py` +
+  `backend/app/providers/perplexity_provider.py` (real, replacing the stubs),
+  `backend/app/providers/registry.py` (wire real when `DRY_RUN=0`),
+  `backend/app/config.py` (`gemini_api_key`, `perplexity_api_key`),
+  `deploy/.env.example` (`GEMINI_API_KEY`, `PERPLEXITY_API_KEY`, blank in DRY_RUN),
+  ADR-23 recorded in [design.md](design.md),
+  `backend/tests/pipeline/test_gemini_provider.py` +
+  `test_perplexity_provider.py` (respx).
+- **Acceptance:** each adapter satisfies the `Provider` protocol and passes a respx
+  request/response-shape test with a computed non-zero `cost_usd`; grounding is
+  enabled on the Gemini call; `DRY_RUN=1` still returns four mocks and CI makes
+  **no** live provider call; `make test`/`make typecheck` green.
+- **Status:** todo
+
+### P5.8 — Turkish: native fixed prompts + suffix-aware + İ/ı-casefold footprint matching
+- **Goal:** the credibility half of Turkish (2c minimal slice). Add a **native**
+  (not translated) Turkish 12-prompt set to `checker_prompts.py`, selected by
+  `lang='tr'` and carrying the same `VERSION` stamp + a `# NATIVE — native-speaker
+  sign-off required before launch` marker. Add Turkish matching to `footprint.py`,
+  gated on the run's `lang`/locale so English behaviour is byte-unchanged. Because
+  the current `detect(raw_text, kyc)` signature and the `KYC` model carry **no**
+  language, `detect` gains a `lang` parameter (default `'en'`) threaded from
+  `analysis.lang` at its `runner.py` footprint-step call site (the checker branch
+  from P5.2, same pipeline lane); `architecture.md` §2's
+  `footprint.detect(raw_text, kyc)` note is reconciled in P5.11's docs pass. The two
+  `lang`-gated rules: (a) the
+  **dotted/dotless-i casefold** (İ/i and I/ı — the classic Turkish `.lower()` trap
+  that corrupts a brand), and (b) **suffix-aware** brand/alias matching (Turkish
+  agglutination — *Marka'nın*, *Markayı*, *Markada*, *Markadan* — breaks the current
+  `\b`-anchored match). Validate against a small **labelled Turkish fixture** (the
+  brandkit `# TODO(pipeline)` on `footprint.py`).
+- **Why now:** the roadmap is emphatic that Turkish ships *at checker launch* and
+  "is not the corner we cut" — wrong Turkish numbers kill the differentiation story.
+  Fixed prompts make this a curated list + a matching rule, not a generation engine.
+- **Dependencies:** P5.2 (the fixed-prompt module + checker branch to extend).
+- **Complexity:** M
+- **Deliverables:** `backend/app/pipeline/checker_prompts.py` (native TR set),
+  `backend/app/pipeline/footprint.py` (TR casefold + suffix matching, gated on a new
+  `lang` param), `backend/app/pipeline/runner.py` (thread `analysis.lang` into the
+  footprint step; sequences after P5.2's kind-branch, same pipeline lane),
+  ADR-24 recorded in [design.md](design.md),
+  `backend/tests/pipeline/test_footprint_tr.py` (labelled TR precision fixture, incl.
+  İ/ı cases), `backend/tests/pipeline/test_checker_prompts.py` (TR case).
+- **Acceptance:** `generate(kyc, 'tr')` returns 12 non-empty native-Turkish prompts,
+  version-stamped and byte-stable; the labelled fixture asserts a Turkish brand is
+  matched with common suffixes and apostrophe forms, that the İ/ı casefold does not
+  corrupt matches, and that unrelated tokens do **not** match; **all existing
+  English `footprint` tests stay green**; `make test` green under `DRY_RUN`.
+- **Status:** todo
+
+### P5.9 — Turkish UI + i18n wiring
+- **Goal:** make the checker screens speak Turkish. Fill the `tr` dictionary in
+  `lib/i18n.ts` with **native** copy (seeded from
+  [frontend-brandkit.md](frontend-brandkit.md) §6, pending a native-speaker
+  sign-off), wire the EN/TR toggle so every string on the landing, progress,
+  results, and email-gate screens switches, and pass `lang` through to
+  `createCheckerAnalysis`. No new dependency — the plain typed dictionary from P5.4.
+- **Why now:** completes the Turkish launch requirement on the UI side; pairs with
+  P5.8 so the public checker is genuinely bilingual before the loud launch.
+- **Dependencies:** P5.4 (checker screens + i18n scaffold), P5.5 (email-gate copy),
+  P5.8 (TR prompts, so a TR run produces sensible results).
+- **Complexity:** S
+- **Deliverables:** `frontend/lib/i18n.ts` (native TR dict),
+  `frontend/app/checker/**` + `frontend/components/EmailGate.tsx` (toggle wiring),
+  ADR-25 recorded in [design.md](design.md),
+  `frontend/tests/checker-i18n.test.tsx`.
+- **Acceptance:** toggling to Turkish renders all checker copy in Turkish (no
+  English leakage, no untranslated keys) and a TR submit produces a TR-language run;
+  the toggle is keyboard-accessible and axe-clean; `npm test -- --run` green.
+  (Native-speaker sign-off is an operator step tracked in P5.11's launch gate.)
+- **Status:** todo
+
+### P5.10 — Public methodology page ("show our work")
+- **Goal:** the transparency wedge as a public asset. A `/methodology` page
+  publishing the **12 fixed prompts** (EN + TR), the **four engines**, the **score
+  formula** (`footprints / total_responses`, shown), and honest caveats: single
+  sample today, binary score with the weighted 0–100 version coming, the Turkish
+  matching approach and its limits. It renders the exact live prompts from a
+  build-time JSON artifact **generated from** the same **version-stamped**
+  `checker_prompts` module the runner reads (P5.2/P5.8) — never a hand-copy — so the
+  published methodology can never drift from what actually runs. Linked from the
+  checker page.
+- **Why now:** roadmap 2a promises "show our work from the first touch — not a
+  teaser," and the draft makes the public methodology page a headline checker
+  feature and a Product-Hunt/comparison-page talking point; it is cheap (a static
+  read of a generated artifact) and on-wedge.
+- **Dependencies:** P5.2 **and P5.8** (the version-stamped EN+TR prompt module — the
+  TR prompts come from P5.8 and are required for the both-languages render), P5.4
+  (route shell + i18n seam), **P5.9** (the filled TR `i18n.ts` dict — P5.10's
+  methodology copy keys layer on top, so sequence P5.9 → P5.10 to avoid an
+  `i18n.ts` write collision).
+- **Complexity:** S
+- **Deliverables:** *(frontend half)* `frontend/app/methodology/page.tsx`,
+  `frontend/lib/i18n.ts` additions, a link from `/checker`,
+  `frontend/tests/methodology.test.tsx` + `methodology.a11y.test.tsx`;
+  *(infra half — `scripts/**` and the `Makefile` are infra-owned, see the
+  merge-risks note)* `scripts/gen_methodology.py`, the `Makefile` `gen-types`
+  target wiring (+ the CI contract-drift gate picking the new artifact up), and
+  `shared/contracts/checker_methodology.json` (the version-stamped fixed prompts
+  **EN+TR** + score-formula/engine metadata, exported **from the `checker_prompts`
+  source** so the current
+  OpenAPI drift gate also guards it — a generated artifact, **never** a hand-copy;
+  +lead review on `shared/contracts/**`), which the page imports at build time —
+  this keeps the locked **two**-endpoint count (no new HTTP route) and mirrors the
+  `openapi.json` → `types.ts` precedent from P3.1 (no frontend-lane edit of
+  spine-owned `routes.py`); plus a one-line reconciliation of design.md §2's
+  "two files are produced by `make gen-types`" statement (now three artifacts).
+- **Acceptance:** the page renders the exact live 12 prompts (read from the
+  generated `checker_methodology.json`, not a hand-copy — a prompt edit re-exported
+  via `make gen-types` shows up here with **no** second edit), the formula, the
+  engine list, and the stated limitations, in both languages; `make gen-types`
+  produces no drift; it is axe-clean and reachable from `/checker`;
+  `npm test -- --run` green.
+- **Status:** todo
+
+### P5.11 — Operator-gated: live 4-engine smoke, cost soak, deploy, launch gate
+- **Goal:** the one live/real-key task, mirroring P4.1 + P4.2. With `DRY_RUN=0` and
+  all four real keys (Anthropic + OpenAI + the new Gemini + Perplexity), run a real
+  checker analysis and confirm four engines answer, footprints, the presence map,
+  competitors-appeared, and a score; **capture the per-checker-run cost** and check
+  it against `CHECKER_DAILY_USD_CAP` and the pricing model (feeds the roadmap 2d
+  pricing decision). Verify the kill-switch, both rate limits, and the daily cost cap
+  fire live. Redeploy the existing stack to `test.beyondkaira.com` (the `/checker` +
+  `/methodology` + `/api/v1/checker*` routes need **no** Caddy change — the shared
+  Caddy already path-routes `/api/*` → api and everything else → web), then flip
+  `CHECKER_ENABLED=1`. Add a `DRY_RUN=1` checker-happy-path e2e job to CI. The
+  **loud public launch** (Product Hunt / LinkedIn) is the go/no-go gated here on:
+  real engines green, the abuse guards verified live, the methodology page live, and
+  **Turkish signed off by a native speaker — or the checker launches EN-only** ("no
+  Turkish beats bad Turkish"). The EN-only path is a **deliberate,
+  operator-authorized deviation** from the frozen roadmap **2a** "Turkish at checker
+  launch (not a later add)" mandate — invoked **only** with a **named** operator
+  sign-off and recorded as a deviation; the **default/primary path is bilingual at
+  launch** (P5.8/P5.9 build it, so the fallback is a last resort, not the plan).
+- **Why now:** cost, live-provider behaviour, and the launch decision are the only
+  things `DRY_RUN` cannot prove; isolating them keeps every other task $0.
+- **Dependencies:** P5.1–P5.10 all done; P4.2 deploy scripts proven.
+- **Complexity:** M
+- **Deliverables:** a cost + soak note (session summary / private feasibility doc),
+  a `checker` e2e job in `.github/workflows/ci.yml`, a redeploy verification, the
+  recorded per-run cost, a **documented demand-test metrics query** reading from
+  `checker_submissions` (total demand = `count(*)` of submissions, cache-served
+  hits included; fresh runs = `count(*)` of `kind='checker'` analyses; run→email
+  conversion = `count(DISTINCT email)/count(*)` over submissions — per-submit
+  recording means hot cached brands neither undercount demand nor lose leads; still
+  a plain `count()/sum()` read, no new
+  endpoint), and the docs reconciliation (architecture.md checker data-flow, roadmap
+  2a status, tech-debt #5/#9 closed); no new product code unless a bug surfaces.
+- **Acceptance:** a real four-engine checker run completes within the caps with no
+  secret committed; the measured per-run cost **and** the demand-test metrics query
+  (runs + run→email conversion) are recorded; kill-switch, both rate limits, and the
+  daily cap observed firing live; `https://test.beyondkaira.com/checker`
+  serves the loop and `/methodology` is reachable; the `DRY_RUN` checker e2e is green
+  in CI; the launch go/no-go is recorded with the Turkish sign-off (or the
+  named-operator-authorized EN-only deviation) attached.
+- **Status:** todo
+
+---
+
+### Phase-5 assumptions
+- **Reusing `analyses` for checker rows is the right call** (a `kind` column, not a
+  new `checker_analyses` table): the checker walks the identical queue + six-step
+  lifecycle, so a parallel table would duplicate the worker, the GET envelope, and
+  every model. Recorded as **ADR-19** when built.
+- **The worker needs no dispatch change.** The `kind`-branch lives inside
+  `run_pipeline` (pipeline lane), so `app/worker.py` calls it unchanged — no
+  separate `checker_runner`, no worker seam. This is deliberately more minimal than
+  a parallel runner and removes a backend-spine ↔ pipeline merge risk.
+- **KYC is reused as-is, not synthesized.** Running the existing KYC step on the
+  seed string is zero new code and keeps the DRY_RUN score coherent (~0.5, about
+  "Yanki Demo Co" per tech-debt #6); the real brand is shown under real keys. A
+  brand-derived "KYC-lite" was rejected (see the preamble) because under DRY_RUN it
+  collapses the score to ~0.
+- **Lead capture and demand counting are per-submit, not per-analysis-row.** The
+  append-only `checker_submissions` table exists because the 24h cache shares one
+  `analyses` row across many visitors: a single `analyses.email` column would let
+  visitor B's email overwrite visitor A's on a hot cached brand (losing exactly
+  the leads the checker exists to capture), and `count(*)` over `analyses` would
+  miss every cache-served demand signal. One submission row per accepted submit
+  (email nullable until the gate is filled) fixes both; the lead list is
+  `SELECT email FROM checker_submissions WHERE email IS NOT NULL`. Richer lead
+  metadata (consent flags, dedupe) can be added to this table later if marketing
+  needs it.
+- **Competitors are computed from the raw answers**, via a deterministic Title-Case
+  proper-noun co-mention heuristic (brand + aliases excluded, stoplist-filtered),
+  **not** from `kyc.competitors` and **not** via an LLM pass. This is $0,
+  deterministic, and faithful to "brands that showed up" (it surfaces brands the KYC
+  list never knew). Recorded as **ADR-21**.
+- **Checker KYC leans on model world-knowledge**, not a crawl: with only
+  brand+category as seed text, the KYC call infers aliases from what the model knows
+  about the brand. Acceptable for a free checker, and the "show your work" ethos
+  means we display exactly what came back.
+- **One worker suffices for the demand-test volume** (~3000 runs / 90 days ≈ 33/day);
+  the `llm_cache` upsert (P5.2) removes the tech-debt #9 race so a second worker can
+  be added later with no code change.
+- **`ip_hash` is a salted hash of the `X-Forwarded-For` client IP** (privacy behind
+  the shared Caddy), stored instead of a raw IP; the salt (`RATE_LIMIT_SALT`) is a
+  new env var.
+- **`CHECKER_ENABLED` defaults to `0`** — the public route is dark in every
+  environment (`deploy/.env.example` ships `0`) until the operator flips it at
+  P5.11; local dev and the CI e2e job set it `1`.
+- **A plain typed i18n dictionary** (no `next-intl`) is enough for a two-language,
+  handful-of-screens surface — fewer moving parts. Recorded as **ADR-25**.
+- **12 fixed prompts × 4 engines = 48 responses** fits under the existing
+  `MAX_RESPONSES_PER_JOB=60`, so no cost-cap or queue change is needed; **12** is a
+  constant, not a configurable knob.
+- **The binary score is an acceptable, honest ship for the free checker** — the
+  weighted 0–100 score (2b) is deferred and the methodology page (P5.10) says so.
+- **The fixed prompt sets are version-stamped** so the runner and the methodology
+  page read one identical, published source.
+
+### Phase-5 open questions (operator input wanted)
+- **Native Turkish prompts + copy need a native-speaker sign-off** before the loud
+  launch (brandkit §6 / roadmap 2c risk). **Who signs off — and who is the named
+  operator authorized to invoke the EN-only fallback?** Resolve this owner **early**
+  so the primary path (bilingual at launch) stays the default. Confirmed launch
+  rule: if no sign-off by go-live, the checker launches **EN-only** — a **deliberate,
+  recorded deviation** from the frozen roadmap 2a "Turkish at checker launch (not a
+  later add)" mandate — and Turkish follows once signed off (P5.8/P5.9 build it;
+  P5.11 gates the launch on it).
+- **Default abuse thresholds are guesses:** `CHECKER_RATE_LIMIT_PER_IP_HOUR=5`,
+  `CHECKER_RATE_LIMIT_PER_BRAND_DAY=3`, and `CHECKER_DAILY_USD_CAP=50` — the real
+  numbers come from P5.11's Week-1 cost read and the pricing decision. Product to
+  confirm the free-tier generosity vs spend.
+- **Behind-proxy client IP:** rate limiting keys on a salted hash of the client IP;
+  behind the shared Caddy the real client IP arrives via `X-Forwarded-For` — confirm
+  the trusted-proxy handling so the hash keys on the visitor, not the proxy, and is
+  spoof-resistant enough for per-IP limiting. (Infra detail for P5.6/P5.11.)
+- **Which brand gets the "≥1 full raw answer" shown free** — defaulting to the first
+  answer that mentions the brand (falling back to the first answer) unless product
+  prefers a "best" one. Affects the `EmailGate` framing in P5.5.
+- **Competitor precision on real answers:** the deterministic proper-noun heuristic
+  is $0 and faithful on the mock, but can be noisy on real answers. If it proves
+  thin/noisy after P5.11's read, the fallback is one cheap "extract the brands
+  mentioned" LLM pass (pulling a small slice of 2b's extraction forward) — deferred
+  unless the data demands it.
+- **Where the checker lives / email gate strength / captcha:** `/checker` on the
+  same origin is assumed; a single unverified email is assumed for max lead capture
+  (weakest abuse control). Whether to add email verification, disposable-domain
+  blocking, or a lightweight proof-of-work/captcha before go-live is a product/abuse
+  trade-off to confirm at P5.11.
+- **Grounding cost/ToS:** Gemini search grounding and Perplexity live-search add
+  cost and have ToS constraints (the draft flags a "ToS review for all 4 APIs");
+  confirm grounding is on and compliant before P5.7's live path runs in P5.11.
 
 ---
 

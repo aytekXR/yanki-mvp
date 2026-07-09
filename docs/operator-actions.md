@@ -6,23 +6,26 @@ zero keys and zero cost (DRY_RUN). Items are ordered by when you'll want them.
 For the tick-list-only version, see
 [operator-expected.md](operator-expected.md).*
 
-Last updated: 2026-07-09 (session 2).
+Last updated: 2026-07-10 (session 3).
 
-## ⚡ Expected from you right now (session-2 status)
+## ⚡ Expected from you right now (session-3 status)
 
-Session 2 is **complete**. It found **no keys in `deploy/.env` and no GitHub
-remote**, so P4.1 (real-key smoke test) was skipped and the session did the
-key-free tasks instead: P4.3 (CI hardening + gitleaks) done, P4.4 (e2e-in-CI)
-authored, P4.5 (accessibility audit) done — all local gates (lint / typecheck /
-test / contract-drift) and a live DRY_RUN smoke test are green.
+Session 3 is **complete**. It re-checked both gates and found **still no keys
+in `deploy/.env` and still no GitHub remote**, so per the session-2 brief it
+executed the last key-free task: **P4.6 — the roadmap-"Next" free public
+checker is now decomposed into 11 session-sized Phase-5 tasks** (P5.1–P5.11 in
+[implementation-plan.md](implementation-plan.md), with its build gate, lanes,
+and merge risks). Planning only — no code changed; `make test` stayed green
+(64 backend + 20 frontend tests).
 
-**Where we stand:** plan completion ≈ 89% (28.5 of 32 tasks; full snapshot in
+**Where we stand:** MVP plan (Phases 0–4) ≈ 92% (29.5 of 32 tasks; counting the
+11 frozen Phase-5 tasks, 29.5/43 ≈ 69% of the enlarged plan — full snapshot in
 [implementation-plan.md](implementation-plan.md) §Readiness snapshot);
-production readiness ≈ 70% — the missing ~30% is entirely the outside-world
-proof only you can trigger. The session is closed and the next-session brief
-is ready in [sessions/2026-07-09-02.md](sessions/2026-07-09-02.md) §6. To
-unblock the rest of Phase 4, the two items below are what's needed from you —
-everything else can wait:
+production readiness ≈ 70%, **unchanged** — the missing ~30% is entirely the
+outside-world proof only you can trigger. The session is closed and the
+next-session brief is ready in
+[sessions/2026-07-10-01.md](sessions/2026-07-10-01.md) §6. **There is no
+key-free work left** — the two items below gate everything:
 
 1. **Provide real API keys, then decide `DRY_RUN=0` (unblocks P4.1 → P4.2).**
    Put real `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` into `deploy/.env`. See
@@ -84,6 +87,27 @@ everything else can wait:
    - **Supervise the first `make deploy`** — `deploy/deploy.sh` and
      `rollback.sh` are written but have never run against a real server
      (tracked in tech debt).
+
+## Phase-5 decisions wanted (non-blocking today; needed before the checker goes live)
+
+Session 3 decomposed the free public checker (Phase 5). Building it stays
+frozen until the MVP is signed off (items 1–2 above + first deploy), but four
+product decisions and two future keys sit with you — full detail in the
+"Phase-5 open questions" block of
+[implementation-plan.md](implementation-plan.md):
+
+- **Turkish sign-off owner.** Native Turkish prompts + UI copy need a
+  native-speaker sign-off before the loud launch. Who signs off — and who is
+  the named operator authorized to invoke the EN-only fallback ("no Turkish
+  beats bad Turkish")?
+- **Abuse thresholds.** Defaults are guesses: 5 checks/IP/hour, 3 fresh
+  runs/brand/day, $50/day cost cap. Confirm the free-tier generosity vs spend.
+- **Email-gate strength.** A single unverified email is assumed (max lead
+  capture). Add verification / disposable-domain blocking / captcha before
+  go-live, or not?
+- **The one free raw answer.** Default: first answer that mentions the brand.
+- **Two more API keys later** (P5.7/P5.11): `GEMINI_API_KEY` +
+  `PERPLEXITY_API_KEY`, plus a grounding/ToS check for both — not needed now.
 
 ## Local-machine quirks (informational)
 
