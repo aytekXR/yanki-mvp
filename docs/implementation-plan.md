@@ -40,9 +40,11 @@ Related: [architecture.md](architecture.md) (how it's built),
 one orchestrated pass.** The DRY_RUN stack boots and was driven end-to-end —
 `POST` a URL → `202` → the six pipeline steps run → a GEO score renders
 (`geo_score=0.6`, `total_responses=40` = 10 prompts × 4 mock engines); the
-failure and `422` paths hold; `make lint`/`typecheck`/`test` are green (54
+failure and `422` paths hold; `make lint`/`typecheck`/`test` are green (62
 backend tests incl. real-Postgres `SKIP LOCKED` queue tests on `:5433`, 9
-vitest). Default ports stay web `8140` / api `8141`, now overridable via
+vitest). A 5-dimension adversarial review pass confirmed and fixed 16 findings
+(SSRF guard, footprint word boundaries, idempotent re-runs, prod Dockerfile,
+deploy-script fixes) with the live smoke re-verified afterwards. Default ports stay web `8140` / api `8141`, now overridable via
 `YANKI_WEB_PORT`/`YANKI_API_PORT`/`YANKI_DB_PORT`.
 
 ➡️ **Next up: P4.1 — real-key smoke test + Week-1 invoice check.** Phase 4 is the

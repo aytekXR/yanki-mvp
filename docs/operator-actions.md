@@ -54,3 +54,8 @@ Last updated: 2026-07-09 (session 1).
 
 6. **Node is v20 here; README recommends 22 LTS.** Everything builds and tests
    green on 20 — upgrade is optional.
+
+7. **Docker group membership may not apply to long-lived sessions.** `aytek`
+   is in the `docker` group (per `/etc/group`) but processes started before
+   the membership was granted get "permission denied" on the socket. Fix: use
+   a fresh login shell, or prefix commands with `sg docker -c "…"`.
