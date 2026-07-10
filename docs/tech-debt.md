@@ -4,7 +4,9 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (P5.6: **item 21 REPAID** — `POST /api/v1/checker` now
+Last updated: 2026-07-10 (session 12 close: three repayments — #6, #19, #21 —
+and one new minor, **#22** (checker cost-cap window/kind-scope not test-pinned).
+P5.6: **item 21 REPAID** — `POST /api/v1/checker` now
 carries a salted `ip_hash`, a default-OFF `CHECKER_ENABLED` kill-switch, per-IP
 and per-brand rate limits, and a rolling-24h daily cost cap, all enforced before
 enqueuing and all exempting the $0 24h cache hit; the endpoint is safe to expose
@@ -236,3 +238,11 @@ devDependencies).)
     cheaper surface than fresh runs; making the per-IP cap count cache hits would
     429 a hammered-then-cached brand's own legitimate cache hits and break their
     email gate, so cache hits stay exempt.
+22. **The checker cost-cap's window and kind scope are not test-pinned**
+    (verify-lens finding, session 12, accepted as a minor). No test feeds the
+    cap an out-of-24h-window response or a non-checker (`kind='mvp'`) response
+    cost, so a regression that widened/narrowed the rolling window or dropped
+    the `kind='checker'` filter would still pass green. The guard itself is
+    deletion-tested; only these two boundary dimensions are unpinned. Add the
+    two cases when next touching `backend/tests/test_checker_ratelimit.py`
+    (P5.7 retunes `_EST_CHECKER_RUN_COST_USD` — a natural moment).

@@ -170,3 +170,15 @@ expandable per-row full answers in ResultsTable, axe-tested both states,
 deployed. See [sessions/2026-07-10-09.md](sessions/2026-07-10-09.md);
 the next brief remains session 9's §6 (P5.2 → P5.3) with the session
 10/11 amendments.
+
+## Session 12 (2026-07-10, #10) — P5.2 + P5.3 + P5.6, checker backend complete
+
+Operator said "continue implementation using workflows" (+ mid-session:
+close when workflows done; docs-only changes never via workflow). Three
+implement→3-lens-adversarial-verify workflows landed P5.2 (d6e7253, checker
+pipeline branch, debt #6/#19 repaid), P5.3 (c5e4f6d, presence map +
+competitors; verify caught possessive-exclusion bug pre-merge), P5.6
+(7542751, kill-switch + limits + cost cap, debt #21 repaid). Deployed dark
+(CHECKER_ENABLED=0, live-verified 503 + zero rows, $0 spend); co-tenants
+untouched; CI 5/5. See [sessions/2026-07-10-10.md](sessions/2026-07-10-10.md)
+§6 for the next brief (P5.4 → P5.5, or P5.7 if keys arrive).

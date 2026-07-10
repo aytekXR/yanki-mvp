@@ -7,24 +7,26 @@ remote, and CI status at start regardless. Nothing here blocks local
 development — `make dev` + `make test` work with zero keys and zero cost
 (DRY_RUN).*
 
-Last updated: 2026-07-10 (session 11: **items 0–2 all confirmed done by
-you — thank you. Nothing is expected from you right now.** Your follow-up
-"show full LLM responses, on demand" is being shipped this session:
-expandable rows in the response table, collapsed by default. Your KYC
-question answered: **nothing is hardcoded on prod — we really visit the
-site.** The pipeline's discovery step fetches your actual website (homepage
-+ up to 5 same-domain pages; for JS-rendered SPA sites it also mines the
-site's own JS bundles for the embedded text), assembles ~20k chars of real
-site text, and ONE live LLM call (Claude Haiku 4.5) extracts the profile
-from that text under facts-only instructions — empty fields are preferred
-over guesses, and an empty location backfills from the domain (.com.tr →
-Türkiye). The only hardcoded profile anywhere is the deterministic mock
-used by `DRY_RUN=1` dev/CI runs, which prod does not use.)
+Last updated: 2026-07-10 (session 12 close: **nothing is blocking, one
+recommended item** — the two API keys, item 12, now the ONLY thing between
+us and P5.7. This session shipped the entire checker backend and deployed
+it **dark**: P5.2 checker pipeline (`d6e7253`), P5.3 presence map +
+competitors (`c5e4f6d`), P5.6 hardening (`7542751`). The public checker
+endpoint exists on prod but is **parked behind `CHECKER_ENABLED=0`** — a
+fresh submit gets a friendly 503 and records nothing (live-verified, $0).
+Do NOT flip `CHECKER_ENABLED` yet: that is the P5.11 go-live step, after
+the frontend (P5.4/P5.5), real engines (P5.7), Turkish (P5.8/P5.9), the
+methodology page (P5.10), and your item-13 decisions. Your live MVP product
+is untouched: same URL, same behavior, plus each result now carries the
+groundwork for the checker views. Prod spend this session: **$0**.)
 
-## Do now
+## Do now (recommended, not blocking)
 
-Nothing. All operator items are done or parked (items 12–14 below come due
-at P5.7/P5.11).
+- [ ] **Item 12 below — the two API keys.** Everything else in Phase 5
+  that doesn't need you is either done (P5.0–P5.3, P5.6) or pure frontend
+  (P5.4/P5.5, next session, $0). Providing `GEMINI_API_KEY` +
+  `PERPLEXITY_API_KEY` whenever convenient unblocks P5.7 (real 4-engine
+  panel). No urgency — next session proceeds without them.
 
 ## Done (this session and before)
 
@@ -66,8 +68,9 @@ at P5.7/P5.11).
 
 ## Later — Phase 5, the public checker (2/12 built; these come due at P5.7/P5.11)
 
-- [ ] **12. Two more API keys** when P5.7/P5.11 come up (**~2–3 sessions
-  away** at the current pace — P5.2–P5.6 need nothing from you):
+- [ ] **12. Two more API keys** (**now the only P5.7 blocker** as of
+  session 12 — P5.2/P5.3/P5.6 landed without needing you; only P5.4/P5.5
+  frontend work remains keyless):
   `GEMINI_API_KEY` + `PERPLEXITY_API_KEY`, plus a grounding/ToS sanity check
   for both.
 - [ ] **13. Checker product decisions** (needed before the checker goes live):

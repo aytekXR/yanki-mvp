@@ -207,6 +207,19 @@ Poll (every 2s):
 `result` is always present so the frontend renders partial state as the pipeline
 fills it in. See the locked response shape in SPEC §"API contract".
 
+**Checker rows branch inside the same pipeline (P5.2).** A `kind='checker'`
+analysis (ADR-19) walks the same six steps with two substitutions and **zero
+HTTP**: step 1 builds a seed string `Brand: {brand}. Category: {category}.`
+instead of crawling (the synthetic `checker://` url is never fetched), and
+step 3 uses the fixed, `VERSION`-stamped 12-prompt set from
+`checker_prompts.generate(kyc, lang)` (EN wired; unwired langs fall back to EN
+until P5.8) instead of the templated generator. Steps 2 and 4–6, the progress
+mapping, and the `StepProgress` contract are untouched. At read time (P5.3,
+ADR-21) `_to_out` adds two checker-only result fields computed from stored
+rows — `engine_presence` (per-engine mentioned/total from the footprint
+booleans) and `competitors_appeared` (proper-noun co-mention heuristic over the
+raw answers) — both `null` for MVP rows.
+
 ### Rate limiting the submit endpoint (P5.0)
 
 `POST /api/v1/analyses` is public with real keys, so `services/rate_limit.py`
@@ -223,7 +236,24 @@ with a `Retry-After` header:
 | `ANALYSES_DAILY_CAP` | 100 | Global backstop: max submits across all IPs per rolling 24h. |
 | `IP_HASH_SALT` | *(empty)* | Salt mixed into `sha256(salt+ip)`; blank is fine for the MVP. |
 
-P5.6 reuses the `hash_ip` / `client_ip` helpers for the checker endpoint.
+### Hardening the checker endpoint (P5.6)
+
+`POST /api/v1/checker` reuses the same `hash_ip` / `client_ip` helpers (salted
+hash into `checker_submissions.ip_hash`; raw IP never persisted). A **$0 24h
+cache hit is exempt from every guard** — it still returns its analysis id and
+records the submission row the email gate posts against. A **fresh** run is
+guarded in this order, and a rejected submit records **nothing**:
+
+| Env var | Default | Rejection |
+|---|---|---|
+| `CHECKER_ENABLED` | `0` (off) | Master kill-switch: friendly parked `503` — the public surface stays dark in every environment until the operator flips it at P5.11. |
+| `CHECKER_RATE_LIMIT_PER_IP_HOUR` | 10 | `429` + `Retry-After` per client IP per rolling hour (submission rows counted). |
+| `CHECKER_RATE_LIMIT_PER_BRAND_DAY` | 20 | `429`: fresh runs of one normalized `(brand, category, lang)` per rolling day — cache-served repeats don't count. |
+| `CHECKER_DAILY_USD_CAP` | 5.0 | `503` "at capacity": rolling-24h sum of checker `responses.cost_usd` (always $0 under `DRY_RUN`). |
+
+Numeric limits follow the P5.0 idiom: a value of `0` is a clean kill-switch for
+that guard. See ADR-22 for the accepted residuals (XFF spoofability of the
+per-IP guard; unbounded $0 cache-hit submission rows).
 
 ---
 

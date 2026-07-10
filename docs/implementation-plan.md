@@ -210,40 +210,78 @@ deployed. Their KYC question answered on the record: profiles are
 extracted live from the genuinely-fetched site text, nothing hardcoded
 outside the DRY_RUN mock.
 
-➡️ **Next up: P5.2 (checker pipeline branch: seed KYC + fixed 12-prompt
-set + cache upsert) — then P5.3.** Remember: P5.2 removes the session-9
-`claim_next` checker guard; its fixed checker prompt set should follow the
-session-10 template idiom (category questions + brand probes). Parked
-operator items: Gemini/Perplexity keys (P5.7+), checker product decisions
-(P5.11), brandkit v2.
+✅ **Session 12 (2026-07-10): P5.2 + P5.3 + P5.6 — the checker backend is
+complete and deployed dark.** Three implement→adversarial-verify workflows
+(each: 1 implementer + 3 lenses + bounded fix loop), one deploy at close.
+**P5.2** (commit `d6e7253`, ship, 0 blocking): checker rows run all six
+steps with zero HTTP — seed-string discovery, KYC as-is, fixed
+`checker-en-v1` 12-prompt set (`checker_prompts.generate(kyc, lang)`,
+category-question idiom, never names the brand — the checker measures
+*unprompted* visibility; unwired langs fall back to EN until P5.8);
+`_write_cache` upsert (PG-gated race test); `claim_next` guard removed
+(debt #6 + #19 repaid, ADR-20). **P5.3** (commit `c5e4f6d`, ship after one
+fix round — the heuristic lens caught possessive brand forms like "Nike's"
+escaping exclusion, fixed pre-merge): pure read-time
+`services/checker_summary.py` (ADR-21) → nullable checker-only
+`engine_presence` + `competitors_appeared` in `ResultOut`; additive
+contract regen. **P5.6** (commit `7542751`, ship after one fix round;
+abuse-bypass lens probed XFF spoofing/counter bypass/guard ordering):
+default-OFF `CHECKER_ENABLED` kill-switch (parked 503), per-IP 10/h +
+per-brand 20/day 429s, rolling-24h $5 cost cap, salted `ip_hash` on
+submissions; rejected submits record nothing; $0 cache hits exempt (debt
+#21 repaid, ADR-22). Suite grew 113 → 146 backend tests; CI 5/5 green;
+deployed (last-good `7542751`), co-tenants byte-identical, live-verified at
+$0: fresh checker submit → 503 "not open yet" + zero rows, MVP results
+unchanged with the new fields `null`. One workflow failure recovered: the
+P5.3 implementer finished but died emitting its structured report
+(oversized fields); resumed with a report-reconstruction stage —
+implementation was intact, nothing redone.
+
+➡️ **Next up: P5.4 (checker frontend EN: landing + live results) → P5.5
+(email gate).** Both frontend-lane, $0, DRY_RUN-testable; the whole English
+checker vertical becomes demoable. **P5.7 (real Gemini + Perplexity) is the
+alternative if the operator supplies the two keys** (operator-expected item
+12 — now the only thing P5.7 waits on; respx-only in CI either way). Then
+P5.8/P5.9 (Turkish) → P5.10 (methodology) → P5.11 (operator go-live).
+Parked operator items: checker product decisions (P5.11), brandkit v2.
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 9 close — P5.0 rate limit + P5.1 checker
-API live on prod).
+Last updated: 2026-07-10 (session 12 close — P5.2 + P5.3 + P5.6 deployed;
+checker backend complete, dark behind the kill-switch).
 
 - **MVP plan completion (Phases 0–4): 32 / 32 tasks = 100%, all residuals
   closed.** Phases 0–3: 26/26. Phase 4: 6/6, and session 8 closed P4.1's
   last residual (the OpenAI cost leg, measured live on prod). The KYC card
   and the live-mode flip are operator-directed polish/ops inside completed
   surfaces, not new plan tasks.
-- **Phase 5 (post-MVP checker): 2 / 12 built** — P5.0 + P5.1 landed and
-  are live on prod (session 9). Build gate OPEN, nothing operator-blocked
-  until P5.7 (keys) / P5.11 (go-live decisions). Counting Phase 5, the
-  enlarged plan stands at 34 / 44 ≈ 77%. Next session: **P5.2, then P5.3**.
-- **Production readiness: ~98%.** Code, tests (82 backend + 25 frontend),
-  docs, CI (5/5 green), secret scanning, accessibility, deploy/rollback
-  exercised, TLS via the shared Caddy — and the product runs **fully live
-  in production**: real Anthropic + OpenAI panel at a measured
-  **$0.0162/analysis ≈ 1% of the $49 plan** (NFR-1 headroom ~35×), now
-  behind **P5.0 rate limiting** (5/IP/hour + 100/day → worst-case abuse
-  ≈$1.62/day; tech-debt #2 repaid). The missing ~2%, in priority order:
+- **Phase 5 (post-MVP checker): 5 / 12 built** — P5.0/P5.1 (session 9) +
+  P5.2/P5.3/P5.6 (session 12) all deployed. The checker **backend vertical
+  is complete**: submit → pipeline → scored result with presence map +
+  competitors, hardened, parked dark behind `CHECKER_ENABLED=0`. Counting
+  Phase 5, the enlarged plan stands at **37 / 44 ≈ 84%**. Next session:
+  **P5.4 → P5.5** (frontend; $0, keyless), or **P5.7 if the operator
+  supplies the Gemini/Perplexity keys** (the only P5.7 blocker).
+- **Production readiness: ~98%** (definition unchanged — this metric is the
+  LIVE MVP product; the checker is intentionally unreleased until P5.11).
+  Code, tests (**146 backend + 31 frontend**), docs, CI (5/5 green), secret
+  scanning, accessibility, deploy/rollback exercised, TLS via the shared
+  Caddy — the product runs **fully live in production**: real Anthropic +
+  OpenAI panel at a measured **$0.0162/analysis ≈ 1% of the $49 plan**
+  (NFR-1 headroom ~35×), behind P5.0 rate limiting (5/IP/hour + 100/day →
+  worst-case abuse ≈$1.62/day) **plus the operator's $10 console caps on
+  both providers** (session 11). The missing ~2%, in priority order:
   KYC-cost persistence + adapter contract tests (debt #1); multi-stage prod
-  web image (debt #18); XFF-spoofable per-IP limit is accepted MVP posture
-  (daily cap is the backstop). Gemini/Perplexity remain stubs by design
-  until P5.7.
+  web image (debt #18); XFF-spoofable per-IP limits are accepted posture on
+  both public endpoints (global/daily caps are the backstop).
+  Gemini/Perplexity remain stubs by design until P5.7.
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate).
+  **Session-12 sequencing change (order, not scope): P5.6 pulled ahead of
+  P5.4/P5.5** — the plan explicitly allows it ("P5.6 … can run any time") and
+  the session-9 brief recommended it: hardening landed in the same session
+  that made checker rows runnable, so prod never had a runnable-but-
+  unthrottled checker. The planned build order resumes at P5.4.
   **Session-6 operator-driven change (models, not scope): "use the cheapest
   models"** — OpenAI provider switched `gpt-4o-mini` → `gpt-5-nano`
   (Anthropic already on Haiku 4.5, the cheapest); P4.1 then ran live with an
@@ -1207,7 +1245,10 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   change that lands the runner branch, and keep its
   `test_claim_next_skips_checker_rows` replaced by a claims-checker-rows
   assertion — otherwise checker rows never run.**
-- **Status:** todo
+- **Status:** ✅ done (session 12, commit `d6e7253` — ship, 0 blocking findings;
+  guard removed, upsert PG-race-tested; prompt set `checker-en-v1` never names
+  the brand: the checker measures unprompted visibility. Card's "#7 repaid" was
+  a stale renumbering — the real items were #6 + #19, both repaid.)
 
 ### P5.3 — Engine-presence map + competitors-that-showed-up (read-time aggregation)
 - **Goal:** surface the two checker-only results the draft promises, computed at
@@ -1241,7 +1282,9 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   brand and its aliases excluded — derived from the answers alone, **not** from
   `kyc.competitors`; for an MVP (`kind='mvp'`) analysis both fields are `null`; the
   helper is pure and unit-tested; no `gen-types` drift.
-- **Status:** todo
+- **Status:** ✅ done (session 12, commit `c5e4f6d` — ship after one fix round:
+  possessive brand forms escaped exclusion, caught by the adversarial heuristic
+  lens and fixed pre-merge; 23-test suite; contract additive, drift-free.)
 
 ### P5.4 — Checker frontend: bilingual-ready landing + live results (EN)
 - **Goal:** the public checker screens, reusing the existing components. A new
@@ -1348,7 +1391,12 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   cached-brand submit still `202`s the existing id; `ip_hash` is a salted hash, never
   the raw IP; under `DRY_RUN` all costs are `0` so the cap never trips by default;
   `make test` green.
-- **Status:** todo
+- **Status:** ✅ done (session 12, commit `7542751` — ship after one fix round;
+  abuse-bypass lens probed XFF/counter/ordering holes. Defaults: 10/IP/h,
+  20/brand/day, $5/day. Reused the P5.0 `IP_HASH_SALT` — the card's fifth var
+  `rate_limit_salt` was aspirational, no second salt shipped. Card's "#3
+  repaid" was stale renumbering; the real item was #21, repaid. Live-verified
+  parked: prod fresh submit → 503, zero rows recorded.)
 
 ### P5.7 — Make Gemini + Perplexity real (the minimal 2b slice)
 - **Goal:** replace the two **stub** providers with real adapters so the public
