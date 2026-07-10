@@ -30,25 +30,25 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
 
   return (
     <div className="overflow-x-auto rounded-xl border border-surface-border">
-      <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+      <table className="w-full min-w-[640px] table-fixed border-collapse text-left text-sm">
         <thead>
           <tr className="bg-surface-muted text-xs font-medium uppercase tracking-wider text-surface-subtle">
-            <th scope="col" className="px-4 py-3">
+            <th scope="col" className="w-[12%] px-4 py-3">
               Engine
             </th>
-            <th scope="col" className="px-4 py-3">
+            <th scope="col" className="w-[16%] px-4 py-3">
               Model
             </th>
-            <th scope="col" className="px-4 py-3">
+            <th scope="col" className="w-[10%] px-4 py-3">
               Footprint
             </th>
-            <th scope="col" className="px-4 py-3">
+            <th scope="col" className="w-[26%] px-4 py-3">
               Matched snippet
             </th>
-            <th scope="col" className="px-4 py-3">
+            <th scope="col" className="w-[24%] px-4 py-3">
               Prompt
             </th>
-            <th scope="col" className="px-4 py-3">
+            <th scope="col" className="w-[12%] px-4 py-3">
               Answer
             </th>
           </tr>
@@ -65,11 +65,15 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
                   <td className="px-4 py-3 font-medium text-surface-foreground">
                     {response.engine}
                   </td>
-                  <td className="px-4 py-3 text-surface-subtle">{response.model}</td>
+                  <td className="px-4 py-3 text-surface-subtle">
+                    <span className="block truncate" title={response.model}>
+                      {response.model}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <FootprintBadge value={response.footprint} />
                   </td>
-                  <td className="max-w-xs px-4 py-3">
+                  <td className="px-4 py-3">
                     {response.matched_snippet ? (
                       <span
                         className="block truncate font-mono text-xs text-surface-foreground"
@@ -83,7 +87,7 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
                       </span>
                     )}
                   </td>
-                  <td className="max-w-xs px-4 py-3">
+                  <td className="px-4 py-3">
                     <span
                       className="block truncate text-surface-subtle"
                       title={promptText.get(response.prompt_id) ?? ''}

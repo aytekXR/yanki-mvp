@@ -99,6 +99,33 @@ describe('ResultsTable full-answer expansion', () => {
     expect(screen.getByText('(empty answer)')).toBeInTheDocument()
   })
 
+  it('uses a fixed table layout so columns cannot overflow', () => {
+    const { container } = render(
+      <ResultsTable responses={responses} prompts={prompts} />,
+    )
+    const table = container.querySelector('table')
+    expect(table).not.toBeNull()
+    expect(table).toHaveClass('table-fixed')
+  })
+
+  it('truncates long snippets and models inside a titled span', () => {
+    const longSnippet =
+      'Acmelongunbrokenmonospacedsnippetstringthatwouldotherwiseblowoutitscolumnwidthonwidedesktops'
+    const longModel = 'gemini-flash-lite-latest:ungrounded'
+    const pathological: AnalysisResponse[] = [
+      { ...responses[0], matched_snippet: longSnippet, model: longModel },
+    ]
+    render(<ResultsTable responses={pathological} prompts={prompts} />)
+
+    const snippet = screen.getByText(longSnippet)
+    expect(snippet).toHaveClass('truncate')
+    expect(snippet).toHaveAttribute('title', longSnippet)
+
+    const model = screen.getByText(longModel)
+    expect(model).toHaveClass('truncate')
+    expect(model).toHaveAttribute('title', longModel)
+  })
+
   it('links each toggle to the answer region it controls', async () => {
     const user = userEvent.setup()
     render(<ResultsTable responses={responses} prompts={prompts} />)
