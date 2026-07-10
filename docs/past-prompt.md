@@ -48,3 +48,25 @@ changed. See [sessions/2026-07-10-01.md](sessions/2026-07-10-01.md); the
 next-session brief lives at the end of that log (§6).
 
 ---
+
+## Session 4 — 2026-07-10
+
+**Prompt executed:** "Using workflows, continue implementation. Is anything
+expected from me? If so, log here and also to a operator expected md file.
+Start from @docs/resume-prompt.md" — resolved via the session-3 brief
+(sessions/2026-07-10-01.md §6) **as superseded by its §9 post-close
+addendum**: the operator had pushed to GitHub and the first CI run was 4/5
+green with e2e red, so the push-branch ran: fix the e2e job, prove all five
+CI jobs green.
+
+**Outcome:** e2e fixed (install-order: npm ci + Playwright before the
+bind-mounting compose boot — dockerd was root-owning the anonymous-volume
+mountpoint), verified locally by repro before pushing; run 29059944092 =
+5/5 green with the Playwright spec's first-ever execution (`1 passed`,
+6.6s) → P4.4 done; action majors bumped off Node 20 (checkout v7 /
+setup-node v6 / setup-uv v7), run 29060093072 = 5/5 green, deprecation
+annotations cleared. Tech-debt 2–3 repaid (list renumbered). See
+[sessions/2026-07-10-02.md](sessions/2026-07-10-02.md); the next-session
+brief lives at the end of that log (§6).
+
+---

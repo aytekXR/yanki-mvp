@@ -6,38 +6,38 @@ Maintained by the orchestrator at every session close. Tick items as you do
 them; the next session re-checks `deploy/.env`, the git remote, and CI status
 at start regardless.*
 
-Last updated: 2026-07-10 (post-close addendum — you pushed! CI observed).
+Last updated: 2026-07-10 (session 4 close — **CI is fully green: 5/5 jobs**).
 
-**Update: you completed item 2** — `main` is on `github.com/aytekXR/yanki-mvp`
-and the first-ever CI run executed: **4 of 5 jobs green on the first attempt**
-(backend / frontend / contract / secrets-gitleaks). The **e2e job is red**, as
-predicted — cause diagnosed (a file-ownership/order bug in the CI job itself,
-not in the app), **fix is the agent's first task next session, nothing needed
-from you**. Session 3 also delivered P4.6 (the public-checker Phase-5 plan,
-P5.1–P5.11) — the last key-free task.
+**Session-4 result: the e2e job is fixed and ALL FIVE CI jobs are green**
+(runs 29059944092 + 29060093072) — the Playwright happy path executed for the
+first time anywhere and passed (`1 passed, 6.6s`), and the deprecated-action
+annotations are cleared. **Nothing was needed from you for that, and item 3
+below is now fully optional** (CI covers browser e2e). The MVP build is done
+except for the two things only you can unblock: real keys (item 1), then the
+supervised first deploy (items 4–7).
 
 ## Do now — the one thing everything else waits on
 
 - [ ] **1. Real API keys → unblocks P4.1 (cost validation), then P4.2 (deploy).**
-  Spends real money, so timing is your call.
+  Spends real money, so timing is your call. Until then, sessions have only
+  one small hygiene fallback left (ESLint CLI migration, debt #10).
   ```bash
   cp deploy/.env.example deploy/.env
   # then edit: ANTHROPIC_API_KEY=…, OPENAI_API_KEY=…, DRY_RUN=0
   ```
 - [x] **2. Push to GitHub → first-ever CI run.** ✅ Done (2026-07-10,
-  `aytekXR/yanki-mvp`). Result: backend / frontend / contract / secrets green;
-  **e2e red — agent-side fix queued, no action needed from you.** README's
-  clone URL updated to the real remote.
+  `aytekXR/yanki-mvp`) — and as of session 4 **all five jobs are green**
+  (backend / frontend / contract / secrets / e2e).
 
 ## Optional
 
-- [ ] **3. Local browser e2e needs root once** (skippable — CI covers it after
-  item 2):
+- [ ] **3. Local browser e2e needs root once** (fully skippable — CI now
+  proves the browser e2e on every push):
   ```bash
   cd frontend && sudo npx playwright install-deps chromium
   ```
 
-## Later — at first deploy (P4.2, after items 1–2)
+## Later — at first deploy (P4.2, after item 1)
 
 - [ ] **4. Server `deploy/.env`** from `.env.example` with real secrets
   (`POSTGRES_PASSWORD` must be set — `make deploy` refuses without it).

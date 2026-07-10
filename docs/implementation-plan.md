@@ -67,41 +67,58 @@ jobs green on the first attempt** (backend / frontend / contract-drift /
 secrets-gitleaks). The **e2e job is red** — it died at `npm ci`, before
 Playwright: the job boots the bind-mounting compose stack first, the web
 container (root) writes `frontend/node_modules` into the checkout, and the
-runner user then gets `EACCES`. Diagnosis in tech-debt item 2.
+runner user then gets `EACCES`. (Diagnosed in tech-debt item 2 at the time;
+repaid session 4.)
 
-➡️ **Next up: (1) fix the e2e CI job** (order/ownership fix in
-`.github/workflows/ci.yml` — the first code task of session 4, no operator
-input needed), then the operator-gated pair: **P4.1 — real-key smoke + Week-1
-invoice check** (needs keys in `deploy/.env`), then **P4.2 — deploy to
-test.beyondkaira.com** (supervised). Phase 5 is decomposed but frozen behind
-its build gate (P4.1 + P4.2 + all-five-green CI).
+✅ **Session 4 (2026-07-10): the CI proof completed — all five jobs green.**
+The e2e failure's mechanism was confirmed and fixed: dockerd creates a missing
+host-side anonymous-volume mountpoint (`frontend/node_modules`) as root when
+the compose stack boots before `npm ci`; the job now installs frontend deps +
+Playwright *before* the boot, so the runner-owned dir is reused and ownership
+is preserved. Reproduced and the fixed order verified locally in a scratch
+checkout before pushing. Run 29059944092: **5/5 green — the Playwright
+happy-path spec executed for the first time anywhere, `1 passed (6.6s)`
+(P4.4 done)**. A second push bumped the Node-20-deprecated action majors
+(checkout v7, setup-node v6, setup-uv v7 — release notes checked against our
+usage; setup-uv capped at v7 because v8 dropped floating major tags); run
+29060093072 stayed **5/5 green** with the deprecation annotations cleared.
+Tech-debt items 2–3 repaid (list renumbered; see tech-debt.md header).
+
+➡️ **Next up: the operator-gated pair — P4.1 — real-key smoke + Week-1
+invoice check** (needs keys in `deploy/.env`; the only thing expected from
+the operator), then **P4.2 — deploy to test.beyondkaira.com** (supervised).
+With CI fully green, the Phase-5 build gate is missing only P4.1 + P4.2. The
+one remaining key-free fallback: tech-debt #10 (`next lint` → ESLint CLI
+migration).
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 3 + post-close CI addendum).
+Last updated: 2026-07-10 (session 4 close).
 
-- **MVP plan completion (Phases 0–4): 29.5 / 32 tasks ≈ 92%.** Phases 0–3:
-  26/26 done. Phase 4: P4.3 + P4.5 + P4.6 done, P4.4 authored (counted ½ —
-  proof needs the first push), P4.1 + P4.2 operator-gated. Nothing key-free
-  remains: every open item now needs the operator.
+- **MVP plan completion (Phases 0–4): 30 / 32 tasks ≈ 94%.** Phases 0–3:
+  26/26 done. Phase 4: P4.3 + P4.4 + P4.5 + P4.6 done (P4.4 proven in CI,
+  session 4), P4.1 + P4.2 operator-gated. Nothing key-free remains on the
+  critical path: every open task now needs the operator (the sole key-free
+  fallback is hygiene debt #10, the ESLint CLI migration).
 - **Phase 5 (post-MVP checker): decomposed, 0 / 11 built.** P4.6's deliverable
-  is the P5.1–P5.11 breakdown below — planning only; its build gate (P4.1 +
-  P4.2 + first green CI) is unmet. Counting Phase 5, the enlarged plan stands
-  at 29.5 / 43 ≈ 69%.
-- **Production readiness: ~72%** (session 3 closed at ~70%; nudged by the
-  post-close first CI run). Code, tests (64 backend + 20 frontend), docs, CI
-  config, secret scanning, and accessibility are done and verified locally —
-  and **4 of the 5 CI jobs are now proven on a real runner** (first push,
-  2026-07-10). Still missing, in order: the e2e CI job green (diagnosed fix,
-  agent-side), real-key cost validation (P4.1, operator), first supervised
-  deploy (P4.2, operator) — plus rate limiting before any public URL
-  (accepted debt, planned task P5.6).
+  is the P5.1–P5.11 breakdown below — planning only; its build gate now lacks
+  only P4.1 + P4.2 (the all-five-green CI leg was met 2026-07-10). Counting
+  Phase 5, the enlarged plan stands at 30 / 43 ≈ 70%.
+- **Production readiness: ~75%** (session 3 closed at ~70%, post-close CI
+  nudged it to ~72%; the full CI proof adds the rest). Code, tests (64
+  backend + 20 frontend), docs, CI, secret scanning, and accessibility are
+  done — and **all five CI jobs are proven green on a real runner** (runs
+  29059944092 + 29060093072, 2026-07-10), including the first-ever Playwright
+  spec execution. Still missing, in order: real-key cost validation (P4.1,
+  operator), first supervised deploy (P4.2, operator) — plus rate limiting
+  before any public URL (accepted debt #3, planned task P5.6).
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate). No new
-  deviation this session — P4.6 ran exactly per the session-2 brief's
-  neither-gate-unblocked branch. Prior recorded deviations stand: P4.3/P4.5
-  before P4.1 (key-blocked fallback), P4.4 split authored vs. proven, P4.3
-  without a `.gitleaks.toml`.
+  deviation this session — session 4 executed the push-branch of the
+  session-3 brief (fix e2e, prove five green) plus the opportunistic action
+  bumps that brief pre-authorized. The P4.4 authored-vs-proven split is
+  resolved (proven). Prior recorded deviations stand: P4.3/P4.5 before P4.1
+  (key-blocked fallback), P4.3 without a `.gitleaks.toml`.
 
 ### Agent lanes (parallelism map)
 
@@ -535,7 +552,7 @@ GEO score with every raw answer behind it — the whole-loop definition of done.
 
 ---
 
-## Phase 4 — Polish (P4.3 + P4.5 + P4.6 done, P4.4 authored; P4.1 + P4.2 operator-gated)
+## Phase 4 — Polish (P4.3 + P4.4 + P4.5 + P4.6 done; P4.1 + P4.2 operator-gated)
 
 Goal: take the working DRY_RUN loop to a live, cost-validated, CI-guarded deploy,
 then start the first [roadmap.md](roadmap.md) **Next** items. Each task is sized
@@ -600,7 +617,10 @@ happy path renders a score.**
   **First-push proof landed 2026-07-10** (run 29058049101 on
   `aytekXR/yanki-mvp`): backend, frontend, contract-drift, and secrets all
   green on the first-ever real-runner execution — the P4.3 jobs are proven.
-  (The fifth job, P4.4's e2e, failed pre-Playwright; see P4.4.)
+  (The fifth job, P4.4's e2e, went green in session 4 after its install-order
+  fix; see P4.4.) Session 4 also bumped the action majors off the deprecated
+  Node-20 runtime (checkout v7, setup-node v6, setup-uv v7 — v8 dropped
+  floating major tags, so v7 keeps the repo's `@vN` pin style).
 
 ### P4.4 — Playwright in CI
 - **Goal:** a CI job that boots the `DRY_RUN=1` stack, sets `E2E_BASE_URL`, and
@@ -610,19 +630,20 @@ happy path renders a score.**
 - **Complexity:** S
 - **Deliverables:** an e2e job in `.github/workflows/`.
 - **Acceptance:** the happy path runs (not skipped) and passes in CI.
-- **Status:** done pending first-push proof (operator). The `e2e` job exists in
-  `.github/workflows/ci.yml`: it writes `deploy/.env` with `DRY_RUN=1`, brings
-  the stack up (`docker compose up -d --build`), waits on api `:8141/healthz`
-  and web `:8140`, `npm ci`, `npx playwright install --with-deps chromium`, runs
-  `e2e/happy-path.spec.ts` with `E2E_BASE_URL=http://localhost:8140`, dumps
-  compose logs on failure, and tears down (`down -v`, always). **Executed once
-  and failed (2026-07-10, first push, run 29058049101):** the stack booted and
-  both health waits passed on the runner, but `npm ci` died with `EACCES` —
-  the compose boot (bind mount, root container) precedes the install and
-  root-owns `frontend/node_modules`. The Playwright spec itself still has
-  never run anywhere. **Fix is session 4's first task:** install deps before
-  booting the stack and/or `chown` the mount (diagnosis in tech-debt item 2);
-  status stays *authored, unproven* until the job goes green.
+- **Status:** done (session 4 — proven in CI). The `e2e` job in
+  `.github/workflows/ci.yml` runs `npm ci` + `npx playwright install
+  --with-deps chromium` **first**, then writes `deploy/.env` with `DRY_RUN=1`,
+  brings the stack up (`docker compose up -d --build`), waits on api
+  `:8141/healthz` and web `:8140`, runs `e2e/happy-path.spec.ts` with
+  `E2E_BASE_URL=http://localhost:8140`, dumps compose logs on failure, and
+  tears down (`down -v`, always). The first-push run (29058049101) had the
+  installs *after* the boot and died `EACCES`: dockerd creates the missing
+  anonymous-volume mountpoint `frontend/node_modules` on the host as root.
+  The reorder was reproduced/verified locally in a scratch checkout, then
+  **run 29059944092 went green: `1 passed (6.6s)` — the spec's first-ever
+  execution, not skipped** (acceptance met). Known accepted dependency: the
+  discovery step really fetches example.com even under DRY_RUN, so the job
+  needs runner egress (tech-debt #9).
 
 ### P4.5 — Accessibility + polish audit
 - **Goal:** audit the three screens against [frontend-brandkit.md](frontend-brandkit.md)
@@ -757,12 +778,12 @@ aliases are the *real* submitted brand would find nothing in the mock answers
 (which still name "Yanki Demo Co") and collapse the DRY_RUN score to ~0. Under
 **real** keys the real KYC call returns the real brand's profile, so the displayed
 brand is correct at launch; only the $0 DRY_RUN run shows "Yanki Demo Co"
-(tech-debt #6, expected). The one extra analysis-model call per uncached check is
+(tech-debt #4, expected). The one extra analysis-model call per uncached check is
 negligible against the 48 execution probes it accompanies.
 
 **Everything is $0-first.** Every task is buildable and testable under `DRY_RUN=1`
 on the deterministic `MockProvider` (a checker run comes back about "Yanki Demo
-Co", tech-debt #6 — fine and expected). Real-key and live steps are isolated into
+Co", tech-debt #4 — fine and expected). Real-key and live steps are isolated into
 the one operator-gated task (P5.11), mirroring P4.1/P4.2. Real Gemini/Perplexity
 adapters (P5.7) are exercised only via `respx`, never a live call in CI (the P2.2
 pattern).
@@ -772,7 +793,7 @@ when its task lands — numbered by *planned* build order; the independent P5.6/
 may land early, so land order can differ from the numbering): **ADR-19** checker as
 a `kind` of analysis (reuse `analyses`) plus the append-only `checker_submissions`
 table for per-submit demand + lead capture — P5.1; **ADR-20** `llm_cache` upsert for concurrent-worker safety (repays
-tech-debt #9) — P5.2; **ADR-21** competitors computed from the raw answers via a
+tech-debt #7) — P5.2; **ADR-21** competitors computed from the raw answers via a
 deterministic proper-noun co-mention heuristic (not `kyc.competitors`, not an LLM
 pass) — P5.3; **ADR-22** Postgres-derived rate limiting + daily cost cap +
 `CHECKER_ENABLED` kill-switch + salted `ip_hash`, no Redis — P5.6; **ADR-23** real
@@ -938,7 +959,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   generator. Steps 4–6 (execute, footprint, scoring) run unchanged. Also make
   `execute._write_cache` an **upsert** (`INSERT … ON CONFLICT (cache_key) DO
   NOTHING`, then re-read) so the public checker is safe with more than one worker
-  (repays tech-debt #9; SQLite supports `ON CONFLICT DO NOTHING`).
+  (repays tech-debt #7; SQLite supports `ON CONFLICT DO NOTHING`).
 - **Why now:** it turns the existing loop into the checker loop with the smallest
   possible diff; the whole English vertical is DRY_RUN-green once this lands.
 - **Dependencies:** P5.1 (`kind`/`brand`/`category`/`lang` columns).
@@ -950,7 +971,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   `backend/tests/pipeline/test_checker_prompts.py`,
   `backend/tests/pipeline/test_checker_pipeline.py`,
   `backend/tests/pipeline/test_execute_race.py` (Postgres-only concurrent-write
-  test, gated like `test_queue_postgres.py`); tech-debt.md #9 marked repaid;
+  test, gated like `test_queue_postgres.py`); tech-debt.md #7 marked repaid;
   ADR-20 recorded in [design.md](design.md).
 - **Acceptance:** a `kind='checker'` analysis under `DRY_RUN=1` walks all six steps
   with **no** HTTP crawl, produces exactly **12** prompts and **48** responses
@@ -1062,7 +1083,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
 
 ### P5.6 — Public hardening: kill-switch + per-IP & per-brand rate limit + daily cost cap
 - **Goal:** make the anonymous endpoint safe to expose — the blocker called out in
-  tech-debt #5, required "before any public URL." All Postgres-backed, no new infra.
+  tech-debt #3, required "before any public URL." All Postgres-backed, no new infra.
   (a) A `CHECKER_ENABLED` master **kill-switch** (default `0`): while off,
   `POST /api/v1/checker` returns a friendly parked **503** and enqueues nothing
   (cached-brand hits from P5.1 still return, since they cost nothing) — the public
@@ -1089,7 +1110,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   `backend/app/config.py` (`checker_enabled`, `checker_rate_limit_per_ip_hour`,
   `checker_rate_limit_per_brand_day`, `checker_daily_usd_cap`, `rate_limit_salt`),
   `deploy/.env.example` (all five vars; `CHECKER_ENABLED=0`), ADR-22 recorded in
-  [design.md](design.md); tech-debt.md #5 marked repaid;
+  [design.md](design.md); tech-debt.md #3 marked repaid;
   `backend/tests/test_checker_ratelimit.py`.
 - **Acceptance:** with `CHECKER_ENABLED=0` a fresh submit → `503` parked and
   nothing recorded, while a 24h cached-brand submit still returns its id; with it
@@ -1265,7 +1286,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   recording means hot cached brands neither undercount demand nor lose leads; still
   a plain `count()/sum()` read, no new
   endpoint), and the docs reconciliation (architecture.md checker data-flow, roadmap
-  2a status, tech-debt #5/#9 closed); no new product code unless a bug surfaces.
+  2a status, tech-debt #3/#7 closed); no new product code unless a bug surfaces.
 - **Acceptance:** a real four-engine checker run completes within the caps with no
   secret committed; the measured per-run cost **and** the demand-test metrics query
   (runs + run→email conversion) are recorded; kill-switch, both rate limits, and the
@@ -1288,7 +1309,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   a parallel runner and removes a backend-spine ↔ pipeline merge risk.
 - **KYC is reused as-is, not synthesized.** Running the existing KYC step on the
   seed string is zero new code and keeps the DRY_RUN score coherent (~0.5, about
-  "Yanki Demo Co" per tech-debt #6); the real brand is shown under real keys. A
+  "Yanki Demo Co" per tech-debt #4); the real brand is shown under real keys. A
   brand-derived "KYC-lite" was rejected (see the preamble) because under DRY_RUN it
   collapses the score to ~0.
 - **Lead capture and demand counting are per-submit, not per-analysis-row.** The
@@ -1311,7 +1332,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   about the brand. Acceptable for a free checker, and the "show your work" ethos
   means we display exactly what came back.
 - **One worker suffices for the demand-test volume** (~3000 runs / 90 days ≈ 33/day);
-  the `llm_cache` upsert (P5.2) removes the tech-debt #9 race so a second worker can
+  the `llm_cache` upsert (P5.2) removes the tech-debt #7 race so a second worker can
   be added later with no code change.
 - **`ip_hash` is a salted hash of the `X-Forwarded-For` client IP** (privacy behind
   the shared Caddy), stored instead of a raw IP; the salt (`RATE_LIMIT_SALT`) is a
