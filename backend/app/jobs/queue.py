@@ -33,10 +33,18 @@ def claim_next(session: Session, settings: Settings) -> Analysis | None:
     stmt = (
         select(Analysis)
         .where(
+            # Only MVP crawl rows run through this pipeline today. A checker row
+            # (kind='checker', P5.1) has a synthetic ``checker://`` url with no
+            # crawl target, so discovery would just fail it and litter the queue
+            # while starving real MVP jobs. Skip it until P5.2 branches the
+            # runner on ``kind`` and removes this guard. ``is_distinct_from``
+            # still claims legacy NULL-kind rows (IS DISTINCT FROM on Postgres /
+            # IS NOT on SQLite).
+            Analysis.kind.is_distinct_from("checker"),
             or_(
                 Analysis.status == "queued",
                 and_(Analysis.status == "running", Analysis.claimed_at < cutoff),
-            )
+            ),
         )
         .order_by(Analysis.created_at)
         .limit(1)

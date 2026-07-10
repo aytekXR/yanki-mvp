@@ -39,6 +39,15 @@ class Analysis(Base):
     # rows created before this column, and any future non-HTTP callers, leave it
     # null. Never stores the raw IP.
     ip_hash: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    # Checker fields (P5.1). All nullable/defaulted so existing MVP rows are
+    # untouched. ``kind`` distinguishes an MVP crawl analysis ('mvp') from a
+    # checker analysis ('checker'); brand/category/lang are stored NORMALIZED
+    # (trim + casefold) on checker rows so the 24h reuse lookup is a plain
+    # equality match. They stay null on MVP rows.
+    kind: Mapped[str] = mapped_column(sa.Text, nullable=True, default="mvp", server_default="mvp")
+    brand: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    category: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    lang: Mapped[str] = mapped_column(sa.Text, nullable=True, default="en", server_default="en")
     kyc: Mapped[dict[str, Any] | None] = mapped_column(
         sa.JSON().with_variant(JSONB, "postgresql"), nullable=True
     )
@@ -92,6 +101,31 @@ class Response(Base):
     footprint: Mapped[bool | None] = mapped_column(sa.Boolean, nullable=True)
     matched_snippet: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     cost_usd: Mapped[Decimal] = mapped_column(sa.Numeric(10, 6), nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+
+class CheckerSubmission(Base):
+    """One accepted checker submit (P5.1) — append-only demand signal + lead.
+
+    The 24h cache shares a single ``analyses`` row across visitors, so leads and
+    demand must be counted per submit here rather than on the analysis. Every
+    accepted submit (cache hits included) inserts a row; ``email`` is filled
+    later by ``POST /api/v1/checker/leads`` for that specific row, so two
+    visitors served the same cached analysis each keep their own lead.
+    """
+
+    __tablename__ = "checker_submissions"
+
+    id: Mapped[uuid.UUID] = mapped_column(sa.Uuid, primary_key=True, default=uuid.uuid4)
+    analysis_id: Mapped[uuid.UUID] = mapped_column(
+        sa.ForeignKey("analyses.id", ondelete="CASCADE"), nullable=False
+    )
+    # Salted client-IP hash — stays null in P5.1; P5.6 populates it (owns salt).
+    ip_hash: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    lang: Mapped[str] = mapped_column(sa.Text, nullable=False)
+    email: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), nullable=False, default=_utcnow
     )

@@ -5,11 +5,17 @@ null/empty until the pipeline produces them, so the frontend can render partial
 state (and failures keep their partial results queryable — FR-7).
 """
 
+import re
 import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, field_validator
+
+# Minimal email shape check. email-validator (pydantic[email]) is not installed
+# and the card says not to add a heavy dep just for this — a conservative regex
+# (one @, non-empty local/domain, a dotted TLD) is enough for the lead gate.
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 class CreateAnalysisRequest(BaseModel):
@@ -19,6 +25,40 @@ class CreateAnalysisRequest(BaseModel):
 
 class CreateAnalysisResponse(BaseModel):
     id: uuid.UUID
+
+
+class CheckerSubmitRequest(BaseModel):
+    """A public checker submit. brand+category must be non-empty after trim."""
+
+    brand: str
+    category: str
+    lang: str = "en"
+
+    @field_validator("brand", "category")
+    @classmethod
+    def _non_empty(cls, v: str) -> str:
+        # Reject blank/whitespace-only up front so the route records NOTHING
+        # (this raises a 422 before create_checker_analysis runs).
+        if not v or not v.strip():
+            raise ValueError("must not be blank")
+        return v
+
+
+class CheckerSubmitResponse(BaseModel):
+    id: uuid.UUID
+    submission_id: uuid.UUID
+
+
+class CheckerLeadRequest(BaseModel):
+    submission_id: uuid.UUID
+    email: str
+
+    @field_validator("email")
+    @classmethod
+    def _valid_email(cls, v: str) -> str:
+        if not _EMAIL_RE.match(v.strip()):
+            raise ValueError("invalid email")
+        return v.strip()
 
 
 class PromptOut(BaseModel):

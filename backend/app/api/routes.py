@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.api.schemas import (
     AnalysisOut,
+    CheckerLeadRequest,
+    CheckerSubmitRequest,
+    CheckerSubmitResponse,
     CreateAnalysisRequest,
     CreateAnalysisResponse,
     PromptOut,
@@ -18,6 +21,7 @@ from app.db.models import Analysis
 from app.db.session import get_session
 from app.net_guard import is_public_url
 from app.services.analyses import create_analysis, get_analysis
+from app.services.checker import attach_lead, create_checker_analysis
 from app.services.rate_limit import (
     RateLimitExceeded,
     check_rate_limit,
@@ -79,6 +83,32 @@ def submit_analysis(
 
     analysis = create_analysis(session, str(payload.url), ip_hash=ip_hash)
     return CreateAnalysisResponse(id=analysis.id)
+
+
+@router.post("/checker", status_code=202, response_model=CheckerSubmitResponse)
+def submit_checker(
+    payload: CheckerSubmitRequest,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> CheckerSubmitResponse:
+    # Blank brand/category is rejected by the schema (422) before we get here, so
+    # an invalid submit records nothing. This route does NOT rate-limit or gate
+    # on a kill-switch — that is P5.6's job (which also fills ip_hash).
+    analysis, submission = create_checker_analysis(
+        session, payload.brand, payload.category, payload.lang, settings
+    )
+    return CheckerSubmitResponse(id=analysis.id, submission_id=submission.id)
+
+
+@router.post("/checker/leads", status_code=202)
+def submit_checker_lead(
+    payload: CheckerLeadRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, str]:
+    submission = attach_lead(session, payload.submission_id, payload.email)
+    if submission is None:
+        raise HTTPException(status_code=404, detail="submission not found")
+    return {"status": "ok"}
 
 
 @router.get("/analyses/{analysis_id}", response_model=AnalysisOut)

@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     analyses_daily_cap: int = 100
     ip_hash_salt: str = ""
 
+    # Checker (P5.1) — a fresh checker run is reused for this many hours when a
+    # done analysis with the same normalized (brand, category, lang) exists, so
+    # a hot brand costs $0 on repeat and can't be hammered into new LLM spend.
+    checker_result_cache_hours: int = 24
+
 
 @lru_cache
 def get_settings() -> Settings:

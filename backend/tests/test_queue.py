@@ -34,6 +34,31 @@ def test_claim_next_returns_none_when_no_work(db_session, settings):
     assert claim_next(db_session, settings) is None
 
 
+def test_claim_next_skips_checker_rows(db_session, make_analysis, settings):
+    # A queued kind='checker' row (P5.1) has a synthetic checker:// url the MVP
+    # pipeline cannot crawl; the worker must NOT claim it until P5.2 branches the
+    # runner, otherwise it litters the queue with failures and starves MVP jobs.
+    checker = make_analysis(
+        url="checker://nike/running shoes",
+        kind="checker",
+        brand="nike",
+        category="running shoes",
+        lang="en",
+        created_at=_dt(-200),  # older than the mvp row: order must not save us
+    )
+    mvp = make_analysis(url="https://mvp.test", created_at=_dt(-10))
+
+    first = claim_next(db_session, settings)
+    assert first is not None
+    assert first.id == mvp.id  # the checker row is skipped even though it is older
+
+    # Nothing runnable remains: the checker row is never claimed.
+    assert claim_next(db_session, settings) is None
+    db_session.refresh(checker)
+    assert checker.status == "queued"
+    assert checker.attempts == 0
+
+
 def test_claim_next_uses_plain_update_on_sqlite(db_session, make_analysis, settings):
     # SQLite has no SKIP LOCKED; the claim must still succeed via the fallback branch.
     assert db_session.get_bind().dialect.name == "sqlite"

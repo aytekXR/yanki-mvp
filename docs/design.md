@@ -414,4 +414,53 @@ decision → consequences**, with one line on why the alternative was rejected.
   catch contrast, but the browser cannot launch on this host; it is a future CI
   upgrade, not an MVP gate. A jest-axe fallback — unnecessary once vitest-axe's
   matchers are wired via `expect.extend`.
+
+### ADR-19 — Checker reuses the `analyses` table with a synthetic URL + append-only submissions (P5.1)
+- **Context:** the public checker needs the *same* six-step pipeline the MVP
+  crawl already runs, but starting from a brand+category instead of a URL. It
+  also needs (a) a 24h per-brand result cache so a hot brand costs $0 on repeat
+  and can't be hammered into new LLM spend, and (b) a lead-capture email gate.
+  The 24h cache means one `analyses` row is served to many visitors, so a lead
+  or a demand count cannot live on the analysis.
+- **Decision:** do **not** add a parallel `checker_analyses` table — extend the
+  existing `analyses` table with four **nullable** columns (`kind` default
+  `'mvp'`, `brand`, `category`, `lang` default `'en'`; migration stays
+  additive-only, no MVP column/constraint touched) and let the checker run as
+  `kind='checker'` rows. Because `analyses.url` is `NOT NULL` and a checker row
+  has no crawl target, store a **deterministic synthetic** `url`
+  (`f"checker://{brand}/{category}"`, normalized) so the constraint is satisfied
+  with no schema change. Brand/category/lang are stored **normalized** (trim +
+  casefold, one `normalize_triple` helper) on the analysis row, so the 24h reuse
+  lookup is a plain equality match on the triple (`"  Nike "` and `"nike"` hit
+  the same entry). Reuse requires `status='done'` and `created_at` within
+  `CHECKER_RESULT_CACHE_HOURS`. A separate **append-only `checker_submissions`**
+  table records **one row per accepted submit** (cache hits included) — the
+  demand signal — and the email gate sets `email` on **that** submission row, so
+  two visitors served the same cached analysis each keep their own lead and a
+  shared row never loses an email to an overwrite. `ip_hash` lands nullable now
+  (populated by P5.6; no second migration).
+- **Consequences:** the pipeline, worker, and `GET /api/v1/analyses/{id}` poll
+  path all work for checker rows **unchanged** (P5.2 only branches on `kind`
+  inside `run_pipeline`; the GET envelope shows the synthetic `checker://` URL,
+  fine for now — P5.3/P5.4 shape the checker result view). Only a `done` run is
+  reused, so a *concurrent* in-flight run of the same brand may create a second
+  `analyses` row before the first finishes; that is acceptable at MVP (the
+  pipeline is idempotent and the extra cost is bounded by one run) and the demand
+  signal is still counted per submit. Storing normalized values on the analysis
+  means the raw user strings are not preserved on any row today — acceptable
+  because the checker echoes the user's own input back client-side; if a
+  display-exact original is ever needed it is an additive column.
+- **Rejected:** a separate `checker_analyses` table (duplicates the queue, the
+  pipeline dispatch, and the poll endpoint for no gain); altering `url` to be
+  nullable (a constraint change on the live MVP column under extra-sensitive
+  `alembic/**` review, avoided by the synthetic URL); storing the email on the
+  `analyses` row (a shared cached analysis would overwrite one visitor's lead
+  with another's); normalizing at query time from stored raw strings (makes the
+  cache lookup a non-sargable expression and risks drift between insert-time and
+  query-time normalization).
+- **Migration notes:** `0003_checker_fields` is additive — four nullable
+  `analyses` columns (server defaults `'mvp'`/`'en'` backfill existing rows on
+  Postgres; the ORM carries matching `default=` so SQLite `create_all` agrees)
+  plus the new `checker_submissions` table. Safe to apply on the live table
+  during a redeploy; `down_revision = "0002_analyses_ip_hash"`.
 </content>

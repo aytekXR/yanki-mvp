@@ -70,6 +70,69 @@
         "title": "AnalysisOut",
         "type": "object"
       },
+      "CheckerLeadRequest": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "submission_id": {
+            "format": "uuid",
+            "title": "Submission Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "submission_id",
+          "email"
+        ],
+        "title": "CheckerLeadRequest",
+        "type": "object"
+      },
+      "CheckerSubmitRequest": {
+        "description": "A public checker submit. brand+category must be non-empty after trim.",
+        "properties": {
+          "brand": {
+            "title": "Brand",
+            "type": "string"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "lang": {
+            "default": "en",
+            "title": "Lang",
+            "type": "string"
+          }
+        },
+        "required": [
+          "brand",
+          "category"
+        ],
+        "title": "CheckerSubmitRequest",
+        "type": "object"
+      },
+      "CheckerSubmitResponse": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "submission_id": {
+            "format": "uuid",
+            "title": "Submission Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "submission_id"
+        ],
+        "title": "CheckerSubmitResponse",
+        "type": "object"
+      },
       "CreateAnalysisRequest": {
         "properties": {
           "url": {
@@ -400,6 +463,92 @@
           }
         },
         "summary": "Read Analysis",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/v1/checker": {
+      "post": {
+        "operationId": "submit_checker_api_v1_checker_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckerSubmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckerSubmitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Checker",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/v1/checker/leads": {
+      "post": {
+        "operationId": "submit_checker_lead_api_v1_checker_leads_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckerLeadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Submit Checker Lead Api V1 Checker Leads Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Checker Lead",
         "tags": [
           "analyses"
         ]
