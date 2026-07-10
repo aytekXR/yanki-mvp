@@ -2,7 +2,8 @@
 # =============================================================================
 # Yanki prod rollback: redeploy the last-good SHA recorded by deploy.sh.
 #
-#   !!! UNTESTED — validate on the first server deploy. Marked tech debt. !!!
+#   First exercised 2026-07-10 (P4.2): same-SHA rollback path ran clean and
+#   healthy. The pruned-image branch (git checkout + rebuild) is still unproven.
 # =============================================================================
 set -euo pipefail
 

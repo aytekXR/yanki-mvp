@@ -112,3 +112,15 @@ readiness ~85%; only P4.2 (supervised deploy) remains. See
 lives at the end of that log (§6).
 
 ---
+
+## Session 7 (2026-07-10, #05) — brief executed: the P4.2 branch
+
+The session-7 brief (end of
+[sessions/2026-07-10-04.md](sessions/2026-07-10-04.md) §6) offered two
+branches: OpenAI re-run if quota existed (it didn't — still
+`insufficient_quota`) and **P4.2 supervised deploy if the operator was
+present** — the operator opened with "Let's deploy website. Using
+workflows", so the deploy branch ran and completed: P4.2 done,
+https://yanki.beyondkaira.com live, MVP 32/32. See
+[sessions/2026-07-10-05.md](sessions/2026-07-10-05.md); the session-8 brief
+(start Phase 5 / P5.1) lives at the end of that log (§6).

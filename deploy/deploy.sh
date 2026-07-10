@@ -8,7 +8,8 @@
 #   uvicorn ...`); deploy.sh does NOT run a second concurrent alembic — two
 #   un-locked migrations against one DB would race on first deploy.
 #
-#   !!! UNTESTED — validate on the first server deploy. Marked tech debt. !!!
+#   First exercised for real 2026-07-10 (P4.2): build -> up -> migrate ->
+#   healthy -> last-good recorded, on the shared VPS, co-tenants undisturbed.
 # =============================================================================
 set -euo pipefail
 

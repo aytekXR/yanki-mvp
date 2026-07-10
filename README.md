@@ -131,25 +131,31 @@ friendly names over the generated schemas and narrows the loosely-typed fields.
 ## Deploy
 
 Deployment reuses the proven ams-pulse pattern. One command from your laptop
-builds, deploys, migrates, health-checks, and auto-rolls-back on failure:
+builds, deploys, migrates, health-checks, and auto-rolls-back on failure —
+**first exercised for real 2026-07-10; the site is live at
+<https://yanki.beyondkaira.com>** (in DRY_RUN mock mode until the operator
+flips it):
 
 ```bash
 make deploy      # build + deploy + migrate + health check (auto-rollback on failure)
 make rollback    # redeploy the last-good SHA if something slips through
 ```
 
-**One-time prerequisites** (done once by an admin — see [`docs/architecture.md`](docs/architecture.md)):
+**One-time prerequisites** (all **done** as of 2026-07-10 — see [`docs/architecture.md`](docs/architecture.md)):
 
-1. On the server, create `deploy/.env` from `deploy/.env.example` and fill in real secrets.
-   `make deploy` refuses to run without it and never auto-creates secrets.
+1. ~~On the server, create `deploy/.env`~~ **done:** real secrets + a real
+   `POSTGRES_PASSWORD` are in place. `make deploy` refuses to run without the
+   file and never auto-creates secrets.
 2. ~~Point DNS~~ **done:** `yanki.beyondkaira.com → 161.97.172.146` resolves
    (verified 2026-07-10). Yanki serves from the **same VPS** as the other
    beyondkaira sites (pulse-prod, Ant Media, brier) — deploys must never
    disturb them.
-3. Add the site block from `deploy/caddy/yanki.beyondkaira.com.caddy` to the
-   shared Caddy's config (`~/repo/ams-pulse/deploy/config/Caddyfile.prod` — it
-   has **no import dir**), then `caddy validate` and **reload** (never restart)
-   inside `pulse-prod-caddy-1`.
+3. ~~Add the site block~~ **done:** the block from
+   `deploy/caddy/yanki.beyondkaira.com.caddy` now lives in the shared Caddy's
+   config (`~/repo/ams-pulse/deploy/config/Caddyfile.prod` — it has **no
+   import dir**), validated in-container and **reloaded** (never restart)
+   in `pulse-prod-caddy-1`. Don't append it twice — a duplicate site key
+   fails validation.
 
 Compose project name is `yanki-prod`. Yanki runs **no** Caddy of its own: web +
 api join the shared Caddy's network (`pulse-prod_default`) as `yanki-web` /

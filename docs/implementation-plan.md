@@ -97,7 +97,7 @@ and the root config files `next lint` never touched (verified 0 errors /
 0 warnings). Verified by mirroring the CI frontend job locally (tsc, lint,
 vitest 20/20, `next build` with its build-time lint still on) and on the
 real runner. The flat-config + ESLint 9 move is deliberately deferred to the
-Next 16 bump — new tech-debt #16 records the coupling (`--ext` and
+Next 16 bump — new tech-debt #15 records the coupling (`--ext` and
 `.eslintrc.json` both die under flat config; migrate together, manually —
 the official codemod is buggy, vercel/next.js#85679).
 
@@ -113,34 +113,54 @@ discovered: the **OpenAI key has `insufficient_quota`** (billing) — its leg
 (~+$0.002/analysis est.) gets recorded once the operator adds credits.
 Full suite stayed green (64 backend + 20 frontend; ruff + mypy clean).
 
-➡️ **Next up: P4.2 — deploy to yanki.beyondkaira.com** (supervised, on this
-VPS next to the live sites): needs the operator's shared-Caddy edit + a
-supervised `make deploy`. Small parallel item: OpenAI billing → one cheap
-re-run to record the OpenAI leg. The Phase-5 build gate now lacks only P4.2.
+✅ **Session 7 (2026-07-10): P4.2 done — https://yanki.beyondkaira.com is
+LIVE. The MVP plan (Phases 0–4) is 32/32 complete.** The operator said
+"let's deploy"; a 4-agent pre-flight workflow reviewed the never-run deploy
+path (verdict GO: 0 blockers, 36 checks passed — incl. validating the
+concatenated Caddyfile inside the live Caddy container). First `make deploy`
+caught one real bug: the prod web image build failed because
+`ENV NODE_ENV=production` made `npm ci` omit devDependencies, so `next build`
+couldn't transpile `next.config.ts` (fix: `npm ci --include=dev`, commit
+3a84943). Second run deployed clean: build → migrate → healthy → last-good
+recorded. A mock analysis ran end-to-end on prod (geo_score 0.6). The yanki
+site block was appended to the shared Caddyfile, validated in-container,
+Caddy **reloaded** (never restarted) — TLS issued immediately, and **all four
+co-tenant sites matched their pre-reload baseline** (pulse 200 / apex 200 /
+www 301 / ams 200). `make rollback` exercised clean (same-SHA path).
+Tech-debt #1 repaid (list renumbered; old #8 rewritten as #7 — wiring now
+proven, coupling remains). DRY_RUN=1 on prod by design for now (mock
+pipeline, $0 — no rate limiting exists yet; going live-providers is an
+operator flip).
+
+➡️ **Next up: nothing in Phases 0–4 — the MVP plan is complete.** The
+Phase-5 build gate (P4.1 ✅ + P4.2 ✅ + CI ✅) is now **open**: next session
+starts P5.1 unless the operator redirects. Residuals that need the operator
+first: OpenAI billing (one ~$0.02 re-run to record that cost leg) and the
+DRY_RUN=0 decision for prod (see operator-expected.md).
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 6 close — first live run).
+Last updated: 2026-07-10 (session 7 close — P4.2 done, the site is live).
 
-- **MVP plan completion (Phases 0–4): 31 / 32 tasks ≈ 97%.** Phases 0–3:
-  26/26 done. Phase 4: P4.1 + P4.3 + P4.4 + P4.5 + P4.6 done (P4.1's
-  OpenAI leg pends operator billing — a residual, not a blocker), leaving
-  only **P4.2** (supervised deploy). Every remaining step needs the
-  operator (Caddy edit in ams-pulse + supervising `make deploy`; OpenAI
-  credits for the cost-record residual).
-- **Phase 5 (post-MVP checker): decomposed, 0 / 11 built.** P4.6's deliverable
-  is the P5.1–P5.11 breakdown below — planning only; its build gate now lacks
-  only **P4.2** (CI leg met 2026-07-10; P4.1 leg met session 6). Counting
-  Phase 5, the enlarged plan stands at 31 / 43 ≈ 72%.
-- **Production readiness: ~85%** (session 5 closed at ~75%; the first live
-  run adds the real-world proof). Code, tests (64 backend + 20 frontend),
-  docs, CI (5/5 green on a real runner), secret scanning, accessibility —
-  and now **the pipeline proven live with real Claude Haiku 4.5 calls**:
-  end-to-end in ~40s, correct KYC, measured $0.0132/analysis ≈ 1% of the
-  $49 plan (NFR-1 margin holds ~35×). Still missing, in order: first
-  supervised deploy (P4.2, operator), the OpenAI cost leg (operator
-  billing), and rate limiting before any public URL (accepted debt #3,
-  planned task P5.6).
+- **MVP plan completion (Phases 0–4): 32 / 32 tasks = 100%.** Phases 0–3:
+  26/26. Phase 4: 6/6 — P4.2 landed this session
+  (https://yanki.beyondkaira.com serves through the shared Caddy; deploy +
+  rollback both exercised; co-tenants verified undisturbed). The single
+  P4.1 residual stands: the OpenAI cost leg pends operator billing.
+- **Phase 5 (post-MVP checker): decomposed, 0 / 11 built — and its build
+  gate is now OPEN** (CI ✅ session 4, P4.1 ✅ session 6, P4.2 ✅ session 7).
+  Counting Phase 5, the enlarged plan stands at 32 / 43 ≈ 74%. Next session
+  starts **P5.1** unless the operator redirects.
+- **Production readiness: ~95%.** Code, tests (64 backend + 20 frontend),
+  docs, CI (5/5 green), secret scanning, accessibility, the pipeline proven
+  live (real Haiku 4.5 calls, $0.0132/analysis ≈ 1% of the $49 plan), and
+  now **the real deploy**: SHA-tagged images, migrations on boot, health
+  gate, last-good rollback, TLS via the shared Caddy — all exercised on the
+  real server. The missing ~5%: prod deliberately runs **DRY_RUN=1** (mock
+  pipeline) until the operator opts into live providers — because rate
+  limiting doesn't exist yet (accepted debt #2, planned P5.6) a public URL
+  with real keys would be unmetered spend; plus the OpenAI cost-leg
+  residual (operator billing).
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate).
   **Session-6 operator-driven change (models, not scope): "use the cheapest
@@ -148,7 +168,7 @@ Last updated: 2026-07-10 (session 6 close — first live run).
   (Anthropic already on Haiku 4.5, the cheapest); P4.1 then ran live with an
   Anthropic-only panel because the OpenAI key lacks quota. Session 5 executed
   exactly the no-keys branch of the session-4 brief (the ESLint CLI fallback,
-  debt #10). **One session-5 post-close operator-driven TARGET change (not
+  old debt #10, since repaid). **One session-5 post-close operator-driven TARGET change (not
   scope):** the deploy is now
   `yanki.beyondkaira.com` on the shared VPS the dev host runs on, co-tenant
   with live sites (was `test.beyondkaira.com`); the P4.2 card, deploy
@@ -630,7 +650,7 @@ happy path renders a score.**
   scans ≈ $0.45/mo/customer ≈ **1% of the $49 plan** — far under the 35%
   ceiling; no repricing needed. Residual: record the OpenAI leg (~+$0.002/
   analysis est.) once the operator fixes quota; KYC-call cost is not
-  persisted to the DB (small gap, noted in tech-debt #2).
+  persisted to the DB (small gap, noted in tech-debt #1).
 
 ### P4.2 — Deploy to yanki.beyondkaira.com (this VPS, co-tenant with live sites)
 - **Goal:** first real supervised deploy. Target retargeted by the operator
@@ -667,7 +687,14 @@ happy path renders a score.**
   **every pre-existing site on the VPS (pulse, ams.*, etc.) still serves
   before AND after** — spot-check them around the Caddy reload and the deploy.
   (Scripts are currently marked UNTESTED tech debt — this task clears that.)
-- **Status:** todo (operator-gated: P4.1 first; deploy is supervised)
+- **Status:** ✅ done (2026-07-10, session 7). All acceptance criteria met:
+  `make deploy` built/migrated/health-checked (after one real fix — the web
+  image needed `npm ci --include=dev`, commit 3a84943); the site serves at
+  https://yanki.beyondkaira.com with valid TLS; a mock analysis ran
+  end-to-end on prod; `make rollback` exercised clean; co-tenants
+  (pulse/apex/www/ams) matched their pre-deploy baseline before and after
+  the Caddy reload. Old tech-debt #1 repaid. Note: prod runs DRY_RUN=1
+  until the operator opts into live providers.
 
 ### P4.3 — CI hardening
 - **Goal:** GitHub Actions: `make lint` + `make typecheck` + `make test` (with a
@@ -723,7 +750,7 @@ happy path renders a score.**
   **run 29059944092 went green: `1 passed (6.6s)` — the spec's first-ever
   execution, not skipped** (acceptance met). Known accepted dependency: the
   discovery step really fetches example.com even under DRY_RUN, so the job
-  needs runner egress (tech-debt #9).
+  needs runner egress (tech-debt #8).
 
 ### P4.5 — Accessibility + polish audit
 - **Goal:** audit the three screens against [frontend-brandkit.md](frontend-brandkit.md)
@@ -858,12 +885,12 @@ aliases are the *real* submitted brand would find nothing in the mock answers
 (which still name "Yanki Demo Co") and collapse the DRY_RUN score to ~0. Under
 **real** keys the real KYC call returns the real brand's profile, so the displayed
 brand is correct at launch; only the $0 DRY_RUN run shows "Yanki Demo Co"
-(tech-debt #4, expected). The one extra analysis-model call per uncached check is
+(tech-debt #3, expected). The one extra analysis-model call per uncached check is
 negligible against the 48 execution probes it accompanies.
 
 **Everything is $0-first.** Every task is buildable and testable under `DRY_RUN=1`
 on the deterministic `MockProvider` (a checker run comes back about "Yanki Demo
-Co", tech-debt #4 — fine and expected). Real-key and live steps are isolated into
+Co", tech-debt #3 — fine and expected). Real-key and live steps are isolated into
 the one operator-gated task (P5.11), mirroring P4.1/P4.2. Real Gemini/Perplexity
 adapters (P5.7) are exercised only via `respx`, never a live call in CI (the P2.2
 pattern).
@@ -873,7 +900,7 @@ when its task lands — numbered by *planned* build order; the independent P5.6/
 may land early, so land order can differ from the numbering): **ADR-19** checker as
 a `kind` of analysis (reuse `analyses`) plus the append-only `checker_submissions`
 table for per-submit demand + lead capture — P5.1; **ADR-20** `llm_cache` upsert for concurrent-worker safety (repays
-tech-debt #7) — P5.2; **ADR-21** competitors computed from the raw answers via a
+tech-debt #6) — P5.2; **ADR-21** competitors computed from the raw answers via a
 deterministic proper-noun co-mention heuristic (not `kyc.competitors`, not an LLM
 pass) — P5.3; **ADR-22** Postgres-derived rate limiting + daily cost cap +
 `CHECKER_ENABLED` kill-switch + salted `ip_hash`, no Redis — P5.6; **ADR-23** real
@@ -1039,7 +1066,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   generator. Steps 4–6 (execute, footprint, scoring) run unchanged. Also make
   `execute._write_cache` an **upsert** (`INSERT … ON CONFLICT (cache_key) DO
   NOTHING`, then re-read) so the public checker is safe with more than one worker
-  (repays tech-debt #7; SQLite supports `ON CONFLICT DO NOTHING`).
+  (repays tech-debt #6; SQLite supports `ON CONFLICT DO NOTHING`).
 - **Why now:** it turns the existing loop into the checker loop with the smallest
   possible diff; the whole English vertical is DRY_RUN-green once this lands.
 - **Dependencies:** P5.1 (`kind`/`brand`/`category`/`lang` columns).
@@ -1163,7 +1190,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
 
 ### P5.6 — Public hardening: kill-switch + per-IP & per-brand rate limit + daily cost cap
 - **Goal:** make the anonymous endpoint safe to expose — the blocker called out in
-  tech-debt #3, required "before any public URL." All Postgres-backed, no new infra.
+  tech-debt #2, required "before any public URL." All Postgres-backed, no new infra.
   (a) A `CHECKER_ENABLED` master **kill-switch** (default `0`): while off,
   `POST /api/v1/checker` returns a friendly parked **503** and enqueues nothing
   (cached-brand hits from P5.1 still return, since they cost nothing) — the public
@@ -1366,7 +1393,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   recording means hot cached brands neither undercount demand nor lose leads; still
   a plain `count()/sum()` read, no new
   endpoint), and the docs reconciliation (architecture.md checker data-flow, roadmap
-  2a status, tech-debt #3/#7 closed); no new product code unless a bug surfaces.
+  2a status, tech-debt #2/#6 closed); no new product code unless a bug surfaces.
 - **Acceptance:** a real four-engine checker run completes within the caps with no
   secret committed; the measured per-run cost **and** the demand-test metrics query
   (runs + run→email conversion) are recorded; kill-switch, both rate limits, and the
@@ -1389,7 +1416,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   a parallel runner and removes a backend-spine ↔ pipeline merge risk.
 - **KYC is reused as-is, not synthesized.** Running the existing KYC step on the
   seed string is zero new code and keeps the DRY_RUN score coherent (~0.5, about
-  "Yanki Demo Co" per tech-debt #4); the real brand is shown under real keys. A
+  "Yanki Demo Co" per tech-debt #3); the real brand is shown under real keys. A
   brand-derived "KYC-lite" was rejected (see the preamble) because under DRY_RUN it
   collapses the score to ~0.
 - **Lead capture and demand counting are per-submit, not per-analysis-row.** The
@@ -1412,7 +1439,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   about the brand. Acceptable for a free checker, and the "show your work" ethos
   means we display exactly what came back.
 - **One worker suffices for the demand-test volume** (~3000 runs / 90 days ≈ 33/day);
-  the `llm_cache` upsert (P5.2) removes the tech-debt #7 race so a second worker can
+  the `llm_cache` upsert (P5.2) removes the tech-debt #6 race so a second worker can
   be added later with no code change.
 - **`ip_hash` is a salted hash of the `X-Forwarded-For` client IP** (privacy behind
   the shared Caddy), stored instead of a raw IP; the salt (`RATE_LIMIT_SALT`) is a
@@ -1471,7 +1498,9 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
 Keep this honest — see [design.md](design.md) ADR log for the "why" behind
 decisions.
 
-- **Deploy/rollback scripts are UNTESTED** until P4.2. Marked so in README.
+- ~~Deploy/rollback scripts are UNTESTED~~ **repaid 2026-07-10 (P4.2):** both
+  exercised on the real server (rollback's pruned-image rebuild branch is the
+  only path still unproven — tech-debt #17).
 - **Gemini + Perplexity are stubs** (planned — roadmap 2b), not a shortcut to hide.
 - **Prompt generation is templated, not LLM** (deliberate — testable + free;
   roadmap 2d LLM prompt engine supersedes).

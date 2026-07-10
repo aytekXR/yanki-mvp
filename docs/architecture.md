@@ -327,7 +327,8 @@ docker network (`pulse-prod_default`) via aliases — not host ports:
   before `make deploy`.
 - `make deploy` / `make rollback` follow the ams-pulse pattern: build, tag by git
   SHA, `compose -p yanki-prod up`, `/healthz` check, roll back to the last-good
-  SHA file on failure. **Marked UNTESTED tech debt.**
+  SHA file on failure. **First exercised for real 2026-07-10 (P4.2)** — both
+  paths ran clean on the shared VPS with co-tenants verified undisturbed.
 
 **One-time prerequisites** (done once by an admin — from README §Deploy):
 
