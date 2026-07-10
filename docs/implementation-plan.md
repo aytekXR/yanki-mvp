@@ -110,7 +110,7 @@ session 5 repaid it; a keyless session 6 would be a no-op close.
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 5 close).
+Last updated: 2026-07-10 (session 5 close + post-close deploy retarget).
 
 - **MVP plan completion (Phases 0–4): 30 / 32 tasks ≈ 94%.** Phases 0–3:
   26/26 done. Phase 4: P4.3 + P4.4 + P4.5 + P4.6 done (P4.4 proven in CI,
@@ -132,9 +132,16 @@ Last updated: 2026-07-10 (session 5 close).
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate). No new
   deviation this session — session 5 executed exactly the no-keys branch of
-  the session-4 brief (the ESLint CLI fallback, debt #10). Prior recorded
-  deviations stand: P4.3/P4.5 before P4.1 (key-blocked fallback), P4.3
-  without a `.gitleaks.toml`.
+  the session-4 brief (the ESLint CLI fallback, debt #10). **One post-close
+  operator-driven TARGET change (not scope):** the deploy is now
+  `yanki.beyondkaira.com` on the shared VPS the dev host runs on, co-tenant
+  with live sites (was `test.beyondkaira.com`); the P4.2 card, deploy
+  configs, and operator checklist were updated in the same commit
+  (`b32de42`) and the DNS prerequisite is already met. A `brandkit/` v2
+  package also landed in the repo (operator-dropped); **its adoption is
+  deliberately skipped for now** (operator call, 2026-07-10) — v1 tokens
+  stay live. Prior recorded deviations stand: P4.3/P4.5 before P4.1
+  (key-blocked fallback), P4.3 without a `.gitleaks.toml`.
 
 ### Agent lanes (parallelism map)
 

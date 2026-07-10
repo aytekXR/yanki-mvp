@@ -7,8 +7,11 @@ remote, and CI status at start regardless. Nothing here blocks local
 development — `make dev` + `make test` work today with zero keys and zero
 cost (DRY_RUN).*
 
-Last updated: 2026-07-10 (session 5 close: the last key-free task is done —
-**everything that remains needs you**).
+Last updated: 2026-07-10 (session 5 close + post-close: deploy retargeted to
+**yanki.beyondkaira.com on this VPS** at your direction — DNS verified done,
+deploy configs reconciled with the real topology, CI still 5/5 green (run
+29064538453). The last key-free task is done — **everything that remains
+needs you**).
 
 **Session-5 result: the final key-free task landed** — the frontend lint
 script migrated off the deprecated `next lint` to the ESLint CLI (old
@@ -113,6 +116,17 @@ detail: the "Phase-5 open questions" block in
   - **Email-gate strength.** A single unverified email is assumed (max lead
     capture). Add verification / disposable-domain blocking / captcha, or not?
   - **The one free raw answer.** Default: first answer that mentions the brand.
+
+## Later — design (non-blocking)
+
+- [ ] **10. Brandkit v2 adoption decision.** You dropped `brandkit/` (the
+  Yankı brand v2 package: petrol-ink/echo-teal palette, logos, icons,
+  `frontend-brandkit-v2.md`, design rationale) into the repo on 2026-07-10
+  and chose to **skip integrating it for now** — so nothing happens until
+  you say so. When you want it adopted, decide: does v2 supersede
+  `docs/frontend-brandkit.md` (v1) and should the frontend tokens change to
+  match? (Heads-up from tech-debt #14: a palette change means re-computing
+  the WCAG contrast ratios by hand — axe can't check contrast under jsdom.)
 
 ## Local-machine quirks (informational)
 
