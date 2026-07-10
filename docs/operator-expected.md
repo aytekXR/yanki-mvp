@@ -4,16 +4,20 @@
 do them. Nothing here blocks local development — `make dev` + `make test`
 work with zero keys and zero cost (DRY_RUN).*
 
-Last updated: 2026-07-10, **session 13 CLOSE — the build is done.**
-All six build tasks shipped and deployed dark (last-good `643e0ee`, CI
-green, $0 prod spend): real Gemini+Perplexity (P5.7), brandkit v2 (P5.12),
-checker frontend + email gate (P5.4/P5.5), **your waitlist + email
-notifications (P5.13)**, methodology page (P5.10). Plan **43/44 ≈ 98%** —
-the only remaining card is **P5.11: your go-live**. The checker still
-answers 503 (dark); the **waitlist is LIVE on prod** — a real thank-you
-email was delivered to your Resend account inbox as proof (check it).
-Every analysis run now attempts an operator alert mail (delivery pending
-B1). Next session = P5.11 at your pace: answer A1, do B1+B2, then B3.
+Last updated: 2026-07-10, **session 13 FINAL close (after five operator
+follow-ups, all shipped same day; last-good `d6514ee`, CI green).**
+The build is done: plan **43/44 ≈ 98%** — the only remaining card is
+**P5.11: your go-live**. Beyond the six build tasks, this session also
+delivered on your directives: the **Gemini prod-incident hotfix**
+(live-proven: 4 real engines, $0.0253/analysis), **brand icons + logo
+site-wide**, **growth-loop emails** (thank-you invites a first analysis;
+kind-aware run-alert links; waitlist CTA on both results pages), the
+**responses-table width fix**, the **"yanki" wordmark spelling**, and —
+with your verified domain + new key — **emails now DELIVER to real
+recipients** (proven both directions). The checker still answers 503
+(dark) until B3. Signup mails are deduped by design: one thank-you per
+address ever, 10 signups/IP/hour (your question — session log §11).
+Next session = P5.11 at your pace: answer A1, do B2, then B3.
 
 ## A. Questions waiting for your answer
 
