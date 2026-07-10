@@ -47,9 +47,9 @@ agent mechanics are the master SPEC.
        deprecated/superseded files deleted (session logs, `past-prompt.md`, and
        the numbered `00-`/`01-` source docs are archives, not candidates).
        Record the audit in the session log.
-8. [ ] **Operator checklists refreshed** — [`operator-expected.md`](operator-expected.md)
-       (tick-list) and [`operator-actions.md`](operator-actions.md) (full context)
-       both reflect exactly what's expected from the human next; if nothing, say so.
+8. [ ] **Operator checklist refreshed** — [`operator-expected.md`](operator-expected.md)
+       (the single operator file: tick-list + commands + context) reflects
+       exactly what's expected from the human next; if nothing, say so.
 
 ## 4. Definition of done (per task)
 

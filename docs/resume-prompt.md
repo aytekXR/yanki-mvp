@@ -230,11 +230,12 @@ session log.
 
 ## 8. Operator Checklist Refresh (Required)
 
-[`docs/operator-expected.md`](operator-expected.md) is the operator's
-on-the-go tick-list; [`docs/operator-actions.md`](operator-actions.md) is the
-full-context version. Refresh **both** at session close so the operator always
-knows exactly what only a human can do next. If nothing is expected from the
-operator, say so explicitly in both files.
+[`docs/operator-expected.md`](operator-expected.md) is the **single** operator
+file: a tick-list of everything only a human can do, with the commands and
+context inline (a separate `operator-actions.md` existed until 2026-07-10 and
+was merged in). Refresh it at session close so the operator always knows
+exactly what only a human can do next. If nothing is expected from the
+operator, say so explicitly.
 
 ---
 
@@ -331,7 +332,7 @@ At all times maintain:
 * architecture decisions
 * documentation health (incl. the markdown inventory — no stale, misplaced,
   or deprecated .md files)
-* the operator checklists (`docs/operator-expected.md` + `docs/operator-actions.md`)
+* the operator checklist (`docs/operator-expected.md`)
 * technical debt
 * risks
 * blockers
