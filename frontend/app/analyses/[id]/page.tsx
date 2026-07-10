@@ -84,7 +84,9 @@ export default function AnalysisPage() {
     <main className="mx-auto max-w-4xl px-4 py-12 sm:px-8">
       <div className="space-y-8">
         <header className="space-y-1">
-          <h1 className="text-3xl font-semibold text-surface-foreground">Analysis</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-surface-foreground">
+            Analysis
+          </h1>
           {analysis ? (
             <p className="break-all text-sm text-surface-subtle">{analysis.url}</p>
           ) : null}
@@ -108,15 +110,15 @@ function FailureCard({ reason }: { reason: string }) {
   return (
     <div
       role="alert"
-      className="space-y-3 rounded-lg border border-danger bg-danger-soft p-6"
+      className="space-y-3 rounded-xl border border-danger bg-danger-soft p-6"
     >
-      <h2 className="text-xl font-semibold text-danger-700">
+      <h2 className="text-xl font-semibold text-danger-strong">
         {"We couldn't finish this analysis."}
       </h2>
       <p className="text-sm text-surface-foreground">{reason}</p>
       <Link
         href="/"
-        className="inline-flex min-h-[40px] items-center rounded text-sm font-medium text-primary hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex min-h-[40px] items-center rounded text-sm font-medium text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         Try another URL
       </Link>
@@ -134,7 +136,7 @@ function Results({ analysis }: { analysis: Analysis }) {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-lg border border-surface-border bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-surface-border bg-white p-6 shadow-sm">
         <ScoreGauge score={percent} footprintCount={footprints} totalResponses={total} />
       </section>
 
@@ -151,7 +153,7 @@ function Results({ analysis }: { analysis: Analysis }) {
                 key={prompt.id}
                 className="flex flex-col gap-2 rounded-lg border border-surface-border bg-white p-3 sm:flex-row sm:items-start"
               >
-                <span className="w-fit rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">
+                <span className="w-fit rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary-strong">
                   {prompt.category}
                 </span>
                 <span className="text-sm text-surface-foreground">{prompt.text}</span>

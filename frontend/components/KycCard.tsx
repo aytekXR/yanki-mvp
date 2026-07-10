@@ -54,16 +54,16 @@ export default function KycCard({ kyc }: KycCardProps) {
       <h2 className="text-xl font-semibold text-surface-foreground">
         Company profile (KYC)
       </h2>
-      <div className="space-y-6 rounded-lg border border-surface-border bg-white p-6 shadow-sm">
+      <div className="space-y-6 rounded-xl bg-ink p-6 font-mono shadow-sm">
         {hasCompany || hasDescription ? (
           <div className="space-y-2">
             {hasCompany ? (
-              <p className="text-2xl font-semibold text-surface-foreground">
+              <p className="text-2xl font-semibold text-ink-foreground">
                 {companyName}
               </p>
             ) : null}
             {hasDescription ? (
-              <p className="text-sm leading-relaxed text-surface-foreground">
+              <p className="text-sm leading-relaxed text-ink-foreground">
                 {description}
               </p>
             ) : null}
@@ -77,15 +77,15 @@ export default function KycCard({ kyc }: KycCardProps) {
                 key={row.label}
                 className="flex flex-col gap-1 sm:flex-row sm:gap-3"
               >
-                <dt className="w-32 shrink-0 text-xs font-medium uppercase tracking-wide text-surface-subtle">
+                <dt className="w-32 shrink-0 text-xs font-medium uppercase tracking-wider text-ink-foreground">
                   {row.label}
                 </dt>
-                <dd className="text-sm text-surface-foreground">{row.value}</dd>
+                <dd className="text-sm text-ink-foreground">{row.value}</dd>
               </div>
             ))}
             {chipRows.map((row) => (
               <div key={row.label} className="flex flex-col gap-1.5">
-                <dt className="text-xs font-medium uppercase tracking-wide text-surface-subtle">
+                <dt className="text-xs font-medium uppercase tracking-wider text-ink-foreground">
                   {row.label}
                 </dt>
                 <dd>
@@ -93,7 +93,7 @@ export default function KycCard({ kyc }: KycCardProps) {
                     {row.items.map((item, index) => (
                       <li
                         key={`${item}-${index}`}
-                        className="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700"
+                        className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-medium text-primary-strong"
                       >
                         {item}
                       </li>

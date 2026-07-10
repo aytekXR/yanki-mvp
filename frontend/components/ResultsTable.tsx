@@ -29,10 +29,10 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-surface-border">
+    <div className="overflow-x-auto rounded-xl border border-surface-border">
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
-          <tr className="bg-surface-muted text-xs font-medium uppercase tracking-wide text-surface-subtle">
+          <tr className="bg-surface-muted text-xs font-medium uppercase tracking-wider text-surface-subtle">
             <th scope="col" className="px-4 py-3">
               Engine
             </th>
@@ -55,7 +55,7 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
         </thead>
         <tbody>
           {responses.map((response, index) => {
-            const zebra = index % 2 === 1 ? 'bg-surface-muted' : 'bg-white'
+            const zebra = index % 2 === 1 ? 'bg-surface-zebra' : 'bg-white'
             const isOpen = openIds.has(response.id)
             const answerId = `answer-${response.id}`
 
@@ -97,7 +97,7 @@ export default function ResultsTable({ responses, prompts }: ResultsTableProps) 
                       onClick={() => toggle(response.id)}
                       aria-expanded={isOpen}
                       aria-controls={answerId}
-                      className="inline-flex min-h-[32px] items-center gap-1 rounded text-xs font-medium text-primary hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="inline-flex min-h-[32px] items-center gap-1 rounded text-xs font-medium text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <Chevron open={isOpen} />
                       {isOpen ? 'Hide full answer' : 'Show full answer'}
@@ -153,13 +153,13 @@ function Chevron({ open }: { open: boolean }) {
 function FootprintBadge({ value }: { value: boolean | null }) {
   if (value) {
     return (
-      <span className="inline-flex items-center rounded-full bg-success-soft px-2 py-1 text-xs font-medium text-success-700">
+      <span className="inline-flex items-center rounded-full bg-success-soft px-2 py-1 text-xs font-medium text-success-strong">
         Yes
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center rounded-full bg-danger-soft px-2 py-1 text-xs font-medium text-danger-700">
+    <span className="inline-flex items-center rounded-full bg-danger-soft px-2 py-1 text-xs font-medium text-danger-strong">
       No
     </span>
   )

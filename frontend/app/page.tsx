@@ -19,7 +19,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-16 sm:px-8">
       <section className="space-y-6">
-        <h1 className="text-4xl font-bold text-surface-foreground">
+        <h1 className="text-5xl font-semibold tracking-tight text-surface-foreground">
           See how AI answers talk about your brand.
         </h1>
         <p className="max-w-2xl text-base text-surface-subtle">
@@ -33,9 +33,9 @@ export default function HomePage() {
         {STEPS.map((step, index) => (
           <div
             key={step.title}
-            className="rounded-lg border border-surface-border bg-white p-6 shadow-sm"
+            className="rounded-xl border border-surface-border bg-white p-6 shadow-sm"
           >
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-medium text-primary-700">
+            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-xs font-medium text-primary-strong">
               {index + 1}
             </div>
             <h2 className="text-xl font-semibold text-surface-foreground">

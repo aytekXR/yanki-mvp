@@ -8,10 +8,10 @@ describe('scoreBand', () => {
     expect(scoreBand(29)).toBe('danger')
   })
 
-  it('returns primary between 30 and 59', () => {
-    expect(scoreBand(30)).toBe('primary')
-    expect(scoreBand(45)).toBe('primary')
-    expect(scoreBand(59)).toBe('primary')
+  it('returns warning between 30 and 59', () => {
+    expect(scoreBand(30)).toBe('warning')
+    expect(scoreBand(45)).toBe('warning')
+    expect(scoreBand(59)).toBe('warning')
   })
 
   it('returns success at 60 and above', () => {

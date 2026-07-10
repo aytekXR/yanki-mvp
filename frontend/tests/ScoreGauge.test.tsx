@@ -16,9 +16,9 @@ describe('ScoreGauge', () => {
     expect(screen.getByRole('img')).toHaveClass('text-danger')
   })
 
-  it('uses the primary band between 30 and 59', () => {
+  it('uses the warning band between 30 and 59', () => {
     render(<ScoreGauge score={45} footprintCount={9} totalResponses={20} />)
-    expect(screen.getByRole('img')).toHaveClass('text-primary')
+    expect(screen.getByRole('img')).toHaveClass('text-warning')
   })
 
   it('uses the success band at 60 and above', () => {

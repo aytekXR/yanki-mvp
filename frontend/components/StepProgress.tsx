@@ -95,8 +95,8 @@ export default function StepProgress({
 function dotClass(state: StepState): string {
   const base =
     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-medium'
-  if (state === 'done') return `${base} bg-success-soft text-success-700`
-  if (state === 'active') return `${base} bg-primary text-white motion-safe:animate-pulse`
+  if (state === 'done') return `${base} bg-success-soft text-success-strong`
+  if (state === 'active') return `${base} bg-primary text-white motion-safe:animate-pulse-ring`
   return `${base} border border-surface-border bg-surface-muted text-surface-subtle`
 }
 

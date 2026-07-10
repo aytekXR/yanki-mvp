@@ -4,10 +4,10 @@ type Variant = 'primary' | 'secondary' | 'ghost'
 type Size = 'sm' | 'md'
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: 'bg-primary text-white hover:bg-primary-700',
+  primary: 'bg-primary text-white hover:bg-primary-hover',
   secondary:
     'bg-white border border-surface-border text-surface-foreground hover:bg-surface-muted',
-  ghost: 'bg-transparent text-primary hover:bg-primary-50',
+  ghost: 'bg-transparent text-primary hover:bg-primary-soft',
 }
 
 // Heights keep interactive targets at least 40px tall (accessibility baseline §7).

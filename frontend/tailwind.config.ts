@@ -1,7 +1,11 @@
 import type { Config } from 'tailwindcss'
 
-// Token families copied verbatim from docs/frontend-brandkit.md §2.
-// Use the class names (bg-primary, text-danger) in markup — never raw hex.
+// Token families copied verbatim from brandkit v2 §2
+// (brandkit/brandkit/frontend-brandkit-v2.md, reconciled into
+// docs/frontend-brandkit.md). Use the class names (bg-primary, text-danger) in
+// markup — never a raw hex. Two hexes the spec references without a token name
+// are minted here: surface.zebra (#F9FBFB, ResultsTable zebra rows) and
+// ink.foreground (#C7DBE0, mono text on the ink KYC/code surface).
 const config: Config = {
   content: [
     './app/**/*.{ts,tsx}',
@@ -12,54 +16,73 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#4f46e5',
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          DEFAULT: '#0E7569', // brand accent: buttons, links, active step
+          hover: '#0A5B51', // button/link hover
+          soft: '#E2F3EF', // selected rows, soft badges, hero pill
+          strong: '#0A5B51', // accessible teal text on the soft fill
+        },
+        signal: {
+          DEFAULT: '#3BD1B5', // bright accent — dark surfaces only
+        },
+        ink: {
+          DEFAULT: '#0B1D26', // dark surfaces: KYC code block, footer
+          foreground: '#C7DBE0', // minted: mono text on the ink surface (7.9:1)
         },
         surface: {
-          DEFAULT: '#ffffff',
-          muted: '#f8fafc',
-          border: '#e2e8f0',
-          foreground: '#0f172a',
-          subtle: '#64748b',
+          DEFAULT: '#FFFFFF', // card / panel background
+          muted: '#F5F8F8', // page + inset backgrounds
+          border: '#DCE6E9', // hairlines, dividers (decorative only)
+          foreground: '#0C1E28', // primary text
+          subtle: '#4E6B78', // secondary text, labels; form-control borders
+          zebra: '#F9FBFB', // minted: ResultsTable zebra rows
         },
         success: {
-          DEFAULT: '#16a34a',
-          soft: '#dcfce7',
-          // Darker green for text/glyphs on `success-soft` (4.57:1, WCAG 1.4.3).
-          700: '#15803d',
+          DEFAULT: '#177E4D', // footprint = yes, score ≥ 60%
+          soft: '#DDF3E4',
+          strong: '#116038', // "Yes" badge text, done check
+        },
+        warning: {
+          DEFAULT: '#B45309', // score 30–59%
+          soft: '#FCEFD8',
+          strong: '#8A4B08', // warning badge text
         },
         danger: {
-          DEFAULT: '#dc2626',
-          soft: '#fee2e2',
-          // Darker red for text/headings on `danger-soft` (5.30:1, WCAG 1.4.3).
-          700: '#b91c1c',
+          DEFAULT: '#C4403A', // footprint = no, failed job, score 0–29%
+          soft: '#FBE5E3',
+          strong: '#9E332E', // "No" badge text, failure heading
         },
       },
       fontFamily: {
+        // Wired to next/font CSS variables set in app/layout.tsx (self-hosted at
+        // build; no runtime CDN). Fallback stacks match brandkit v2 §3.
         sans: [
+          'var(--font-sans)',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
           '"Segoe UI"',
-          'Roboto',
           'sans-serif',
         ],
         mono: [
+          'var(--font-mono)',
           'ui-monospace',
           '"SF Mono"',
           'Menlo',
           'Consolas',
           'monospace',
         ],
+      },
+      keyframes: {
+        // Soft pulse ring for the active StepProgress dot (brandkit v2 §5).
+        // Applied via motion-safe: so prefers-reduced-motion disables it.
+        'pulse-ring': {
+          '0%': { boxShadow: '0 0 0 0 rgba(14, 117, 105, 0.45)' },
+          '70%': { boxShadow: '0 0 0 6px rgba(14, 117, 105, 0)' },
+          '100%': { boxShadow: '0 0 0 0 rgba(14, 117, 105, 0)' },
+        },
+      },
+      animation: {
+        'pulse-ring': 'pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

@@ -11,7 +11,7 @@ interface ScoreGaugeProps {
 // Full literal class names so Tailwind's content scanner keeps them.
 const BAND_CLASSES: Record<ScoreBand, { text: string; stroke: string }> = {
   danger: { text: 'text-danger', stroke: 'stroke-danger' },
-  primary: { text: 'text-primary', stroke: 'stroke-primary' },
+  warning: { text: 'text-warning', stroke: 'stroke-warning' },
   success: { text: 'text-success', stroke: 'stroke-success' },
 }
 

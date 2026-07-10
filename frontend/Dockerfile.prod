@@ -15,6 +15,9 @@ RUN npm ci --include=dev || npm install --include=dev
 
 COPY . .
 
+# next.config.ts rewrites (/api, /healthz → API_ORIGIN) are evaluated at build time, not runtime.
+ENV API_ORIGIN=http://api:8141
+
 # Produce the optimized production build.
 RUN npm run build
 

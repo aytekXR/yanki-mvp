@@ -702,3 +702,48 @@ decision → consequences**, with one line on why the alternative was rejected.
   now (needs live per-tier prices unavailable this session — deferred to the
   P5.11 retune); a non-grounded Gemini call (grounding is the whole point of a
   *search* engine on the panel and is required by the card).
+
+### ADR-24 — Brandkit v2 ("echo") adoption across the existing frontend (P5.12)
+- **Context:** the operator handed down brandkit v2
+  (`brandkit/brandkit/frontend-brandkit-v2.md`): a new "echo" identity — deep
+  petrol `ink` + echo `teal` primary, Sora + IBM Plex Mono — retiring the
+  indigo-based v1. Sequenced before the checker UI (P5.4) so the new system is
+  built once, not twice. Must land with zero behavior/contract change and all
+  tests + axe green.
+- **Decision:** port the v2 §2 token table verbatim into
+  `frontend/tailwind.config.ts` (teal `primary` `#0E7569` family with
+  `-hover`/`-soft`/`-strong`, `signal`, `ink`, the `surface` family, and each
+  status hue with `-soft`/`-strong`); the v1 numeric `primary-50…900` scale and
+  the `success-700`/`danger-700` names are removed in favor of the `-strong`
+  shades. Fonts self-host via `next/font/google` in `app/layout.tsx` (CSS
+  variables wired to tailwind `fontFamily`; no runtime CDN, no `<link>` tags).
+  Every existing surface is restyled token-for-token; radius moves to
+  `rounded-xl` cards per §4.
+- **Score-band semantic change:** `ScoreGauge`/`lib/score.ts` now map 30–59% to
+  `warning` (v1 used `primary`); bands are 0–29 `danger` / 30–59 `warning` /
+  60–100 `success`, always with the numeric percentage and label. The
+  `score`/`ScoreGauge` tests were updated from the `primary` name to `warning`
+  (updated to the v2 name, not weakened).
+- **Two minted tokens:** the spec references two hexes without a token name — the
+  zebra row fill `#F9FBFB` and the KYC-on-ink code text `#C7DBE0`. Minted as
+  `surface-zebra` and `ink-foreground` so components stay hex-free (recorded in
+  `docs/frontend-brandkit.md` §2).
+- **Dockerfile build-time fix:** `frontend/Dockerfile.prod` gains
+  `ENV API_ORIGIN=http://api:8141` before `RUN npm run build`, because
+  `next.config.ts` rewrites (`/api`, `/healthz`) are evaluated at **build** time,
+  not runtime — without it the built image proxied `/healthz` to `localhost:8141`
+  and loopback health checks 500'd (ECONNREFUSED).
+- **Consequences:** `docs/frontend-brandkit.md` is reconciled to v2 (§2 table,
+  minted tokens, a **recomputed** WCAG ratio table for every implemented
+  text-on-fill pair — all pass, lowest 5.02:1 on a graphical arc; §7 rules
+  unchanged, closing debt #13). No backend, contract, compose, or dependency
+  change (`next/font` ships with Next). The dark `ink` KYC JSON block from the
+  spec is **not** applied to the current `KycCard` — it is a light profile card,
+  deliberately not a JSON dump (a test enforces that), so `ink`/`ink-foreground`
+  are reserved for the checker surface.
+- **Rejected:** keeping the v1 `-700` token names (the spec renames them
+  `-strong`; carrying both would drift); forcing the `KycCard` onto `bg-ink`
+  (would break the "not a JSON dump" test and require re-choosing every inner
+  text token against a dark fill — out of scope, deferred to the checker UI);
+  inventing new hexes to hit contrast (unnecessary — every implemented pair
+  already clears its floor).

@@ -4,6 +4,12 @@
 system: copy these tokens into `frontend/tailwind.config.ts` and build the five
 components against them. When in doubt, prefer boring and consistent over clever.*
 
+**v2 supersedes v1 (2026-07-10, P5.12).** The visual identity is now the "echo"
+system: deep petrol ink + echo teal, Sora + IBM Plex Mono. The source of truth is
+[brandkit/brandkit/frontend-brandkit-v2.md](../brandkit/brandkit/frontend-brandkit-v2.md);
+§2 and §3 below are reconciled to it. The indigo-based v1 palette is retired — no
+doc or component quotes the dead indigo/slate hexes.
+
 See also: [architecture.md](architecture.md) (the API these components render),
 [mvp.md](mvp.md) (the two screens they live on).
 
@@ -31,51 +37,92 @@ Tokens are single (light) values today; a dark theme is a roadmap item.
 
 | Token (class) | Role | Hex |
 |---|---|---|
-| `primary` (`bg-primary`, `text-primary`) | Brand accent: buttons, links, active step, gauge mid-band | `#4f46e5` (indigo-600) |
-| `primary-50 … primary-900` | Indigo tint scale — e.g. `bg-primary-100` + `text-primary-700` badges, `hover:bg-primary-700`, `ring-primary-300` | `#eef2ff … #312e81` |
-| `surface` | Card / panel background (`bg-surface`; components also use `bg-white`) | `#ffffff` |
-| `surface-muted` | Page + inset backgrounds (`bg-surface-muted`) | `#f8fafc` (slate-50) |
-| `surface-border` | Hairlines, dividers, input borders | `#e2e8f0` (slate-200) |
-| `surface-foreground` | Primary text (`text-surface-foreground`) | `#0f172a` (slate-900) |
-| `surface-subtle` | Secondary text, labels, captions | `#64748b` (slate-500) |
-| `success` / `success-soft` | Footprint = yes, healthy score, deploy ok | `#16a34a` / `#dcfce7` |
-| `success-700` (`text-success-700`) | Accessible green for text/glyphs sitting on a `success-soft` fill — `ResultsTable` "Yes" badge, `StepProgress` done check | `#15803d` |
-| `danger` / `danger-soft` | Footprint = no, failed job, errors | `#dc2626` / `#fee2e2` |
-| `danger-700` (`text-danger-700`) | Accessible red for text/headings sitting on a `danger-soft` fill — `ResultsTable` "No" badge, failure-card heading | `#b91c1c` |
+| `primary` | Brand accent: buttons, links, active step | `#0E7569` |
+| `primary-hover` | Button hover, link hover | `#0A5B51` |
+| `primary-soft` | Selected rows, soft badges, hero/chip pill | `#E2F3EF` |
+| `primary-strong` | Accessible teal text/glyph on a `primary-soft` fill | `#0A5B51` |
+| `signal` | Bright accent — **dark surfaces only** (charts, mark) | `#3BD1B5` |
+| `ink` | Dark surfaces: KYC/code block, footer, marketing dark | `#0B1D26` |
+| `ink-foreground` **(minted)** | Mono text/glyph on the `ink` surface | `#C7DBE0` |
+| `surface` | Card / panel background (`bg-surface`; components also use `bg-white`) | `#FFFFFF` |
+| `surface-muted` | Page + inset/header backgrounds | `#F5F8F8` |
+| `surface-border` | Hairlines, dividers, card outlines (decorative only) | `#DCE6E9` |
+| `surface-foreground` | Primary text | `#0C1E28` |
+| `surface-subtle` | Secondary text, labels; form-control borders | `#4E6B78` |
+| `surface-zebra` **(minted)** | `ResultsTable` alternating (zebra) rows | `#F9FBFB` |
+| `success` / `success-soft` | Footprint = yes, score ≥ 60% | `#177E4D` / `#DDF3E4` |
+| `success-strong` | "Yes" badge text, `StepProgress` done check on `-soft` | `#116038` |
+| `warning` / `warning-soft` | Score 30–59% | `#B45309` / `#FCEFD8` |
+| `warning-strong` | Warning badge text on `-soft` | `#8A4B08` |
+| `danger` / `danger-soft` | Footprint = no, failed job, score 0–29% | `#C4403A` / `#FBE5E3` |
+| `danger-strong` | "No" badge text, failure-card heading on `-soft` | `#9E332E` |
 
 Button text on `bg-primary` is `text-white` (there is no dedicated on-primary token).
 
-The `-700` shades exist because the base hues fail small-text contrast on their own
-`-soft` fills: `text-success` on `success-soft` is only **3.00:1** and `text-danger`
-on `danger-soft` only **3.95:1** — both below the 4.5:1 floor. So for *any* text or
-glyph on a `-soft` background, use `text-success-700` / `text-danger-700`. The base
-`success` / `danger` remain correct for solid fills, borders, and the gauge arc.
+**Minted tokens.** The spec references two hexes without naming them: the zebra row
+fill `#F9FBFB` and the KYC-on-ink code text `#C7DBE0`. They are minted here as
+`surface-zebra` and `ink-foreground` so components stay hex-free.
 
-**GEO score color scale** (drives `ScoreGauge`): 0–29% → `danger` (red), 30–59% →
-`primary` (indigo), 60–100% → `success` (green). Never rely on color alone —
-always pair with the numeric percentage and a label.
+The `-strong` shades exist because each base hue fails small-text contrast on its own
+`-soft` fill (below the 4.5:1 floor). So for *any* text or glyph on a `-soft`
+background, use the `-strong` shade; `signal` `#3BD1B5` fails on white and is
+**dark-surface only**. The base `success` / `warning` / `danger` remain correct for
+solid fills, borders, and the gauge arc.
+
+**GEO score bands** (drives `ScoreGauge`): 0–29% → `danger`, 30–59% → `warning`
+(v1 used `primary` here; v2 makes the mid band semantic), 60–100% → `success`.
+Never rely on color alone — always pair with the numeric percentage and a label.
+
+**Measured WCAG 2.x contrast ratios** (recomputed against the *implemented*
+combinations; debt #13 — axe cannot check contrast under jsdom). Normal text needs
+≥ 4.5:1; graphical/large UI ≥ 3:1. Every implemented pair passes.
+
+| Text / mark | On fill | Ratio | Floor |
+|---|---|---|---|
+| `primary-strong` | `primary-soft` (chips, step circle) | 6.96:1 | 4.5 |
+| `success-strong` | `success-soft` (Yes badge, done check) | 6.54:1 | 4.5 |
+| `danger-strong` | `danger-soft` (No badge) | 5.87:1 | 4.5 |
+| `warning-strong` | `warning-soft` (warning badge) | 5.98:1 | 4.5 |
+| `primary` | white (links, ghost, toggle) | 5.57:1 | 4.5 |
+| `primary-hover` | white (link hover) | 7.99:1 | 4.5 |
+| white | `primary` (button text, active step number) | 5.57:1 | 4.5 |
+| `surface-subtle` | white (captions, model column) | 5.68:1 | 4.5 |
+| `surface-subtle` | `surface-muted` (table header) | 5.32:1 | 4.5 |
+| `surface-subtle` | `surface-zebra` (model column, zebra row) | 5.47:1 | 4.5 |
+| `surface-foreground` | white | 17.05:1 | 4.5 |
+| `surface-foreground` | `surface-muted` (page bg) | 15.96:1 | 4.5 |
+| `surface-foreground` | `surface-zebra` (table cell) | 16.41:1 | 4.5 |
+| `ink-foreground` | `ink` (KYC/code mono text) | 12.02:1 | 4.5 |
+| `danger` arc | white (gauge 0–29 band) | 5.07:1 | 3.0 |
+| `warning` arc | white (gauge 30–59 band) | 5.02:1 | 3.0 |
+| `success` arc | white (gauge 60–100 band) | 5.09:1 | 3.0 |
+
+The `ink-foreground` pair measures 12.02:1 (spec quoted a conservative 7.9:1); both
+clear the floor. No new hexes were invented to reach compliance.
 
 ---
 
 ## 3. Typography
 
-System font stack — zero web-font payload, fast first paint, matches the "boring
-beats clever" ethos.
+Two webfonts, **self-hosted by `next/font/google`** at build (no runtime CDN, no
+`<link>` tags): Sora 300/400/500/600 and IBM Plex Mono 400/500, `display=swap`.
+Wired to CSS variables (`--font-sans`, `--font-mono`) consumed by tailwind
+`fontFamily`. Mono is the "evidence" voice: KYC JSON, snippets, scores, ids.
 
 ```
-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif
-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace   /* KYC JSON, snippets */
+font-sans: 'Sora', ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif
+font-mono: 'IBM Plex Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace
 ```
 
 | Step | Tailwind class | Size / line-height | Use |
 |---|---|---|---|
-| Display | `text-4xl font-bold` | 36 / 40 | Landing headline |
-| H1 | `text-3xl font-semibold` | 30 / 36 | Page titles |
-| H2 | `text-xl font-semibold` | 20 / 28 | Section headers (KYC, Prompts, Responses) |
-| Body | `text-base` | 16 / 24 | Default |
-| Small | `text-sm` | 14 / 20 | Table cells, captions |
-| Micro | `text-xs font-medium` | 12 / 16 | Labels, badges, step numbers |
-| Code | `text-sm font-mono` | 14 / 20 | KYC JSON, matched snippets |
+| Display | `text-5xl font-semibold tracking-tight` | 48 / 1.15 | Landing headline |
+| H1 | `text-3xl font-semibold tracking-tight` | 30 / 1.2 | Page titles |
+| H2 | `text-xl font-semibold` | 20 / 1.4 | Section headers (KYC, Prompts, Responses) |
+| Body | `text-base` | 16 / 1.5 | Default |
+| Small | `text-sm` | 14 / 1.45 | Table cells, captions |
+| Micro | `text-xs font-medium uppercase tracking-wider` | 12 / 1.35 | Labels, step labels |
+| Code | `text-sm font-mono` | 14 / 1.5 | KYC JSON, matched snippets |
 
 ---
 
@@ -84,8 +131,8 @@ font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace   /* KYC JSON, sn
 - **Spacing scale:** Tailwind default (4px base). Reach for `2`, `3`, `4`, `6`,
   `8`, `12`. Page gutter `px-4` mobile / `px-8` desktop; max content width
   `max-w-4xl mx-auto`.
-- **Radius:** `rounded-lg` (8px) for cards/inputs, `rounded-md` (6px) for buttons,
-  `rounded-full` for badges and the gauge track.
+- **Radius (v2):** `rounded-xl` (12px) cards/panels, `rounded-lg` (8px)
+  inputs/insets, `rounded-md` (6px) buttons, `rounded-full` badges and gauge track.
 - **Shadow:** `shadow-sm` on raised cards; avoid heavy shadows in dark mode (use
   `surface-border` instead).
 - **Grid rhythm:** vertical space between sections `space-y-8`; within a card
@@ -119,8 +166,10 @@ driven entirely by the API response — no hard-coded copy in the data path.
 ### `StepProgress` (Screen 2)
 - Renders the 6 pipeline steps: discovery → KYC → prompts → executing → footprint
   → scoring. Maps from `status` + `progress`.
-- Each step: a number/check icon, a name, and a state — `done` (`success` check),
-  `active` (`primary`, animated), `pending` (`surface-subtle`).
+- Each step: a number/check icon, a name, and a state — `done`
+  (`success-soft` circle + `success-strong` check), `active` (solid `primary`
+  circle, white number, `motion-safe` box-shadow pulse-ring), `pending`
+  (`surface-subtle`).
 - A thin overall progress bar (`bg-primary`, width = `progress`%). Include
   `role="progressbar"` with `aria-valuenow`.
 
@@ -135,11 +184,15 @@ driven entirely by the API response — no hard-coded copy in the data path.
 - One row per `response`: columns = Engine, Model, Footprint (a `success`/`danger`
   badge with text "Yes"/"No", not just a color), Matched snippet (`font-mono`,
   truncated with a title/expand), and (optionally) the prompt it answered.
-- Grouped or sortable by prompt/engine is nice-to-have. Zebra rows via
-  `surface-muted`. Horizontally scrollable on mobile (`overflow-x-auto`) — the
-  page body must never scroll sideways.
-- Also render the KYC JSON (in a `font-mono` code block) and the list of generated
-  prompts on this screen.
+- Footprint badges: "Yes" on `success-soft`/`success-strong`, "No" on
+  `danger-soft`/`danger-strong`. Zebra rows via `surface-zebra` (alternating
+  with white). Horizontally scrollable on mobile (`overflow-x-auto`) — the page
+  body must never scroll sideways.
+- The KYC profile (`KycCard`) and the list of generated prompts also render on
+  this screen. Per spec §5 the `KycCard` block renders on the `ink` surface
+  (`bg-ink`) with `ink-foreground` (`#C7DBE0`) `font-mono` evidence text. The
+  structured labels, value rows, and chip list (roles, copy, test ids) are
+  preserved as a token substitution, not a raw JSON dump.
 
 ### Failure state
 - On `status=failed`, show a `danger`-bordered card with the `error` text and a
@@ -191,13 +244,14 @@ Turkish brand matching must handle suffixes (e.g. *Marka'nın*, *Markayı*) — 
 
 Non-negotiable, checked in review:
 
-- **Contrast:** text ≥ 4.5:1, large text/UI ≥ 3:1, in **both** themes. Verified
-  pairings: `text-success-700` / `text-danger-700` on their `-soft` fills measure
-  **4.57:1** / **5.30:1**; form-control boundaries use `surface-subtle` `#64748b`
-  (**4.76:1** vs white) to meet WCAG 1.4.11, while `surface-border` `#e2e8f0` is
-  kept for decorative dividers and card outlines only (exempt from 1.4.11). The
-  bare `text-success` / `text-danger` must **not** carry small text on a `-soft`
-  fill (see §2).
+- **Contrast:** text ≥ 4.5:1, large text/UI ≥ 3:1. Verified pairings are the §2
+  measured table: the `-strong` shades on their `-soft` fills all clear 4.5:1
+  (`success-strong` 6.54:1, `danger-strong` 5.87:1, `warning-strong` 5.98:1,
+  `primary-strong` 6.96:1); form-control boundaries use `surface-subtle` `#4E6B78`
+  (5.68:1 vs white) to meet WCAG 1.4.11, while `surface-border` `#DCE6E9` is kept
+  for decorative dividers and card outlines only (exempt from 1.4.11). The bare
+  `success` / `warning` / `danger` must **not** carry small text on a `-soft` fill
+  (see §2).
 - **Never color-only:** footprint yes/no, score bands, and step states always carry
   text or an icon in addition to color.
 - **Keyboard:** every interactive element is focusable with a visible
