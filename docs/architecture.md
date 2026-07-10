@@ -31,6 +31,8 @@ api serves HTTP, the worker polls the queue. There is no message broker: the
                         ┌─────────────────────────────────────────┐
    api (FastAPI, sync) │  api  :8141   POST /api/v1/analyses (202) │
                         │               GET  /api/v1/analyses/{id} │
+                        │               POST /api/v1/checker (202) │
+                        │               POST /api/v1/checker/leads │
                         │               GET  /healthz              │
                         └───────────────────┬─────────────────────┘
                                             │  INSERT row status='queued'
@@ -38,7 +40,7 @@ api serves HTTP, the worker polls the queue. There is no message broker: the
                         ┌─────────────────────────────────────────┐
                         │           Postgres 16  (db)              │
                         │  analyses │ prompts │ responses │        │
-                        │           │         │ llm_cache          │
+                        │  llm_cache│ checker_submissions          │
                         │  analyses table doubles as the job queue │
                         └───────────────────┬─────────────────────┘
                                             ▲

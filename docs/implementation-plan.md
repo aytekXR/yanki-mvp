@@ -151,36 +151,59 @@ endpoint — so a new **P5.0** (minimal per-IP limit on `POST
 /api/v1/analyses`, S) was added as the first Phase-5 task, and the operator
 was asked to set provider-console spend caps meanwhile.
 
-➡️ **Next up: P5.0 (rate-limit the live endpoint) — then P5.1.** The
-Phase-5 build gate is open and nothing is operator-blocked; parked operator
-items: Gemini/Perplexity keys (P5.7+), checker product decisions (P5.11),
-brandkit v2.
+✅ **Session 9 (2026-07-10): P5.0 + P5.1 done — the live endpoint is
+rate-limited and the checker API surface exists.** Both landed via
+implement→adversarial-verify workflows, each deployed and verified on prod.
+**P5.0** (commit 31061c0): migration 0002 (`analyses.ip_hash`),
+`services/rate_limit.py`, 429 + `Retry-After` before any row/spend
+(5/IP/hour + 100/day rolling; limit 0 = clean kill-switch, orchestrator
+hardening after the verifier flagged a 500). Live acceptance on prod: one
+real submit ($0.0201, ip_hash persisted) + 4 synthetic rows → 6th submit
+**429, Retry-After 3587**; synthetic rows reset. With the measured cost,
+the daily cap bounds worst-case abuse at **≈$1.62/day**. **P5.1** (commit
+a8f0a06): migration 0003 (nullable `kind/brand/category/lang` + backfill,
+`checker_submissions`), `POST /api/v1/checker` (202 `{id, submission_id}`,
+normalized-triple 24h reuse, synthetic `checker://` url, ADR-19),
+`POST /api/v1/checker/leads` (per-submission emails, no overwrite),
+contract regenerated. **The verifier caught a critical bug empirically**:
+the live worker would claim checker rows, fail crawling `checker://`, and
+kill the reuse cache — fixed with a `claim_next` guard skipping
+`kind='checker'` (**P5.2 must remove it** when the runner branches). Prod
+smoke ($0): migration backfill verified, cache hit returned the same id
+for `" YANKISMOKE "`→`yankismoke`, lead attached, worker skipped checker
+rows (attempts=0); smoke rows deleted. Suite: 82 backend + 25 frontend,
+ruff/mypy/tsc clean, CI green on P5.0 (P5.1 run pending at close).
+
+➡️ **Next up: P5.2 (checker pipeline branch: seed KYC + fixed 12-prompt
+set + cache upsert) — then P5.3.** Remember: P5.2 removes the session-9
+`claim_next` checker guard. Parked operator items: Gemini/Perplexity keys
+(P5.7+), checker product decisions (P5.11), brandkit v2.
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 8 close — live providers on prod, KYC
-card, OpenAI leg recorded).
+Last updated: 2026-07-10 (session 9 close — P5.0 rate limit + P5.1 checker
+API live on prod).
 
 - **MVP plan completion (Phases 0–4): 32 / 32 tasks = 100%, all residuals
   closed.** Phases 0–3: 26/26. Phase 4: 6/6, and session 8 closed P4.1's
   last residual (the OpenAI cost leg, measured live on prod). The KYC card
   and the live-mode flip are operator-directed polish/ops inside completed
   surfaces, not new plan tasks.
-- **Phase 5 (post-MVP checker): 0 / 12 built** (was 11 — session 8 added
-  **P5.0**, the urgent rate-limit slice). Build gate OPEN, nothing
-  operator-blocked until P5.7 (keys) / P5.11 (go-live decisions). Counting
-  Phase 5, the enlarged plan stands at 32 / 44 ≈ 73%. Next session:
-  **P5.0, then P5.1**.
-- **Production readiness: ~97%.** Code, tests (64 backend + 25 frontend),
+- **Phase 5 (post-MVP checker): 2 / 12 built** — P5.0 + P5.1 landed and
+  are live on prod (session 9). Build gate OPEN, nothing operator-blocked
+  until P5.7 (keys) / P5.11 (go-live decisions). Counting Phase 5, the
+  enlarged plan stands at 34 / 44 ≈ 77%. Next session: **P5.2, then P5.3**.
+- **Production readiness: ~98%.** Code, tests (82 backend + 25 frontend),
   docs, CI (5/5 green), secret scanning, accessibility, deploy/rollback
-  exercised, TLS via the shared Caddy — and the product now runs **fully
-  live in production**: real Anthropic + OpenAI panel at a measured
-  **$0.0162/analysis ≈ 1% of the $49 plan** (NFR-1 headroom ~35×). The
-  missing ~3%, in priority order: **rate limiting on the now-live public
-  endpoint** (P5.0 — the one active risk, operator-accepted, console spend
-  caps requested meanwhile); KYC-cost persistence + adapter contract tests
-  (debt #1); multi-stage prod web image (debt #18). Gemini/Perplexity remain
-  stubs by design until P5.7.
+  exercised, TLS via the shared Caddy — and the product runs **fully live
+  in production**: real Anthropic + OpenAI panel at a measured
+  **$0.0162/analysis ≈ 1% of the $49 plan** (NFR-1 headroom ~35×), now
+  behind **P5.0 rate limiting** (5/IP/hour + 100/day → worst-case abuse
+  ≈$1.62/day; tech-debt #2 repaid). The missing ~2%, in priority order:
+  KYC-cost persistence + adapter contract tests (debt #1); multi-stage prod
+  web image (debt #18); XFF-spoofable per-IP limit is accepted MVP posture
+  (daily cap is the backstop). Gemini/Perplexity remain stubs by design
+  until P5.7.
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate).
   **Session-6 operator-driven change (models, not scope): "use the cheapest
@@ -1042,7 +1065,9 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
 - **Acceptance:** 6th submit from one IP within an hour on prod returns 429
   (verify live, then reset); existing e2e/CI stay green; a redeploy applies
   the migration cleanly.
-- **Status:** todo — **do this before P5.1.**
+- **Status:** ✅ done (session 9, commit 31061c0; deployed, 429 verified live
+  with Retry-After 3587, then reset). Bonus: limit `0` acts as a kill-switch
+  (429 everything) instead of crashing.
 
 ### P5.1 — Checker submit endpoint + lead capture + per-brand 24h reuse
 - **Goal:** the checker's API surface, reusing the `analyses` table. One Alembic
@@ -1100,7 +1125,11 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   analysis both persist and are both retrievable (no overwrite); existing MVP
   `POST /api/v1/analyses` behaviour is unchanged (defaults preserve `kind='mvp'`);
   `make gen-types` produces no drift after commit; `make test` green (DRY_RUN, $0).
-- **Status:** todo
+- **Status:** ✅ done (session 9, commit a8f0a06; deployed, migration 0003 +
+  backfill verified on prod, cache-hit + lead smoke passed at $0). Extra
+  (verifier-caught): `jobs/queue.py::claim_next` now skips `kind='checker'`
+  rows so the MVP worker can't fail them crawling `checker://` — **P5.2 must
+  remove this guard** when the runner branches on `kind`.
 
 ### P5.2 — Checker pipeline branch: seed KYC + versioned fixed 12-prompt set (EN)
 - **Goal:** teach the runner to walk the *same six steps* for a checker row without
@@ -1135,7 +1164,11 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   returns 12 non-empty, category-tagged, unique prompts and is byte-stable across
   runs (version-stamped); a stale-claim re-run is idempotent (no doubled rows); two
   workers inserting the same `cache_key` at once both succeed with no `IntegrityError`.
-  `make test` green.
+  `make test` green. **Also (added session 9): remove the `claim_next`
+  `kind='checker'` skip-guard in `backend/app/jobs/queue.py` in the same
+  change that lands the runner branch, and keep its
+  `test_claim_next_skips_checker_rows` replaced by a claims-checker-rows
+  assertion — otherwise checker rows never run.**
 - **Status:** todo
 
 ### P5.3 — Engine-presence map + competitors-that-showed-up (read-time aggregation)

@@ -7,38 +7,34 @@ remote, and CI status at start regardless. Nothing here blocks local
 development — `make dev` + `make test` work with zero keys and zero cost
 (DRY_RUN).*
 
-Last updated: 2026-07-10 (session 8 close: **your three directives are
-done** — (1) prod is **LIVE-PROVIDERS** (`DRY_RUN=0`, redeployed, verified:
-a real analysis ran through https://yanki.beyondkaira.com with 10 Claude +
-10 gpt-5-nano responses, real KYC for anthropic.com); (2) **KYC now renders
-as a proper profile card** on the result page (was a raw JSON dump) —
-see it live:
-https://yanki.beyondkaira.com/analyses/17164747-a6a7-40ab-bc3b-d4d4d6e9ee62 ;
-(3) the **OpenAI cost leg is recorded**: $0.0026/analysis → **measured
-full-panel cost $0.0162/analysis ≈ 1% of the $49 plan**. Your Caddyfile
-commit in ams-pulse (d538631) is confirmed. **One thing is now genuinely
-urgent and only you can do part of it: item 1 below.**)
+Last updated: 2026-07-10 (session 9 close: **nothing is urgent anymore, and
+nothing blocks the next session (P5.2).** The rate-limit hole you accepted
+when going live is CLOSED — **P5.0 is deployed and verified on prod**: the
+6th submit per IP per hour gets a 429, a global 100/day cap bounds
+worst-case abuse at **≈$1.62/day**, and setting either limit to 0 in
+`deploy/.env` is an instant kill-switch. **P5.1 also shipped**: the checker
+API (`POST /api/v1/checker` + lead capture + 24h per-brand reuse) is live
+but inert — checker runs stay queued at $0 until P5.2 wires the pipeline.
+Total live spend to date: **$0.056** (session-8 panel $0.0162 + session-9
+429-acceptance run $0.0201 + earlier P4.1 runs). Items 1–2 below are the
+same two from session 8, now lower stakes; say the word and they're ticked.)
 
-## Do now
+## Do now (recommended, no longer urgent)
 
-- [ ] **1. Set hard spend caps in both provider consoles.** Prod now runs
-  real keys on a public URL **with no rate limiting yet** (you accepted this
-  by going live; the code-side fix is P5.0, the first task of the next
-  session — until it lands, anyone who finds the URL can trigger
-  ~$0.0162-per-analysis spend without bound). Only you can cap the blast
-  radius today:
-  - **Anthropic:** console.anthropic.com → Billing/Limits → set a monthly
-    spend limit (e.g. $10).
+- [ ] **1. Set hard spend caps in both provider consoles** (~5 min). Code-side
+  rate limiting now bounds abuse at ≈$1.62/day, so this is defense-in-depth
+  rather than the only barrier — still worth doing because only you can cap
+  a *provider-side* surprise (pricing change, a bug on our side):
+  - **Anthropic:** console.anthropic.com → Billing/Limits → monthly spend
+    limit (e.g. $10).
   - **OpenAI:** platform.openai.com → Billing → usage limits (e.g. $10/mo).
-  - Escape hatch any time: set `DRY_RUN=1` in `deploy/.env`, then
-    `sg docker -c "make deploy"` → back to $0 mock mode.
+  - Escape hatches any time: `ANALYSES_DAILY_CAP=0` in `deploy/.env` +
+    `sg docker -c "make deploy"` → every submit 429s (kill-switch); or
+    `DRY_RUN=1` + redeploy → $0 mock mode.
 - [ ] **2. Eyeball the KYC card + live result** (2 minutes, no tooling):
-  open the link in the header above — you should see the score gauge, then
-  a "Company profile (KYC)" card (company name large, description,
-  industry/locations rows, chip lists for products/competitors/etc.), then
-  prompts and the response table. Say if you want the card's content or
-  order changed — KYC being "very important" was implemented as
-  *prominent card directly under the score*.
+  https://yanki.beyondkaira.com/analyses/17164747-a6a7-40ab-bc3b-d4d4d6e9ee62
+  — score gauge, then the "Company profile (KYC)" card, then prompts and the
+  response table. Say if you want the card's content or order changed.
 
 ## Done (this session and before)
 
@@ -66,10 +62,12 @@ urgent and only you can do part of it: item 1 below.**)
   cd frontend && sudo npx playwright install-deps chromium
   ```
 
-## Later — Phase 5, the public checker (in build; these come due at P5.7/P5.11)
+## Later — Phase 5, the public checker (2/12 built; these come due at P5.7/P5.11)
 
-- [ ] **12. Two more API keys** when P5.7/P5.11 come up: `GEMINI_API_KEY` +
-  `PERPLEXITY_API_KEY`, plus a grounding/ToS sanity check for both.
+- [ ] **12. Two more API keys** when P5.7/P5.11 come up (**~2–3 sessions
+  away** at the current pace — P5.2–P5.6 need nothing from you):
+  `GEMINI_API_KEY` + `PERPLEXITY_API_KEY`, plus a grounding/ToS sanity check
+  for both.
 - [ ] **13. Checker product decisions** (needed before the checker goes live):
   - **Turkish sign-off owner.** Native Turkish prompts + UI copy need a
     native-speaker sign-off before the loud launch; no sign-off → EN-only

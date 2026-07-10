@@ -4,13 +4,16 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (session 8: **item 1 largely repaid** — the OpenAI
-leg ran live on prod (10 × `gpt-5-nano`, measured $0.0026/analysis); what
-remains of #1 is KYC-cost persistence + adapter contract tests. **Item 2's
-risk is now ACTIVE**: the operator flipped prod to DRY_RUN=0, so the
-anonymous endpoint is public WITH real keys — mitigation task **P5.0**
-(minimal per-IP rate limit on `POST /api/v1/analyses`) added to the plan as
-the first Phase-5 task. Earlier session 7: **old item 1 REPAID by P4.2** — the
+Last updated: 2026-07-10 (session 9: **item 2 REPAID** — P5.0 landed and is
+verified live on prod (5/IP/hour + 100/day rolling caps, 429 + Retry-After
+before any row or spend; worst-case abuse now bounded at ≈$1.62/day at the
+measured $0.0162/analysis); the item is rewritten below as the narrower
+XFF-trust posture note. Three new items from P5.1: #19 (P5.2 must remove the
+`claim_next` checker guard), #20 (lead email regex, not RFC validation),
+#21 (checker endpoint unthrottled until P5.6 — $0 exposure, row growth only).
+Earlier session 8: item 1 largely repaid — the OpenAI leg ran live on prod
+(10 × `gpt-5-nano`, measured $0.0026/analysis); what remains of #1 is
+KYC-cost persistence + adapter contract tests. Earlier session 7: **old item 1 REPAID by P4.2** — the
 deploy + rollback scripts ran for real on the shared VPS (deploy caught and
 fixed one real bug: the prod web image build omitted devDependencies). The
 list was **renumbered once more**: old 2→1, 3→2, 4→3, 5→4, 6→5, 7→6, 8→7,
@@ -39,16 +42,16 @@ devDependencies).)
 
 ## Accepted MVP shortcuts (by design, revisit before/at launch)
 
-2. **No rate limiting or per-IP quota on the anonymous `POST /api/v1/analyses`
-   — and this risk is now LIVE** (session 8: operator flipped prod to
-   DRY_RUN=0, so the public URL runs real providers at ~$0.0162/analysis,
-   unmetered). Per-job caps exist (`PROMPT_COUNT`, `MAX_RESPONSES_PER_JOB`),
-   but nothing stops N parallel submissions. Operator-accepted; mitigations:
-   (a) **P5.6 does NOT cover this endpoint** (it rate-limits the future
-   `/api/v1/checker`), so a new **P5.0** task (minimal per-IP limit on
-   `POST /api/v1/analyses`) is now the FIRST Phase-5 task; (b) the operator
-   was asked to set hard spend caps in both provider consoles; (c)
-   `DRY_RUN=1` + redeploy reverts to mock mode any time.
+2. **P5.0 rate limiting trusts the first `X-Forwarded-For` entry** (the bulk
+   of this item was REPAID in session 9 — the live endpoint now enforces
+   5/IP/hour + 100/day rolling caps with 429 + `Retry-After` before any row
+   is created). Accepted residue: XFF is client-controllable when a request
+   reaches the api without the shared Caddy in front, so the *per-IP* limit
+   is spoofable — the *global* daily cap (≈$1.62/day worst case at measured
+   cost) is the deliberate backstop, and either limit set to `0` is a clean
+   kill-switch (429 everything). Also: the daily-cap `COUNT` has no dedicated
+   `created_at` index (fine at MVP volume). Escape hatch unchanged:
+   `DRY_RUN=1` + redeploy.
 3. **DRY_RUN always analyzes the fixed mock company "Yanki Demo Co"**,
    regardless of the submitted URL (documented in architecture.md). Deliberate:
    keeps the mock deterministic end-to-end.
@@ -158,3 +161,23 @@ devDependencies).)
     the runtime image also carries dev packages. Correct fix later: a
     multi-stage Dockerfile (build with dev deps, run with `npm ci --omit=dev`
     or Next standalone output). Cost today: image size only.
+19. **`claim_next` skips `kind='checker'` rows — a deliberate P5.1 stopgap
+    that P5.2 MUST remove.** Without the P5.2 runner branch, the live worker
+    would claim checker rows, fail to crawl `checker://…`, mark them
+    `failed`, and thereby kill the 24h reuse cache (reuse requires `done`).
+    Until P5.2 lands, checker submits sit `queued` forever ($0, invisible to
+    the worker). Guard + its `test_claim_next_skips_checker_rows` live in
+    `backend/app/jobs/queue.py` / `backend/tests/test_queue.py`; the P5.2
+    card carries the removal instruction.
+20. **Lead email validation is a minimal regex, not RFC/deliverability
+    validation** (`email-validator` isn't installed; the card allowed this).
+    Some technically-invalid addresses will be accepted into
+    `checker_submissions.email`. Fine for a lead gate; `pydantic[email]` is a
+    drop-in swap if lead quality ever matters (relates to operator decision
+    on email-gate strength, operator-expected item 13).
+21. **`POST /api/v1/checker` has no rate limit until P5.6** (deliberate lane
+    ownership — P5.6 adds ip_hash population, limits, kill-switch, cost cap).
+    Exposure today is $0 (worker skips checker rows, see #19) and cache hits
+    are free, but an abuser can grow the `analyses`/`checker_submissions`
+    tables unboundedly. Sequence P5.6 promptly after P5.2 makes checker rows
+    actually run.

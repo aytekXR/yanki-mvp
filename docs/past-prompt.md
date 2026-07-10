@@ -136,3 +136,15 @@ live panel on prod ($0.0162/analysis measured — P4.1 residual closed), and
 P5.0 (rate-limit slice) added to the plan as the new first Phase-5 task.
 See [sessions/2026-07-10-06.md](sessions/2026-07-10-06.md); the session-9
 brief (P5.0 → P5.1) lives at the end of that log (§6).
+
+## Session 9 (2026-07-10, #07) — P5.0 + P5.1 via workflows
+
+Ran the session-8 brief (archived above in the session-8 §6 pointer) as
+written: P5.0 (rate limit on the live endpoint, 31061c0) then P5.1 (checker
+submit + leads + 24h reuse, a8f0a06), both implement→adversarial-verify
+workflows, both deployed and live-verified (429 with Retry-After on prod;
+cache-hit + lead smoke at $0). Verifier catches: a latent 500 on limit=0
+(hardened into a kill-switch) and a critical worker-poisoning bug (worker
+would fail checker:// rows — guarded until P5.2). See
+[sessions/2026-07-10-07.md](sessions/2026-07-10-07.md); the session-10
+brief (P5.2 → P5.3) lives at the end of that log (§6).
