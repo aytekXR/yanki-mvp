@@ -82,6 +82,29 @@ class ResponseOut(BaseModel):
     cost_usd: float
 
 
+class EnginePresence(BaseModel):
+    """One engine's presence in a checker run: ``mentioned`` of ``total`` answers
+    named the searched brand (P5.3). Read-time aggregate of the ``footprint``
+    booleans; the per-engine totals sum to ``total_responses``."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    engine: str
+    mentioned: int
+    total: int
+
+
+class CompetitorMention(BaseModel):
+    """A competitor brand that showed up in the answers and how many answers
+    named it (P5.3) — a proper-noun co-mention over the raw text, not the KYC
+    competitor list."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    mentions: int
+
+
 class ResultOut(BaseModel):
     kyc: dict[str, Any] | None
     prompts: list[PromptOut]
@@ -89,6 +112,9 @@ class ResultOut(BaseModel):
     geo_score: float | None
     footprint_count: int | None
     total_responses: int | None
+    # Checker-only read-time aggregates (P5.3); null for MVP / legacy rows.
+    engine_presence: list[EnginePresence] | None
+    competitors_appeared: list[CompetitorMention] | None
 
 
 class AnalysisOut(BaseModel):

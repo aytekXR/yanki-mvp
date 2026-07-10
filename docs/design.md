@@ -521,4 +521,60 @@ decision → consequences**, with one line on why the alternative was rejected.
   support); passing `brand`/`category` straight into the prompt generator
   (step 3 takes only `kyc`, so the seed→KYC path is the single source of truth
   and real runs get an LLM-enriched profile, not two raw strings).
+
+### ADR-21 — Checker's engine-presence map + competitors-that-showed-up are read-time aggregates, not stored (P5.3)
+- **Context:** the public checker's free tier promises two results the MVP crawl
+  never surfaced: an **engine-by-engine presence map** (which engines mentioned
+  the brand, and how often) and the **list of competitor brands that appeared**
+  in the LLM answers. Both are functions of data the pipeline already writes —
+  every `responses` row carries an `engine`, a `footprint` boolean, and the
+  `raw_text` of the answer. The question was where to compute them: a new
+  pipeline step writing new columns, or at read time from the rows we have.
+- **Decision:** compute both at **read time** in a pure helper
+  `services/checker_summary.py::summarize_checker(responses, kyc)` and have
+  `_to_out` attach them to `ResultOut` **only for `kind='checker'` rows** (null
+  for MVP/legacy). No new column, no pipeline step, no worker change, and — this
+  is the point — **no LLM call**, so the aggregates cost **$0** and can be tuned
+  without a migration or a re-run. `engine_presence` groups the responses by
+  `engine` and reports `mentioned` (`footprint is True`) out of `total`; the
+  per-engine totals sum to `total_responses` and the mentions to
+  `footprint_count`, so the map is always consistent with the headline score.
+  `competitors_appeared` is a **deterministic proper-noun co-mention heuristic**
+  over the raw answers: scan each answer for Title-Case names, **group adjacent
+  capitalized words into one name** (so a multi-word brand like `Yanki Demo Co`
+  is excluded whole, with no `Demo Co` fragment leaking), drop a curated EN/TR
+  **stoplist** of sentence-starters/connectives (LLMs capitalize the first word
+  of every sentence, so `For`/`Some`/`Other` would masquerade as brands),
+  **exclude the searched brand + `kyc.aliases` case-insensitively** (the brand is
+  stored casefolded, answers are Title-Case), then count how many distinct
+  answers each surviving name appears in and return the top `TOP_N` (10). The
+  helper takes no ORM/API import — it consumes duck-typed rows + the `kyc` dict
+  and returns frozen dataclasses the route maps onto the contract models. Three
+  refinements keep the heuristic honest on real answers: the brand exclusion is
+  **possessive-tolerant** (an answer about the brand writes `Nike's`, so a
+  trailing English possessive is stripped for the comparison only, never from a
+  reported name), the stoplist also drops **recommendation/imperative verbs**
+  that weld onto a following brand (`Try Acme`, `Choose Nike`), and a leading
+  stoplist word that doubles as an English name particle is **not** stripped
+  from a multi-word name (`De Beers`, `Ben Sherman`) even though it is dropped
+  when it stands alone.
+- **Consequences:** the two checker fields land as **nullable additions** to
+  `ResultOut` (`engine_presence`, `competitors_appeared`) alongside two new
+  contract models (`EnginePresence`, `CompetitorMention`); the change is
+  additive-only, so the `gen-types` drift gate stays green and existing MVP
+  callers are untouched (both fields read `null`). Being read-time, the map and
+  competitor list recompute on every GET — cheap (one pass over ≤60 rows, pure
+  Python) and always current with whatever responses exist, including partial
+  results on a still-running or failed run. Deliberately, competitors come from
+  the **answers**, not `kyc.competitors`: the KYC list is whatever the profiling
+  step happened to name and would miss brands the answers actually surfaced.
+- **Rejected:** a stored `competitors` column filled by a new pipeline step
+  (adds a migration + a worker change + a re-run cost for a value we can derive,
+  and freezes the heuristic into old rows); an **LLM call** to extract
+  competitors (recurring spend and non-determinism for a $0, deterministic
+  string scan); **intersecting against `kyc.competitors`** (misses brands the
+  KYC never knew — the opposite of "who showed up"); a naive Title-Case grep with
+  no grouping/stoplist (leaks sentence-starters like `Some` and brand fragments
+  like `Demo Co`); making the fields non-nullable or MVP-populated (they are a
+  checker-only view, meaningless for a URL crawl, so they stay null there).
 </content>

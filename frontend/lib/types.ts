@@ -160,6 +160,18 @@ export interface components {
              */
             submission_id: string;
         };
+        /**
+         * CompetitorMention
+         * @description A competitor brand that showed up in the answers and how many answers
+         *     named it (P5.3) — a proper-noun co-mention over the raw text, not the KYC
+         *     competitor list.
+         */
+        CompetitorMention: {
+            /** Mentions */
+            mentions: number;
+            /** Name */
+            name: string;
+        };
         /** CreateAnalysisRequest */
         CreateAnalysisRequest: {
             /**
@@ -175,6 +187,20 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /**
+         * EnginePresence
+         * @description One engine's presence in a checker run: ``mentioned`` of ``total`` answers
+         *     named the searched brand (P5.3). Read-time aggregate of the ``footprint``
+         *     booleans; the per-engine totals sum to ``total_responses``.
+         */
+        EnginePresence: {
+            /** Engine */
+            engine: string;
+            /** Mentioned */
+            mentioned: number;
+            /** Total */
+            total: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -220,6 +246,10 @@ export interface components {
         };
         /** ResultOut */
         ResultOut: {
+            /** Competitors Appeared */
+            competitors_appeared: components["schemas"]["CompetitorMention"][] | null;
+            /** Engine Presence */
+            engine_presence: components["schemas"]["EnginePresence"][] | null;
             /** Footprint Count */
             footprint_count: number | null;
             /** Geo Score */

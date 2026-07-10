@@ -10,8 +10,10 @@ from app.api.schemas import (
     CheckerLeadRequest,
     CheckerSubmitRequest,
     CheckerSubmitResponse,
+    CompetitorMention,
     CreateAnalysisRequest,
     CreateAnalysisResponse,
+    EnginePresence,
     PromptOut,
     ResponseOut,
     ResultOut,
@@ -22,6 +24,7 @@ from app.db.session import get_session
 from app.net_guard import is_public_url
 from app.services.analyses import create_analysis, get_analysis
 from app.services.checker import attach_lead, create_checker_analysis
+from app.services.checker_summary import summarize_checker
 from app.services.rate_limit import (
     RateLimitExceeded,
     check_rate_limit,
@@ -34,6 +37,20 @@ router = APIRouter(prefix="/api/v1", tags=["analyses"])
 
 def _to_out(analysis: Analysis) -> AnalysisOut:
     """Build the full GET envelope from an ORM row. ``result`` is always present."""
+    # Checker-only read-time aggregates (P5.3). Computed for kind='checker' rows
+    # from the stored responses; left null for MVP / legacy (kind NULL/'mvp').
+    engine_presence: list[EnginePresence] | None = None
+    competitors_appeared: list[CompetitorMention] | None = None
+    if analysis.kind == "checker":
+        summary = summarize_checker(analysis.responses, analysis.kyc)
+        engine_presence = [
+            EnginePresence.model_validate(stat) for stat in summary.engine_presence
+        ]
+        competitors_appeared = [
+            CompetitorMention.model_validate(stat)
+            for stat in summary.competitors_appeared
+        ]
+
     result = ResultOut(
         kyc=analysis.kyc,
         prompts=[PromptOut.model_validate(p) for p in analysis.prompts],
@@ -41,6 +58,8 @@ def _to_out(analysis: Analysis) -> AnalysisOut:
         geo_score=analysis.geo_score,
         footprint_count=analysis.footprint_count,
         total_responses=analysis.total_responses,
+        engine_presence=engine_presence,
+        competitors_appeared=competitors_appeared,
     )
     return AnalysisOut(
         id=analysis.id,
