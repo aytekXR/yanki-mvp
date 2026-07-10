@@ -237,13 +237,20 @@ P5.3 implementer finished but died emitting its structured report
 (oversized fields); resumed with a report-reconstruction stage —
 implementation was intact, nothing redone.
 
-➡️ **Next up: P5.4 (checker frontend EN: landing + live results) → P5.5
-(email gate).** Both frontend-lane, $0, DRY_RUN-testable; the whole English
-checker vertical becomes demoable. **P5.7 (real Gemini + Perplexity) is the
-alternative if the operator supplies the two keys** (operator-expected item
-12 — now the only thing P5.7 waits on; respx-only in CI either way). Then
-P5.8/P5.9 (Turkish) → P5.10 (methodology) → P5.11 (operator go-live).
-Parked operator items: checker product decisions (P5.11), brandkit v2.
+🔄 **Post-close operator directives (2026-07-10, same day):** (1) **the
+product is English-only** — P5.8/P5.9 skipped, Turkish moved to roadmap
+Later; (2) **Gemini/Perplexity key FIELDS staged** in `deploy/.env` +
+`.env.example` (operator pastes keys; inert until P5.7); (3) **brandkit v2
+adoption un-parked and prioritized** — new card **P5.12**, which jumps
+ahead of P5.4 so the checker UI is built once on the new tokens.
+
+➡️ **Next up: P5.12 (brandkit v2 UI refactor — the headline) → P5.4 (checker
+frontend, EN-only, on the new tokens) → P5.5 (email gate).** **P5.7 (real
+Gemini + Perplexity) unblocks the moment keys appear in `deploy/.env`** —
+it is lane-independent and can run in the same session. Then P5.10
+(EN methodology) → P5.11 (operator go-live, Turkish gate removed).
+Remaining operator items: paste the two keys (item 12), checker product
+decisions minus the Turkish decider (item 13).
 
 ### Readiness snapshot (updated at each session close)
 
@@ -255,13 +262,15 @@ checker backend complete, dark behind the kill-switch).
   last residual (the OpenAI cost leg, measured live on prod). The KYC card
   and the live-mode flip are operator-directed polish/ops inside completed
   surfaces, not new plan tasks.
-- **Phase 5 (post-MVP checker): 5 / 12 built** — P5.0/P5.1 (session 9) +
+- **Phase 5 (post-MVP checker): 5 / 11 built** — P5.0/P5.1 (session 9) +
   P5.2/P5.3/P5.6 (session 12) all deployed. The checker **backend vertical
   is complete**: submit → pipeline → scored result with presence map +
-  competitors, hardened, parked dark behind `CHECKER_ENABLED=0`. Counting
-  Phase 5, the enlarged plan stands at **37 / 44 ≈ 84%**. Next session:
-  **P5.4 → P5.5** (frontend; $0, keyless), or **P5.7 if the operator
-  supplies the Gemini/Perplexity keys** (the only P5.7 blocker).
+  competitors, hardened, parked dark behind `CHECKER_ENABLED=0`.
+  **Post-close re-scope (operator, 2026-07-10): P5.8/P5.9 (Turkish)
+  SKIPPED, P5.12 (brandkit v2 refactor) ADDED** → Phase 5 is now 11 tasks;
+  the enlarged plan stands at **37 / 43 ≈ 86%**. Next session: **P5.12
+  (brandkit v2) → P5.4 → P5.5**; **P5.7 the moment the operator's keys land
+  in `deploy/.env`** (fields staged).
 - **Production readiness: ~98%** (definition unchanged — this metric is the
   LIVE MVP product; the checker is intentionally unreleased until P5.11).
   Code, tests (**146 backend + 31 frontend**), docs, CI (5/5 green), secret
@@ -275,13 +284,18 @@ checker backend complete, dark behind the kill-switch).
   web image (debt #18); XFF-spoofable per-IP limits are accepted posture on
   both public endpoints (global/daily caps are the backstop).
   Gemini/Perplexity remain stubs by design until P5.7.
-- **On track vs. original plan: yes, with sequencing changes only.** Scope is
-  unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate).
-  **Session-12 sequencing change (order, not scope): P5.6 pulled ahead of
-  P5.4/P5.5** — the plan explicitly allows it ("P5.6 … can run any time") and
-  the session-9 brief recommended it: hardening landed in the same session
-  that made checker rows runnable, so prod never had a runnable-but-
-  unthrottled checker. The planned build order resumes at P5.4.
+- **On track vs. original plan: yes — MVP scope untouched; ONE
+  operator-directed Phase-5 scope change (2026-07-10, post-session-12):
+  Turkish is out, brandkit v2 is in.** P5.8/P5.9 skipped (whole product
+  English-only; Turkish → roadmap Later, revived only on the operator's
+  word — this consciously supersedes the draft's "Turkish at checker launch"
+  mandate and roadmap 2c, recorded there too); P5.12 (brandkit v2 UI
+  refactor) added ahead of P5.4 — the operator un-parked their own item 14.
+  Net effect on the count: 44 → 43 tasks. **Session-12 sequencing change
+  (order, not scope): P5.6 pulled ahead of P5.4/P5.5** — the plan explicitly
+  allows it ("P5.6 … can run any time") and the session-9 brief recommended
+  it: hardening landed in the same session that made checker rows runnable,
+  so prod never had a runnable-but-unthrottled checker.
   **Session-6 operator-driven change (models, not scope): "use the cheapest
   models"** — OpenAI provider switched `gpt-4o-mini` → `gpt-5-nano`
   (Anthropic already on Haiku 4.5, the cheapest); P4.1 then ran live with an
@@ -929,6 +943,17 @@ and at least one full raw answer — the full report costs an email address. Eng
 one ([roadmap.md](roadmap.md) 2a; [00-first-mvp-draft.md](00-first-mvp-draft.md)
 "The free checker").
 
+> **⚠ Scope change, 2026-07-10 (operator directive, post-session-12): the
+> whole product is ENGLISH-ONLY.** P5.8 + P5.9 (and their ADR-24/ADR-25) are
+> **skipped**, the Turkish coupling notes in the preamble below are void, and
+> P5.10/P5.11 lose their Turkish gates (their cards carry the amendment).
+> Turkish moved to the roadmap's **Later** bucket, to be revived only on the
+> operator's word. In the same directive: **P5.12 (brandkit v2 UI refactor)
+> was added and jumps the queue ahead of P5.4** — the checker frontend gets
+> built once, on the new tokens, not built then re-skinned. Gemini/Perplexity
+> key FIELDS are staged in `deploy/.env` + `.env.example` (inert until P5.7);
+> the operator pastes real keys at their convenience.
+
 **Design stance (why this is small).** The checker is a *thin variation of the loop
 we already run*, not a new product. It reuses the existing six-step pipeline, the
 `analyses`/`prompts`/`responses`/`llm_cache` tables, the Postgres-as-queue worker,
@@ -1049,10 +1074,11 @@ is the strictly-last operator go-live.
 | P5.5 email gate + full-report reveal | frontend | P5.1, P5.4 | P5.6, P5.7 |
 | P5.6 hardening: kill-switch + rate limit + cost cap | backend-spine | P5.1 | P5.2, P5.3, P5.4, P5.5, P5.7 |
 | P5.7 real Gemini + Perplexity | pipeline | none (gate only) | all |
-| P5.8 Turkish prompts + TR footprint matching | pipeline | P5.2 | P5.6, P5.7 |
-| P5.9 Turkish UI + i18n | frontend | P5.4, P5.5, P5.8 | P5.6, P5.7 |
-| P5.10 methodology page ("show our work") | frontend + infra | P5.2, P5.4, P5.8, P5.9 | P5.6, P5.7 |
-| P5.11 operator: live 4-engine smoke + deploy | infra (operator-gated) | all of the above | — |
+| ~~P5.8 Turkish prompts + TR footprint matching~~ | — | **SKIPPED 2026-07-10 (EN-only directive)** | — |
+| ~~P5.9 Turkish UI + i18n~~ | — | **SKIPPED 2026-07-10 (EN-only directive)** | — |
+| P5.10 methodology page ("show our work") — EN-only | frontend + infra | P5.2, P5.4 | P5.6, P5.7 |
+| P5.11 operator: live 4-engine smoke + deploy | infra (operator-gated) | all non-skipped above | — |
+| P5.12 brandkit v2 UI refactor (added 2026-07-10; runs BEFORE P5.4) | frontend | none | P5.6, P5.7 (backend lanes) |
 
 **Shared-contract merge risks (coordinate before editing):**
 - **OpenAPI envelope.** P5.1 (new endpoints/request schemas) and P5.3 (`ResultOut`
@@ -1318,7 +1344,13 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   submit fires); the checker screens pass the axe smoke suite (no critical
   violations) per [frontend-brandkit.md](frontend-brandkit.md) §7;
   `npm test -- --run` green.
-- **Status:** todo
+- **Status:** todo — **amended 2026-07-10 (operator directives): (a) EN-only** —
+  no EN/TR toggle, no `lib/i18n.ts` machinery, no `tr` placeholder; plain
+  English strings (P5.9 skipped). `lang` is simply not sent (API defaults
+  `'en'`). **(b) Build on brandkit v2** — P5.12 lands first; all new checker
+  components use the v2 tokens (`brandkit/brandkit/frontend-brandkit-v2.md` §2)
+  and the v2 score bands. Dependencies become P5.1, P5.3, **P5.12**. Dev note:
+  set `CHECKER_ENABLED=1` in the dev env to exercise submits locally.
 
 ### P5.5 — Email gate + full-report reveal
 - **Goal:** the checker's lead-capture conversion — the free view shows the score +
@@ -1461,7 +1493,11 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   matched with common suffixes and apostrophe forms, that the İ/ı casefold does not
   corrupt matches, and that unrelated tokens do **not** match; **all existing
   English `footprint` tests stay green**; `make test` green under `DRY_RUN`.
-- **Status:** todo
+- **Status:** ⏭️ SKIPPED (operator directive 2026-07-10, post-session-12:
+  English-only product). Card kept intact for a future revival; the code's
+  `checker_prompts.generate` already falls back to EN for unwired langs, so
+  nothing breaks. When revived, also refresh the "P5.8 wires 'tr'" comment in
+  `backend/app/pipeline/checker_prompts.py`.
 
 ### P5.9 — Turkish UI + i18n wiring
 - **Goal:** make the checker screens speak Turkish. Fill the `tr` dictionary in
@@ -1483,7 +1519,10 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   English leakage, no untranslated keys) and a TR submit produces a TR-language run;
   the toggle is keyboard-accessible and axe-clean; `npm test -- --run` green.
   (Native-speaker sign-off is an operator step tracked in P5.11's launch gate.)
-- **Status:** todo
+- **Status:** ⏭️ SKIPPED (operator directive 2026-07-10: English-only product).
+  P5.4 therefore ships **without** the EN/TR toggle and without a `tr` dict
+  placeholder — plain English strings (a typed copy module is still fine for
+  tidiness, but no i18n machinery). Card kept for a future revival.
 
 ### P5.10 — Public methodology page ("show our work")
 - **Goal:** the transparency wedge as a public asset. A `/methodology` page
@@ -1526,7 +1565,12 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   engine list, and the stated limitations, in both languages; `make gen-types`
   produces no drift; it is axe-clean and reachable from `/checker`;
   `npm test -- --run` green.
-- **Status:** todo
+- **Status:** todo — **amended 2026-07-10 (EN-only directive): everything
+  bilingual above reads ENGLISH-ONLY.** Dependencies shrink to **P5.2 + P5.4**
+  (P5.8/P5.9 skipped; no TR prompts in the artifact, no TR dict layering, no
+  i18n write-collision concern); `checker_methodology.json` exports the EN
+  `checker-en-v1` set only; the caveats section should say plainly that
+  Turkish is not yet supported. Everything else stands.
 
 ### P5.11 — Operator-gated: live 4-engine smoke, cost soak, deploy, launch gate
 - **Goal:** the one live/real-key task, mirroring P4.1 + P4.2. With `DRY_RUN=0` and
@@ -1568,7 +1612,48 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   serves the loop and `/methodology` is reachable; the `DRY_RUN` checker e2e is green
   in CI; the launch go/no-go is recorded with the Turkish sign-off (or the
   named-operator-authorized EN-only deviation) attached.
-- **Status:** todo
+- **Status:** todo — **amended 2026-07-10: the EN-only "deviation" IS now the
+  operator-authorized plan** (directive recorded post-session-12, superseding
+  the bilingual-default language above and in roadmap 2a). The Turkish
+  sign-off gate is void; the launch go/no-go gates on: real engines green,
+  abuse guards verified live, methodology page live. Dependencies shrink to
+  P5.1–P5.7 + P5.10 + P5.12 done.
+
+### P5.12 — Brandkit v2 UI refactor (added 2026-07-10, operator directive; jumps ahead of P5.4)
+- **Goal:** adopt the operator's brandkit v2 ("echo" identity:
+  `brandkit/brandkit/frontend-brandkit-v2.md`) across the EXISTING product
+  surfaces, so the checker frontend (P5.4/P5.5) is built once on the new system.
+  Port the §2 token table into `frontend/tailwind.config.ts` (teal `primary`
+  `#0E7569` family, `ink`, `signal`, the `-soft`/`-strong` status shade pairs),
+  swap fonts to Sora + IBM Plex Mono (self-hosted via `next/font` — no external
+  font CDN), apply the v2 **score-band change** (30–59% is now `warning`, not
+  `primary`) to `ScoreGauge`, and restyle the existing pages/components (home
+  form, progress, results incl. KYC card + ResultsTable + expanded answers)
+  token-for-token. v2 **supersedes** `docs/frontend-brandkit.md` (v1) — the
+  operator's item-14 decision, now made: replace v1's §2 token table with the
+  v2 values (or a pointer to the brandkit file) so no doc quotes dead indigo
+  hexes; §7's a11y rules carry over unchanged.
+- **Why now:** operator directive ("dive into UI refactor with given
+  brandkit"); sequencing it before P5.4 avoids building the checker UI twice.
+- **Dependencies:** none (frontend lane; brandkit package already in-repo).
+- **Complexity:** M
+- **Deliverables:** `frontend/tailwind.config.ts` (v2 tokens),
+  `frontend/app/**` + `frontend/components/**` restyle (no behavior change),
+  font wiring, `docs/frontend-brandkit.md` reconciled to v2, ADR in
+  [design.md](design.md) (v2 adoption + the score-band semantic change),
+  updated axe suites green, **manually recomputed WCAG ratios** for every
+  text-on-fill pair actually used (debt #13: axe can't check contrast under
+  jsdom — the brandkit's claimed ratios must be re-verified against the
+  implemented combinations and recorded).
+- **Acceptance:** every existing screen renders in the v2 palette/type with
+  zero raw hexes in components (tokens only); `ScoreGauge` bands follow v2
+  semantics (0–29 danger / 30–59 warning / 60–100 success) with the numeric
+  label always present; all frontend tests + axe suites green
+  (`npm test -- --run`); tsc/eslint/build green; the browser e2e in CI still
+  passes (no selector/behavior drift); no backend or contract change;
+  before/after screenshots of home + results attached to the session log
+  (marketing gradients stay OUT of the product UI per the brandkit).
+- **Status:** todo — **the next session's headline task.**
 
 ---
 

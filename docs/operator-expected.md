@@ -15,18 +15,34 @@ competitors (`c5e4f6d`), P5.6 hardening (`7542751`). The public checker
 endpoint exists on prod but is **parked behind `CHECKER_ENABLED=0`** — a
 fresh submit gets a friendly 503 and records nothing (live-verified, $0).
 Do NOT flip `CHECKER_ENABLED` yet: that is the P5.11 go-live step, after
-the frontend (P5.4/P5.5), real engines (P5.7), Turkish (P5.8/P5.9), the
-methodology page (P5.10), and your item-13 decisions. Your live MVP product
+the brandkit refactor (P5.12), the frontend (P5.4/P5.5), real engines
+(P5.7), the methodology page (P5.10), and your item-13 decisions (Turkish
+is no longer a gate — see the addendum below). Your live MVP product
 is untouched: same URL, same behavior, plus each result now carries the
 groundwork for the checker views. Prod spend this session: **$0**.)
 
+*(Post-close addendum, same day — your three directives are executed and
+recorded: **1) Turkish skipped, whole product English** — P5.8/P5.9 skipped,
+roadmap 2c moved to Later, the P5.11 Turkish sign-off gate is void, and the
+item-13 "Turkish sign-off owner" question below is withdrawn. **2) Key
+fields staged** — see "Do now". **3) Brandkit v2 adoption un-parked** — item
+14 is now DECIDED: new task P5.12 is the next session's headline, ahead of
+the checker frontend so the UI is built once on the new tokens. Plan
+completion is now 37/43 ≈ 86%, Phase 5 5/11.)*
+
 ## Do now (recommended, not blocking)
 
-- [ ] **Item 12 below — the two API keys.** Everything else in Phase 5
-  that doesn't need you is either done (P5.0–P5.3, P5.6) or pure frontend
-  (P5.4/P5.5, next session, $0). Providing `GEMINI_API_KEY` +
-  `PERPLEXITY_API_KEY` whenever convenient unblocks P5.7 (real 4-engine
-  panel). No urgency — next session proceeds without them.
+- [ ] **Paste your two API keys into `deploy/.env`** — the empty fields are
+  staged at the bottom of the file (lines 52–53):
+  ```bash
+  GEMINI_API_KEY=      # paste here
+  PERPLEXITY_API_KEY=  # paste here
+  ```
+  Nothing else to do — the file is gitignored, the keys are inert until
+  P5.7's adapters land (no spend, not even loaded), and the next session
+  picks them up automatically. `deploy/.env.example` documents the same
+  fields. Grounding/ToS sanity check from item 12 still applies when you
+  create them.
 
 ## Done (this session and before)
 
@@ -74,24 +90,25 @@ groundwork for the checker views. Prod spend this session: **$0**.)
   `GEMINI_API_KEY` + `PERPLEXITY_API_KEY`, plus a grounding/ToS sanity check
   for both.
 - [ ] **13. Checker product decisions** (needed before the checker goes live):
-  - **Turkish sign-off owner.** Native Turkish prompts + UI copy need a
-    native-speaker sign-off before the loud launch; no sign-off → EN-only
-    launch ("no Turkish beats bad Turkish") — who is the named decider?
-  - **Abuse thresholds.** Defaults are guesses: 5 checks/IP/hour, 3 fresh
-    runs/brand/day, $50/day cost cap. Confirm free-tier generosity vs spend.
+  - ~~**Turkish sign-off owner.**~~ **Withdrawn** — you decided 2026-07-10:
+    whole product English-only; Turkish deferred to the roadmap's Later.
+  - **Abuse thresholds.** The P5.6 defaults now live in code (guesses):
+    10 checks/IP/hour, 20 fresh runs/brand/day, $5/day cost cap. Confirm
+    free-tier generosity vs spend before go-live.
   - **Email-gate strength.** A single unverified email is assumed (max lead
     capture). Add verification / disposable-domain blocking / captcha, or not?
   - **The one free raw answer.** Default: first answer that mentions the brand.
 
 ## Later — design (non-blocking)
 
-- [ ] **14. Brandkit v2 adoption decision.** You dropped `brandkit/` into the
-  repo on 2026-07-10 and chose to **skip integrating it for now** — nothing
-  happens until you say so. When you want it adopted, decide: does v2
-  supersede `docs/frontend-brandkit.md` (v1) and should the frontend tokens
-  change to match? (Heads-up from tech-debt #13: a palette change means
-  re-computing the WCAG contrast ratios by hand — axe can't check contrast
-  under jsdom.)
+- [x] **14. Brandkit v2 adoption decision — DECIDED 2026-07-10** ("dive into
+  ui refactor with given brandkit"): v2 supersedes `docs/frontend-brandkit.md`
+  (v1) and the frontend tokens change to match. Scheduled as **P5.12**, the
+  next session's headline task, ahead of the checker frontend. The tech-debt
+  #13 heads-up is folded into the card: the WCAG contrast ratios of every
+  implemented text-on-fill pair get manually recomputed and recorded (axe
+  can't check contrast under jsdom). Nothing more needed from you here —
+  before/after screenshots will be attached to the next session log.
 
 ## Local-machine quirks (informational)
 

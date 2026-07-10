@@ -15,7 +15,9 @@ detail, follow the link; this file does not duplicate it.
 
 The three wedges every phase serves (from the draft): **show our work**
 (published methodology, every raw answer one click away), **pricing agencies can
-scale on**, and **Turkish as a first-class language**.
+scale on**, and **Turkish as a first-class language** *(⚠ operator decision
+2026-07-10: Turkish is **deferred to Later** — the whole product launches
+English-only; the wedge stays on the roadmap but is not launch scope. See 2c.)*.
 
 ---
 
@@ -72,7 +74,7 @@ MVP sign-off gate (P4.1 + P4.2 + first green CI).*
 | Public no-signup page: brand + category → 12 fixed prompts × 4 engines, live | Every run is a demand signal and a lead; Semrush has a checker, ours must be more generous and exist in Turkish (theirs doesn't). |
 | Score + engine-by-engine presence map + competitors that showed up + ≥1 full raw answer | "Show our work" from the first touch — not a teaser; the full report costs an email address (lead capture). |
 | Results cached 24h per brand, rate limited, email-gated | Abuse control: caching, rate limits, email gate, fixed prompt set, daily cost check (the draft's checker-abuse mitigation). |
-| **English + Turkish** at checker launch | Turkish is a launch differentiator, not a later add — the checker is where we first prove it publicly. |
+| ~~**English + Turkish** at checker launch~~ **English-only at launch** (operator decision 2026-07-10) | The draft called Turkish a launch differentiator; the operator chose to ship the whole product EN-only and defer Turkish to Later. The original rationale stands whenever it is revived. |
 
 ### 2b. Engine + scoring depth — make the number trustworthy
 
@@ -84,6 +86,14 @@ MVP sign-off gate (P4.1 + P4.2 + first green CI).*
 | Sentiment + position extraction pass (cheap model) | Inputs to the weighted score; a cheap analysis model is one of the three cost protections. |
 
 ### 2c. Turkish as a first-class language — the wedge that can't be a sprint bolt-on
+
+> **⚠ Deferred to Later — operator decision, 2026-07-10.** The whole product
+> ships English-only for now; everything in this subsection moves to the
+> Later bucket and is revived only on the operator's word. Consequence,
+> stated honestly: the "Turkish first-class" wedge is not part of the launch
+> story until then, and the Arabic gate below ("Turkey delivers 20%+ of
+> signups") cannot trigger while Turkish is off. Engineering decomposition
+> (P5.8/P5.9) is preserved in implementation-plan.md as skipped cards.
 
 | Item | Rationale |
 |---|---|
@@ -120,7 +130,8 @@ down on. Each is gated on a day-90 decision below.
 |---|---|
 | **Agency plan ~$299/mo** — 10 projects (kept fully separate) + white-label PDF reports | The agency owner is the multiplier and the highest-leverage buyer; the 5 design partners will "pull the agency plan out of us" when it's time. Day 60–90 decision. |
 | **Google AI Overviews tracking** | Our biggest admitted gap vs Semrush; needs SERP scraping or a paid SERP API. We say it out loud on the comparison page and close it around day 60–90 — hiding it would cost us the transparency story. |
-| **Arabic** language support | Ship only if Turkey delivers 20%+ of signups organically — proof the native-language playbook repeats before we spend on a third language. |
+| **Turkish** language support (moved from 2c, operator decision 2026-07-10) | Native prompts + suffix-aware matching + TR UI, as specced in 2c and the skipped P5.8/P5.9 cards. Revive on the operator's word; requires a native-speaker sign-off before any public Turkish. |
+| **Arabic** language support | Ship only if Turkey delivers 20%+ of signups organically — proof the native-language playbook repeats before we spend on a third language. (Gate suspended while Turkish itself is deferred.) |
 | **CSV export + public API** | Export is a Pro-tier ask already; API is "later, when someone asks and pays" — not needed to prove willingness to pay. |
 | **Compliance-grade tier $500+/mo** (accuracy guarantees, audit trails) | Only if regulated/enterprise brands come inbound asking; the pipeline already supports the audit trail, so it's packaging, not a rebuild. |
 
@@ -172,7 +183,7 @@ table is the contract between "not now" and "when":
 | Billing / Stripe / plan limits | **Next** | 2d — Stripe Free/$49/$129 |
 | Scheduling, recurring scans, weekly digests + alerts | **Next** | 2d — weekly scheduling + digest + alerts |
 | Sentiment analysis and position weighting (score stays binary) | **Next** | 2b — weighted 0–100 score |
-| Turkish language (native prompts + Turkish suffix matching) | **Next** | 2c — Turkish first-class |
+| Turkish language (native prompts + Turkish suffix matching) | **Later** (operator decision 2026-07-10; was Next) | Later — Turkish (moved from 2c) |
 | Cross-account cache (MVP caches within a job only) | **Next** | 2d — cross-account `llm_cache` |
 | Real Gemini + Perplexity engines (stubbed in MVP) | **Next** | 2b — real Gemini + Perplexity |
 | 2-samples-per-prompt sampling | **Next** | 2b — 2 samples per prompt |
