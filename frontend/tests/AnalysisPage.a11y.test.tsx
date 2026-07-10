@@ -9,6 +9,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/lib/api', () => ({
   getAnalysis: vi.fn(),
+  joinWaitlist: vi.fn(),
   ApiError: class ApiError extends Error {
     status: number
     constructor(message: string, status: number) {
@@ -110,6 +111,10 @@ describe('AnalysisPage accessibility', () => {
     )
     const { container } = render(<AnalysisPage />)
     await screen.findByRole('img') // the ScoreGauge
+    // The growth-loop waitlist section renders below the results on done.
+    expect(
+      screen.getByRole('heading', { name: /track this score over time/i }),
+    ).toBeInTheDocument()
     expect(await axeCheck(container)).toHaveNoViolations()
   })
 })

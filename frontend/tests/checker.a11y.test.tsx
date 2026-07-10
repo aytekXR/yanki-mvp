@@ -12,6 +12,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/api', () => ({
   createCheckerAnalysis: vi.fn(),
   getAnalysis: vi.fn(),
+  submitLead: vi.fn(),
+  joinWaitlist: vi.fn(),
   ApiError: class ApiError extends Error {
     status: number
     constructor(message: string, status: number) {
@@ -113,5 +115,57 @@ describe('Checker screens accessibility', () => {
     const { container } = render(<CheckerResultsPage />)
     await screen.findByRole('img') // the ScoreGauge
     expect(await axeCheck(container)).toHaveNoViolations()
+  })
+
+  it('keeps the email gate primary: waitlist does not preempt it pre-reveal', async () => {
+    // Two answers means one is gated, so EmailGate is the primary CTA. The
+    // waitlist section must stay hidden until the gate is unlocked.
+    mockedGet.mockResolvedValue(
+      makeAnalysis({
+        status: 'done',
+        progress: 100,
+        current_step: null,
+        result: {
+          footprint_count: 1,
+          geo_score: 0.5,
+          kyc: null,
+          prompts: [{ id: 'p1', category: 'comparison', text: 'Best note app?' }],
+          responses: [
+            {
+              id: 'r1',
+              engine: 'openai',
+              model: 'gpt-4o-mini',
+              footprint: true,
+              matched_snippet: 'Notion is a strong option.',
+              prompt_id: 'p1',
+              raw_text: 'Notion is a strong option and…',
+              cost_usd: 0.0021,
+            },
+            {
+              id: 'r2',
+              engine: 'anthropic',
+              model: 'claude',
+              footprint: false,
+              matched_snippet: null,
+              prompt_id: 'p1',
+              raw_text: 'Other apps exist.',
+              cost_usd: 0.0021,
+            },
+          ],
+          total_responses: 2,
+          engine_presence: null,
+          competitors_appeared: null,
+        },
+      }),
+    )
+    render(<CheckerResultsPage />)
+    // The gate renders as the primary conversion...
+    expect(
+      await screen.findByRole('heading', { name: /see every answer/i }),
+    ).toBeInTheDocument()
+    // ...and the waitlist section is absent until the gate is unlocked.
+    expect(
+      screen.queryByRole('heading', { name: /track this score over time/i }),
+    ).not.toBeInTheDocument()
   })
 })

@@ -34,9 +34,12 @@ RESEND_ENDPOINT = "https://api.resend.com/emails"
 TIMEOUT_SECONDS = 5.0
 
 _THANK_YOU_TEXT = (
-    "Thanks for joining the Yanki waitlist.\n\n"
-    "We're building a way to see how AI answer engines describe your brand, and "
-    "we'll email you the moment early access opens. No spam, just that one note.\n\n"
+    "Hi there, and welcome to Yanki!\n\n"
+    "Yanki shows you how AI engines talk about your brand when people ask them "
+    "for recommendations.\n\n"
+    "Don't wait for launch to see it: run your first free analysis right now at\n"
+    "https://yanki.beyondkaira.com\n\n"
+    "It takes about a minute, and you'll get your GEO score plus every raw answer.\n\n"
     "- The Yanki team"
 )
 
@@ -104,7 +107,10 @@ def send_run_alert(analysis: Analysis, settings: Settings) -> None:
     ]
     if analysis.status == "done":
         lines.append(f"geo_score: {analysis.geo_score}")
-    lines.append(f"link: https://yanki.beyondkaira.com/analyses/{analysis.id}")
+    # Kind-aware public results page: checker runs live under /checker/<id>, all
+    # other kinds under /analyses/<id>.
+    path = "checker" if kind == "checker" else "analyses"
+    lines.append(f"link: https://yanki.beyondkaira.com/{path}/{analysis.id}")
     send_email(
         settings.notify_email,
         f"Yanki run {analysis.status}",

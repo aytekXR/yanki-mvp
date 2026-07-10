@@ -12,6 +12,7 @@ import ResultsTable from '@/components/ResultsTable'
 import EnginePresenceMap from '@/components/EnginePresenceMap'
 import CompetitorsList from '@/components/CompetitorsList'
 import EmailGate from '@/components/EmailGate'
+import WaitlistForm from '@/components/WaitlistForm'
 
 const POLL_MS = 2000
 
@@ -170,6 +171,14 @@ function Results({
   // geo_score is a 0–1 fraction; ScoreGauge takes a 0–100 percentage.
   const percent = Math.round((result.geo_score ?? 0) * 100)
 
+  // The email gate is the PRIMARY conversion here, so the waitlist section stays
+  // hidden until the gate is out of the way — either unlocked by the visitor, or
+  // never shown at all (0 or 1 answer leaves nothing to gate). It then appears
+  // below, secondary to the gate, never pre-empting it.
+  const [unlocked, setUnlocked] = useState(false)
+  const gateInPlay = result.responses.length > 1
+  const showWaitlist = !gateInPlay || unlocked
+
   return (
     <div className="space-y-8">
       <section className="rounded-xl border border-surface-border bg-white p-6 shadow-sm">
@@ -188,7 +197,25 @@ function Results({
         responses={result.responses}
         prompts={result.prompts}
         submissionId={submissionId}
+        unlocked={unlocked}
+        onUnlock={() => setUnlocked(true)}
       />
+
+      {showWaitlist ? (
+        <section aria-labelledby="track-heading" className="space-y-2">
+          <h2
+            id="track-heading"
+            className="text-xl font-semibold text-surface-foreground"
+          >
+            Want to track this score over time?
+          </h2>
+          <p className="max-w-2xl text-sm text-surface-subtle">
+            Join the waitlist for weekly tracking and updates as your AI
+            visibility changes.
+          </p>
+          <WaitlistForm />
+        </section>
+      ) : null}
     </div>
   )
 }
@@ -204,13 +231,15 @@ function GatedAnswers({
   responses,
   prompts,
   submissionId,
+  unlocked,
+  onUnlock,
 }: {
   responses: AnalysisResponse[]
   prompts: Prompt[]
   submissionId: string | null
+  unlocked: boolean
+  onUnlock: () => void
 }) {
-  const [unlocked, setUnlocked] = useState(false)
-
   if (responses.length === 0) {
     return (
       <section className="space-y-3">
@@ -250,7 +279,7 @@ function GatedAnswers({
       <EmailGate
         submissionId={submissionId}
         hiddenCount={hiddenCount}
-        onUnlock={() => setUnlocked(true)}
+        onUnlock={onUnlock}
       />
     </section>
   )

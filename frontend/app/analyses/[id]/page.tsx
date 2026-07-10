@@ -10,6 +10,7 @@ import StepProgress from '@/components/StepProgress'
 import ScoreGauge from '@/components/ScoreGauge'
 import ResultsTable from '@/components/ResultsTable'
 import KycCard from '@/components/KycCard'
+import WaitlistForm from '@/components/WaitlistForm'
 
 const POLL_MS = 2000
 
@@ -172,6 +173,23 @@ function Results({ analysis }: { analysis: Analysis }) {
             No engine responses were recorded for this analysis.
           </p>
         )}
+      </section>
+
+      {/* Growth loop: once a score is on screen, invite the visitor to keep
+          tracking it. Reuses WaitlistForm as-is (its own <section> landmark and
+          H2 come along); the copy below sets the context above it. */}
+      <section aria-labelledby="track-heading" className="space-y-2">
+        <h2
+          id="track-heading"
+          className="text-xl font-semibold text-surface-foreground"
+        >
+          Want to track this score over time?
+        </h2>
+        <p className="max-w-2xl text-sm text-surface-subtle">
+          Join the waitlist for weekly tracking and updates as your AI visibility
+          changes.
+        </p>
+        <WaitlistForm />
       </section>
     </div>
   )
