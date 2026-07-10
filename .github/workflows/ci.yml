@@ -27,9 +27,12 @@ jobs:
       DRY_RUN: "1"
       TEST_DATABASE_URL: postgresql+psycopg://yanki:yanki@localhost:5433/yanki_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        # v7, not v8: the setup-uv v8 line dropped floating major tags (supply-
+        # chain hardening), so @v8 does not resolve — v7 is the newest major
+        # that keeps the repo's @vN pin style, and it already runs on node24.
+        uses: astral-sh/setup-uv@v7
       - name: Sync deps
         working-directory: backend
         run: uv sync
@@ -47,8 +50,8 @@ jobs:
     name: frontend (typecheck + lint + vitest + build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Install deps
@@ -71,10 +74,13 @@ jobs:
     name: contract drift gate (openapi + types)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-node@v4
+        # v7, not v8: the setup-uv v8 line dropped floating major tags (supply-
+        # chain hardening), so @v8 does not resolve — v7 is the newest major
+        # that keeps the repo's @vN pin style, and it already runs on node24.
+        uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Backend deps
@@ -100,7 +106,7 @@ jobs:
       GITLEAKS_VERSION: "8.28.0"
       GITLEAKS_SHA256: "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Full history so the scan covers every commit, not just the tip.
           fetch-depth: 0
@@ -121,8 +127,8 @@ jobs:
     name: e2e (playwright happy path, DRY_RUN stack)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
       # Both installs MUST run before the stack boots: the compose web service
