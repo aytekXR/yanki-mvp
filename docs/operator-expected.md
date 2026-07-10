@@ -1,128 +1,89 @@
 # Operator Expected — everything only a human can do
 
-*The single operator file (the former `operator-actions.md` was merged in
-here, 2026-07-10). Maintained by the orchestrator at every session close.
-Tick items as you do them; the next session re-checks `deploy/.env`, the git
-remote, and CI status at start regardless. Nothing here blocks local
-development — `make dev` + `make test` work with zero keys and zero cost
-(DRY_RUN).*
+*The single operator file. Maintained by the orchestrator; tick items as you
+do them. Nothing here blocks local development — `make dev` + `make test`
+work with zero keys and zero cost (DRY_RUN).*
 
-Last updated: 2026-07-10 (session 12 close: **nothing is blocking, one
-recommended item** — the two API keys, item 12, now the ONLY thing between
-us and P5.7. This session shipped the entire checker backend and deployed
-it **dark**: P5.2 checker pipeline (`d6e7253`), P5.3 presence map +
-competitors (`c5e4f6d`), P5.6 hardening (`7542751`). The public checker
-endpoint exists on prod but is **parked behind `CHECKER_ENABLED=0`** — a
-fresh submit gets a friendly 503 and records nothing (live-verified, $0).
-Do NOT flip `CHECKER_ENABLED` yet: that is the P5.11 go-live step, after
-the brandkit refactor (P5.12), the frontend (P5.4/P5.5), real engines
-(P5.7), the methodology page (P5.10), and your item-13 decisions (Turkish
-is no longer a gate — see the addendum below). Your live MVP product
-is untouched: same URL, same behavior, plus each result now carries the
-groundwork for the checker views. Prod spend this session: **$0**.)
+Last updated: 2026-07-10, **session 13 CLOSE — the build is done.**
+All six build tasks shipped and deployed dark (last-good `643e0ee`, CI
+green, $0 prod spend): real Gemini+Perplexity (P5.7), brandkit v2 (P5.12),
+checker frontend + email gate (P5.4/P5.5), **your waitlist + email
+notifications (P5.13)**, methodology page (P5.10). Plan **43/44 ≈ 98%** —
+the only remaining card is **P5.11: your go-live**. The checker still
+answers 503 (dark); the **waitlist is LIVE on prod** — a real thank-you
+email was delivered to your Resend account inbox as proof (check it).
+Every analysis run now attempts an operator alert mail (delivery pending
+B1). Next session = P5.11 at your pace: answer A1, do B1+B2, then B3.
 
-*(Post-close addendum, same day — your three directives are executed and
-recorded: **1) Turkish skipped, whole product English** — P5.8/P5.9 skipped,
-roadmap 2c moved to Later, the P5.11 Turkish sign-off gate is void, and the
-item-13 "Turkish sign-off owner" question below is withdrawn. **2) Key
-fields staged** — see "Do now". **3) Brandkit v2 adoption un-parked** — item
-14 is now DECIDED: new task P5.12 is the next session's headline, ahead of
-the checker frontend so the UI is built once on the new tokens. Plan
-completion is now 37/43 ≈ 86%, Phase 5 5/11.)*
+## A. Questions waiting for your answer
 
-## Do now (recommended, not blocking)
+*Reply in chat or edit inline. "Keep defaults" is a complete answer for A1.*
 
-- [ ] **Paste your two API keys into `deploy/.env`** — the empty fields are
-  staged at the bottom of the file (lines 52–53):
-  ```bash
-  GEMINI_API_KEY=      # paste here
-  PERPLEXITY_API_KEY=  # paste here
-  ```
-  Nothing else to do — the file is gitignored, the keys are inert until
-  P5.7's adapters land (no spend, not even loaded), and the next session
-  picks them up automatically. `deploy/.env.example` documents the same
-  fields. Grounding/ToS sanity check from item 12 still applies when you
-  create them.
+- [ ] **A1. Checker go-live decisions** (the former item 13; due before
+  P5.11 flips the checker public):
+  - **Abuse thresholds** — in code: 10 checks/IP/hour, 20 fresh
+    runs/brand/day, $5/day cost cap. *Default: keep.* → Answer: ______
+  - **Email-gate strength** — single unverified email (max lead capture)
+    vs verification / disposable-domain blocking / captcha.
+    *Default: single unverified.* → Answer: ______
+  - **The one free raw answer** — *default: first answer that mentions the
+    brand.* → Answer: ______
 
-## Done (this session and before)
+## B. Actions only you can do (in priority order)
 
-- [x] **0. KYC fix verified on the operator's screen** (2026-07-10,
-  session 11): beyondtech.com.tr profile confirmed correct.
-- [x] **1. Provider-console spend caps in place: $10** on both Anthropic
-  and OpenAI (2026-07-10, session 11). Combined with code-side limits
-  (5/IP/hour, 100/day ≈ $1.62/day worst case), the maximum blast radius is
-  now doubly bounded. Escape hatches remain: `ANALYSES_DAILY_CAP=0` +
-  redeploy (429 kill-switch) or `DRY_RUN=1` + redeploy ($0 mock).
-- [x] **2. KYC card design reviewed** — good for now; operator will
-  integrate a UI design (brandkit) later, so no card changes requested.
-  Follow-up shipped instead: full LLM answers viewable on demand in the
-  response table (this session).
+- [ ] **B1. Resend: verify a sending domain** (required before waitlist
+  emails actually deliver; P5.13 is LIVE on prod, your key is in
+  gitignored `deploy/.env` only). Until `beyondkaira.com` (or a subdomain)
+  is verified in the Resend dashboard (DKIM/SPF DNS records they show),
+  Resend testing mode delivers only FROM `onboarding@resend.dev` TO your
+  own account email — thank-you mails to strangers and notifications to
+  `info@beyondkaira.com` are accepted by the API but not delivered. After
+  verifying: set `EMAIL_FROM=yanki@beyondkaira.com` (or your pick) in
+  `deploy/.env` and redeploy. Code fails open — undelivered email never
+  breaks a signup or an analysis.
+- [ ] **B2. Vendor ToS + pricing check for Gemini/Perplexity** (before
+  P5.11 go-live): (a) grounding/live-search allowed on your account tiers;
+  (b) model ids + prices — adapters pin `gemini-2.5-flash` ($0.30/$2.50
+  per 1M in/out) and `sonar` ($1/$1 per 1M) from model knowledge, not a
+  live read. Note `cost_usd` **undercounts** slightly: per-request
+  search/grounding fees and Gemini thinking tokens are unmodelled (retune
+  in P5.11's week-1 cost read).
+- [ ] **B3. P5.11 go-live itself stays yours** (after A1 + B2): flip
+  `CHECKER_ENABLED=1` in `deploy/.env`, redeploy, supervise the live
+  4-engine smoke. No agent will flip it.
+- [ ] **B4. Rotate the Resend API key when convenient** — it was pasted
+  into a chat transcript; rotate in the dashboard, re-paste into
+  `deploy/.env`.
+- [ ] **B5. (Optional) local browser deps, one root command:**
+  `cd frontend && sudo npx playwright install-deps chromium` — enables
+  local `make e2e` + native screenshots. Fully skippable: CI proves the
+  e2e on every push; screenshots are done via dockerized Chrome.
 
-- [x] **3. Run-mode decision → LIVE.** Flipped + redeployed 2026-07-10
-  (session 8), on your directive.
-- [x] **4. OpenAI billing.** Quota works; `gpt-5-nano` leg proven live on
-  prod ($0.0026/analysis).
-- [x] **5. Caddyfile committed in ams-pulse** (`d538631`) — verified clean
-  working tree there.
-- [x] **6. First deploy (P4.2)** — session 7; deploy + rollback exercised,
-  co-tenants undisturbed, TLS live.
-- [x] **7. Real API keys → P4.1** — session 6; now fully closed by the
-  session-8 OpenAI leg.
-- [x] **8. GitHub + CI** — `aytekXR/yanki-mvp`, 5/5 jobs green since
-  session 4.
-- [x] **9. DNS** — `yanki.beyondkaira.com → 161.97.172.146`.
-- [x] **10. `POSTGRES_PASSWORD`** — real 32-char value generated into
-  `deploy/.env` (session 7); copy to a password manager if you keep one.
+## C. Done (compacted history)
 
-## Optional
-
-- [ ] **11. Local browser e2e needs root once** (fully skippable — CI proves
-  the browser e2e on every push):
-  ```bash
-  cd frontend && sudo npx playwright install-deps chromium
-  ```
-
-## Later — Phase 5, the public checker (2/12 built; these come due at P5.7/P5.11)
-
-- [ ] **12. Two more API keys** (**now the only P5.7 blocker** as of
-  session 12 — P5.2/P5.3/P5.6 landed without needing you; only P5.4/P5.5
-  frontend work remains keyless):
-  `GEMINI_API_KEY` + `PERPLEXITY_API_KEY`, plus a grounding/ToS sanity check
-  for both.
-- [ ] **13. Checker product decisions** (needed before the checker goes live):
-  - ~~**Turkish sign-off owner.**~~ **Withdrawn** — you decided 2026-07-10:
-    whole product English-only; Turkish deferred to the roadmap's Later.
-  - **Abuse thresholds.** The P5.6 defaults now live in code (guesses):
-    10 checks/IP/hour, 20 fresh runs/brand/day, $5/day cost cap. Confirm
-    free-tier generosity vs spend before go-live.
-  - **Email-gate strength.** A single unverified email is assumed (max lead
-    capture). Add verification / disposable-domain blocking / captcha, or not?
-  - **The one free raw answer.** Default: first answer that mentions the brand.
-
-## Later — design (non-blocking)
-
-- [x] **14. Brandkit v2 adoption decision — DECIDED 2026-07-10** ("dive into
-  ui refactor with given brandkit"): v2 supersedes `docs/frontend-brandkit.md`
-  (v1) and the frontend tokens change to match. Scheduled as **P5.12**, the
-  next session's headline task, ahead of the checker frontend. The tech-debt
-  #13 heads-up is folded into the card: the WCAG contrast ratios of every
-  implemented text-on-fill pair get manually recomputed and recorded (axe
-  can't check contrast under jsdom). Nothing more needed from you here —
-  before/after screenshots will be attached to the next session log.
+- [x] Session 13: **Gemini + Perplexity keys pasted** (closes the old
+  item 12) → P5.7 shipped same session (`40d8a34`). **Brandkit v2 decision**
+  (old item 14) → P5.12 shipped (`d5abee7`), WCAG ratios recorded,
+  before/after screenshots in the session log.
+- [x] Sessions 1–12: KYC fix verified · $10 spend caps on Anthropic+OpenAI
+  (plus code-side caps; blast radius doubly bounded — escape hatches:
+  `ANALYSES_DAILY_CAP=0` or `DRY_RUN=1` + redeploy) · run-mode LIVE
+  (session 8) · OpenAI billing proven ($0.0026/analysis) · Caddyfile
+  committed in ams-pulse (`d538631`) · first deploy + rollback exercised
+  (P4.2) · real Anthropic/OpenAI keys (P4.1) · GitHub + CI green
+  (`aytekXR/yanki-mvp`) · DNS `yanki.beyondkaira.com → 161.97.172.146` ·
+  real `POSTGRES_PASSWORD` in `deploy/.env`.
+- [x] Turkish: **deferred to Later, whole product EN-only** (your
+  2026-07-10 directive; P5.8/P5.9 skipped, revive on your word).
 
 ## Local-machine quirks (informational)
 
-- **Ports 5432 and 8140 are already taken on this host.** The dev stack is
-  parameterized; put overrides in `deploy/.env` (or prefix the command):
-  ```bash
-  YANKI_DB_PORT=5434 YANKI_WEB_PORT=8240 make dev
-  # web → http://localhost:8240 , api stays on 8141
-  ```
-  The **prod** stack's loopback binds are 8142/8143 (health checks only —
-  the shared Caddy reaches the containers via network aliases).
-- **Node is v20 here; README recommends 22 LTS.** Everything builds and tests
-  green on 20 — upgrade is optional.
-- **Docker group membership may not apply to long-lived sessions.** `aytek`
-  is in the `docker` group but processes started before the membership was
-  granted get "permission denied" on the socket. Fix: a fresh login shell, or
-  prefix commands with `sg docker -c "…"`.
+- **Ports 5432 and 8140 are taken on this host.** Dev stack is
+  parameterized: `YANKI_DB_PORT=5434 YANKI_WEB_PORT=8240 make dev`
+  (web → http://localhost:8240, api on 8141). **Prod** loopback binds are
+  8142 (web) / 8143 (api) — health checks only; the shared Caddy reaches
+  containers via network aliases.
+- **Node is v20 here; README recommends 22 LTS.** All green on 20 —
+  upgrade optional.
+- **Docker group membership may not apply to long-lived sessions** —
+  prefix with `sg docker -c "…"` or use a fresh login shell.

@@ -182,3 +182,14 @@ competitors; verify caught possessive-exclusion bug pre-merge), P5.6
 (CHECKER_ENABLED=0, live-verified 503 + zero rows, $0 spend); co-tenants
 untouched; CI 5/5. See [sessions/2026-07-10-10.md](sessions/2026-07-10-10.md)
 §6 for the next brief (P5.4 → P5.5, or P5.7 if keys arrive).
+
+## Session 13 — 2026-07-10 (#11 today)
+
+**Prompt executed:** "Using workflows, continue implementation… Start from
+@docs/resume-prompt.md I have added all api keys. This is the last session and
+dedicated to frontend refactor according to brandkit right?" — i.e. the
+session-12 §9 superseding next-session prompt (P5.12 headline + P5.7 on keys
++ P5.4/P5.5), executed in full and exceeded. Mid-session operator additions:
+the waitlist + Resend email notifications (became P5.13); an operator-file
+rewrite into answer-sheet form; three status reports. Full log:
+`sessions/2026-07-10-11.md`.

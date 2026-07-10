@@ -255,6 +255,22 @@ Numeric limits follow the P5.0 idiom: a value of `0` is a clean kill-switch for
 that guard. See ADR-22 for the accepted residuals (XFF spoofability of the
 per-IP guard; unbounded $0 cache-hit submission rows).
 
+### Waitlist + transactional email (P5.13)
+
+`POST /api/v1/waitlist` (the third public write path) stores a lowercased,
+unique email in `waitlist_signups` (`INSERT … ON CONFLICT DO NOTHING
+RETURNING` — the returned row, not rowcount, decides "new") and always
+answers `202 {ok:true}` so signups can't be enumerated; per-IP 10/hour.
+`services/emailer.py` posts to the Resend REST API via httpx (no SDK). It is
+a no-op unless `EMAILS_ENABLED=1` **and** a key is present, and it **never
+raises**: an email failure can't fail a signup or a run. Sends: on a NEW
+signup, a thank-you to the joiner + an alert to `NOTIFY_EMAIL`; in the
+worker, a run alert (kind, brand/url, score, link) when any analysis
+reaches terminal status — the DB row is the record, the mail is the alert.
+Delivery requires the operator's Resend-verified sending domain (testing
+mode reaches only the account owner). ADR-25; accepted residuals in
+tech-debt #24.
+
 ---
 
 ## 4. Job lifecycle — Postgres as the queue

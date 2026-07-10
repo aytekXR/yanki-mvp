@@ -246,3 +246,29 @@ devDependencies).)
     deletion-tested; only these two boundary dimensions are unpinned. Add the
     two cases when next touching `backend/tests/test_checker_ratelimit.py`
     (P5.7 retunes `_EST_CHECKER_RUN_COST_USD` — a natural moment).
+23. **Real-engine costs are approximate until P5.11's week-1 read** (P5.7,
+    session 13). The pinned price table (`gemini-2.5-flash` $0.30/$2.50 per
+    1M in/out; Perplexity `sonar` $1/$1) came from model knowledge, not a
+    live vendor read, and `cost_usd` omits per-request search/grounding
+    fees and Gemini thinking tokens — so real checker runs will cost
+    somewhat MORE than recorded. `_EST_CHECKER_RUN_COST_USD` (the cost-cap
+    projection) needs the same retune, and debt #22's two boundary tests
+    come due at the same touch. Operator item B2 covers the price
+    verification.
+24. **The waitlist endpoint is a third public unauthenticated write path**
+    (P5.13, session 13, verify-lens advisories, accepted): per-IP 10/hour
+    keyed on the client-controlled first XFF hop (same accepted posture as
+    #2/#21b); no global daily cap and no per-email cap (duplicates don't
+    consume quota — an IP-rotating abuser can grow `waitlist_signups`
+    unboundedly at $0); the email column has no length cap. When emails are
+    ENABLED, each new signup also triggers two outbound sends — a
+    mail-bomb-ish lever bounded only by the per-IP cap. Fine for launch
+    volume; add a global signups/day cap when the checker goes loud.
+25. **The methodology page's prose can drift silently** (P5.10, session 13,
+    verify-lens advisories, accepted): the 12 prompts/version/engines are
+    drift-proof (generated artifact), but `score_formula.description` is a
+    hand-authored string in `scripts/gen_methodology.py`, and the CAVEATS /
+    ENGINE_LABELS copy lives as literals in `page.tsx` — a scoring or
+    caching change would not update them. Cheap mitigation when next
+    touched: assert the cache-hours and formula strings against
+    `app.config` values in the generator.

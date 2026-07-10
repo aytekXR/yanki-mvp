@@ -244,33 +244,37 @@ Later; (2) **Gemini/Perplexity key FIELDS staged** in `deploy/.env` +
 adoption un-parked and prioritized** — new card **P5.12**, which jumps
 ahead of P5.4 so the checker UI is built once on the new tokens.
 
-➡️ **Next up: P5.12 (brandkit v2 UI refactor — the headline) → P5.4 (checker
-frontend, EN-only, on the new tokens) → P5.5 (email gate).** **P5.7 (real
-Gemini + Perplexity) unblocks the moment keys appear in `deploy/.env`** —
-it is lane-independent and can run in the same session. Then P5.10
-(EN methodology) → P5.11 (operator go-live, Turkish gate removed).
-Remaining operator items: paste the two keys (item 12), checker product
-decisions minus the Turkish decider (item 13).
+🏁 **Session 13 (2026-07-10, #11 today) finished the entire build:** P5.7
+(`40d8a34`), P5.12 (`d5abee7`), P5.4+P5.5 (`a4dbdab`), **P5.13 — NEW
+operator-directed card, waitlist + Resend emails** (`c521931`), P5.10
+(`93aa34a` + build fix `643e0ee`), all CI-green and deployed dark at
+session close. Full detail: `sessions/2026-07-10-11.md`.
+
+➡️ **Next up: P5.11 only (operator go-live)** — everything agent-buildable
+is done. Blockers are all operator items: A1 decisions, B1 Resend domain,
+B2 vendor ToS/pricing check, then the `CHECKER_ENABLED=1` flip + live
+4-engine smoke + week-1 cost read (incl. the pinned-price retune).
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 12 close — P5.2 + P5.3 + P5.6 deployed;
-checker backend complete, dark behind the kill-switch).
+Last updated: 2026-07-10 (session 13 close — P5.4, P5.5, P5.7, P5.10,
+P5.12, P5.13 all shipped and deployed dark; the build phase of the plan is
+complete).
 
 - **MVP plan completion (Phases 0–4): 32 / 32 tasks = 100%, all residuals
   closed.** Phases 0–3: 26/26. Phase 4: 6/6, and session 8 closed P4.1's
   last residual (the OpenAI cost leg, measured live on prod). The KYC card
   and the live-mode flip are operator-directed polish/ops inside completed
   surfaces, not new plan tasks.
-- **Phase 5 (post-MVP checker): 5 / 11 built** — P5.0/P5.1 (session 9) +
-  P5.2/P5.3/P5.6 (session 12) all deployed. The checker **backend vertical
-  is complete**: submit → pipeline → scored result with presence map +
-  competitors, hardened, parked dark behind `CHECKER_ENABLED=0`.
-  **Post-close re-scope (operator, 2026-07-10): P5.8/P5.9 (Turkish)
-  SKIPPED, P5.12 (brandkit v2 refactor) ADDED** → Phase 5 is now 11 tasks;
-  the enlarged plan stands at **37 / 43 ≈ 86%**. Next session: **P5.12
-  (brandkit v2) → P5.4 → P5.5**; **P5.7 the moment the operator's keys land
-  in `deploy/.env`** (fields staged).
+- **Phase 5 (post-MVP checker): 11 / 12 built** — everything except the
+  operator-gated P5.11. Session 13 shipped the remaining six build cards:
+  P5.7 (real Gemini + Perplexity), P5.12 (brandkit v2), P5.4/P5.5 (checker
+  frontend + email gate), **P5.13 (waitlist + Resend emails — NEW card,
+  operator directive mid-session)**, P5.10 (methodology page). The full
+  checker vertical runs end-to-end dark; the waitlist + run-alert emails
+  are live-in-code (delivery pending the operator's Resend domain
+  verification). **The enlarged plan stands at 43 / 44 ≈ 98%** (P5.13
+  raised the count 43 → 44; only P5.11 remains and it is the operator's).
 - **Production readiness: ~98%** (definition unchanged — this metric is the
   LIVE MVP product; the checker is intentionally unreleased until P5.11).
   Code, tests (**146 backend + 31 frontend**), docs, CI (5/5 green), secret
@@ -279,14 +283,19 @@ checker backend complete, dark behind the kill-switch).
   OpenAI panel at a measured **$0.0162/analysis ≈ 1% of the $49 plan**
   (NFR-1 headroom ~35×), behind P5.0 rate limiting (5/IP/hour + 100/day →
   worst-case abuse ≈$1.62/day) **plus the operator's $10 console caps on
-  both providers** (session 11). The missing ~2%, in priority order:
-  KYC-cost persistence + adapter contract tests (debt #1); multi-stage prod
-  web image (debt #18); XFF-spoofable per-IP limits are accepted posture on
-  both public endpoints (global/daily caps are the backstop).
-  Gemini/Perplexity remain stubs by design until P5.7.
-- **On track vs. original plan: yes — MVP scope untouched; ONE
-  operator-directed Phase-5 scope change (2026-07-10, post-session-12):
-  Turkish is out, brandkit v2 is in.** P5.8/P5.9 skipped (whole product
+  both providers** (session 11). Tests now **170 backend + 65 frontend**.
+  The missing ~2%, in priority order: KYC-cost persistence + adapter
+  contract tests (debt #1); multi-stage prod web image (debt #18);
+  XFF-spoofable per-IP limits are accepted posture on all three public
+  write endpoints (global/daily caps are the backstop; the waitlist adds
+  one more such endpoint — debt #24). Gemini/Perplexity are REAL as of
+  P5.7 (session 13) but their pinned prices are unverified and `cost_usd`
+  undercounts search fees until P5.11's retune (debt #23).
+- **On track vs. original plan: yes — MVP scope untouched; TWO
+  operator-directed Phase-5 scope changes** (both 2026-07-10): post-session-12
+  **Turkish out / brandkit v2 in**, and mid-session-13 **P5.13 added**
+  (waitlist + Resend email notifications — net count 43 → 44).
+  Historical note from the first change: P5.8/P5.9 skipped (whole product
   English-only; Turkish → roadmap Later, revived only on the operator's
   word — this consciously supersedes the draft's "Turkish at checker launch"
   mandate and roadmap 2c, recorded there too); P5.12 (brandkit v2 UI
@@ -1344,13 +1353,13 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   submit fires); the checker screens pass the axe smoke suite (no critical
   violations) per [frontend-brandkit.md](frontend-brandkit.md) §7;
   `npm test -- --run` green.
-- **Status:** todo — **amended 2026-07-10 (operator directives): (a) EN-only** —
-  no EN/TR toggle, no `lib/i18n.ts` machinery, no `tr` placeholder; plain
-  English strings (P5.9 skipped). `lang` is simply not sent (API defaults
-  `'en'`). **(b) Build on brandkit v2** — P5.12 lands first; all new checker
-  components use the v2 tokens (`brandkit/brandkit/frontend-brandkit-v2.md` §2)
-  and the v2 score bands. Dependencies become P5.1, P5.3, **P5.12**. Dev note:
-  set `CHECKER_ENABLED=1` in the dev env to exercise submits locally.
+- **Status:** ✅ **done — session 13 (2026-07-10, commit `a4dbdab`)**, EN-only
+  on the v2 tokens per the amended scope (no i18n machinery; `lang` not
+  sent). Live-proven on the DRY_RUN stack: submit → progress → score +
+  `EnginePresenceMap` + `CompetitorsList` + answers; axe suites on both
+  routes. *(Amendment history: (a) EN-only — P5.9 skipped; (b) build on
+  brandkit v2 — dependencies became P5.1, P5.3, P5.12. Dev note: set
+  `CHECKER_ENABLED=1` in the dev env to exercise submits locally.)*
 
 ### P5.5 — Email gate + full-report reveal
 - **Goal:** the checker's lead-capture conversion — the free view shows the score +
@@ -1380,7 +1389,11 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   invalid email shows an
   inline error and reveals nothing; the gate is keyboard-operable with a visible
   focus ring and a ≥40px target; axe smoke passes; `npm test -- --run` green.
-- **Status:** todo
+- **Status:** ✅ **done — session 13 (2026-07-10, commit `a4dbdab`,** same
+  workflow as P5.4, one fix round). Free view = score + presence map +
+  competitors + exactly one answer (first brand mention, index-0 fallback);
+  valid email reveals in place; second visitor's lead persists alongside
+  (proven live on the DRY_RUN stack via two distinct submissions).
 
 ### P5.6 — Public hardening: kill-switch + per-IP & per-brand rate limit + daily cost cap
 - **Goal:** make the anonymous endpoint safe to expose — the blocker called out in
@@ -1457,7 +1470,12 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   request/response-shape test with a computed non-zero `cost_usd`; grounding is
   enabled on the Gemini call; `DRY_RUN=1` still returns four mocks and CI makes
   **no** live provider call; `make test`/`make typecheck` green.
-- **Status:** todo
+- **Status:** ✅ **done — session 13 (2026-07-10, commit `40d8a34`,** 0 blocking
+  findings, 0 fix rounds). `gemini-2.5-flash` with the `google_search`
+  grounding tool + Perplexity `sonar`, both via httpx/respx (ADR-23). Known
+  honest gaps for P5.11's week-1 read: pinned prices unverified against
+  vendor pages; `cost_usd` omits per-request search/grounding fees and
+  Gemini thinking tokens (undercounts slightly).
 
 ### P5.8 — Turkish: native fixed prompts + suffix-aware + İ/ı-casefold footprint matching
 - **Goal:** the credibility half of Turkish (2c minimal slice). Add a **native**
@@ -1565,12 +1583,16 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   engine list, and the stated limitations, in both languages; `make gen-types`
   produces no drift; it is axe-clean and reachable from `/checker`;
   `npm test -- --run` green.
-- **Status:** todo — **amended 2026-07-10 (EN-only directive): everything
-  bilingual above reads ENGLISH-ONLY.** Dependencies shrink to **P5.2 + P5.4**
-  (P5.8/P5.9 skipped; no TR prompts in the artifact, no TR dict layering, no
-  i18n write-collision concern); `checker_methodology.json` exports the EN
-  `checker-en-v1` set only; the caveats section should say plainly that
-  Turkish is not yet supported. Everything else stands.
+- **Status:** ✅ **done — session 13 (2026-07-10, commits `93aa34a` +
+  build-context fix `643e0ee`,** 0 blocking findings). EN-only per the
+  amendment; `/methodology` renders `checker-en-v1` from the generated
+  artifact (canonical `shared/contracts/checker_methodology.json` + a
+  byte-identical generated copy `frontend/lib/checker_methodology.json`
+  because the web Docker build context cannot reach `shared/` — caught by
+  the first prod image build, fixed inline as deploy-blocking recovery);
+  `make gen-types` idempotent; CI drift gate covers both copies; candid
+  caveats incl. "Turkish not yet supported". *(Amendment history: EN-only —
+  dependencies shrank to P5.2 + P5.4.)*
 
 ### P5.11 — Operator-gated: live 4-engine smoke, cost soak, deploy, launch gate
 - **Goal:** the one live/real-key task, mirroring P4.1 + P4.2. With `DRY_RUN=0` and
@@ -1653,7 +1675,42 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   passes (no selector/behavior drift); no backend or contract change;
   before/after screenshots of home + results attached to the session log
   (marketing gradients stay OUT of the product UI per the brandkit).
-- **Status:** todo — **the next session's headline task.**
+- **Status:** ✅ **done — session 13 (2026-07-10, commit `d5abee7`,** one fix
+  round: the KYC `bg-ink` block). Every surface on the v2 tokens, zero raw
+  hexes, Sora + IBM Plex Mono via `next/font`, v2 score bands
+  (30–59% = `warning`), all 23 implemented WCAG pairs recomputed and
+  recorded in `docs/frontend-brandkit.md` (repays debt #13; worst
+  normal-text pair 4.62:1), CI browser e2e green (no selector drift),
+  before/after screenshots in `docs/sessions/assets/2026-07-10-11/`.
+  Bonus: fixed `Dockerfile.prod` baking `localhost:8141` into the Next
+  rewrites (`API_ORIGIN` now a build-time env) — prod web loopback
+  `/healthz` un-broken (ADR-24).
+
+### P5.13 — Waitlist + Resend email notifications (added 2026-07-10, operator directive, session 13)
+- **Goal:** lead capture ahead of launch + operator awareness of every run.
+  (1) `waitlist_signups` table + `POST /api/v1/waitlist` (202 always — no
+  enumeration; lowercased-unique dedupe via `INSERT … ON CONFLICT DO NOTHING
+  RETURNING`; 10/IP/hour); (2) `services/emailer.py` posting to the Resend
+  REST API via httpx (zero new deps), gated on `EMAILS_ENABLED` + key,
+  **fail-open** — a dead email can never fail a signup or a pipeline run;
+  (3) on NEW signup: thank-you to the joiner + alert to `NOTIFY_EMAIL`;
+  (4) on analysis terminal status (worker): run alert with kind/score/link —
+  runs remain **recorded** in `analyses`; the mail is the alert, not the
+  record; (5) home-page `WaitlistForm` on the v2 tokens.
+- **Why now:** operator directive mid-session-13 ("add a waitlist with
+  resend api… send thank you + notify info@… notify on demo runs").
+- **Dependencies:** none (additive); Resend delivery gated on the operator's
+  domain verification (operator-expected B1).
+- **Complexity:** M
+- **Deliverables/acceptance:** as built — see ADR-25; respx-only tests
+  (emailer resilience, endpoint, worker hook), live-proven 202/202-dup/422.
+- **Status:** ✅ **done — session 13 (2026-07-10, commit `c521931`,** two
+  workflow runs: the first run's green code was lost uncommitted to a
+  concurrent workflow's scope-enforcing fixer — see the session log's
+  workflow-ops note — and was re-implemented cleanly, 0 fix rounds).
+  Backend 170 + frontend 58 tests. **Ops note:** emails deliver only after
+  the operator verifies a Resend sending domain (testing mode: account
+  email only); `EMAILS_ENABLED=1` set in prod env at the session-13 deploy.
 
 ---
 

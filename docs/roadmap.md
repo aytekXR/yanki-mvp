@@ -75,6 +75,7 @@ MVP sign-off gate (P4.1 + P4.2 + first green CI).*
 | Score + engine-by-engine presence map + competitors that showed up + ≥1 full raw answer | "Show our work" from the first touch — not a teaser; the full report costs an email address (lead capture). |
 | Results cached 24h per brand, rate limited, email-gated | Abuse control: caching, rate limits, email gate, fixed prompt set, daily cost check (the draft's checker-abuse mitigation). |
 | ~~**English + Turkish** at checker launch~~ **English-only at launch** (operator decision 2026-07-10) | The draft called Turkish a launch differentiator; the operator chose to ship the whole product EN-only and defer Turkish to Later. The original rationale stands whenever it is revived. |
+| **Waitlist + email notifications** (operator addition 2026-07-10, built same day as P5.13): home-page signup → thank-you mail + operator alert; every analysis run alerts the operator | Lead capture starts BEFORE the checker goes loud, and the operator sees demand in their inbox in real time (runs are recorded in the DB regardless). Resend-backed, fail-open, delivery gated on domain verification. |
 
 ### 2b. Engine + scoring depth — make the number trustworthy
 
