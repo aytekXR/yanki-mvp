@@ -42,12 +42,20 @@ B1). Next session = P5.11 at your pace: answer A1, do B1+B2, then B3.
   `deploy/.env` and redeploy. Code fails open — undelivered email never
   breaks a signup or an analysis.
 - [ ] **B2. Vendor ToS + pricing check for Gemini/Perplexity** (before
-  P5.11 go-live): (a) grounding/live-search allowed on your account tiers;
-  (b) model ids + prices — adapters pin `gemini-2.5-flash` ($0.30/$2.50
-  per 1M in/out) and `sonar` ($1/$1 per 1M) from model knowledge, not a
-  live read. Note `cost_usd` **undercounts** slightly: per-request
-  search/grounding fees and Gemini thinking tokens are unmodelled (retune
-  in P5.11's week-1 cost read).
+  P5.11 go-live) — **updated after the 2026-07-10 prod incident** (a live
+  analysis failed; fixed same day, commit `7ff580f`): Google retired
+  `gemini-2.5-flash` for new accounts, so the adapter now uses the rolling
+  alias **`gemini-flash-lite-latest`**, and your free-tier key has **zero
+  search-grounding quota** — Gemini answers are honestly labeled
+  `:ungrounded` until you act. Your parts:
+  (a) **Enable billing on your Google AI Studio project** if you want
+  grounded (live web search) Gemini answers — after enabling, just tell
+  the next session to redeploy; grounding re-activates automatically.
+  (b) Verify current prices: flash-lite is pinned **UNVERIFIED** at
+  $0.10/$0.40 per 1M in/out; Perplexity `sonar` $1/$1 (verified working
+  live). `cost_usd` still undercounts per-request search fees — retune in
+  P5.11's week-1 read.
+  (c) The ToS sanity check on both vendors stands.
 - [ ] **B3. P5.11 go-live itself stays yours** (after A1 + B2): flip
   `CHECKER_ENABLED=1` in `deploy/.env`, redeploy, supervise the live
   4-engine smoke. No agent will flip it.

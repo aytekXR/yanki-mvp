@@ -272,3 +272,14 @@ devDependencies).)
     caching change would not update them. Cheap mitigation when next
     touched: assert the cache-hours and formula strings against
     `app.config` values in the generator.
+26. **Gemini grounding is disabled in practice until the operator enables
+    billing** (2026-07-10 prod incident, commit `7ff580f`). The free-tier
+    key has zero `google_search` grounding quota (429 on every model), so
+    the adapter's grounded-first attempt falls back ungrounded and memos
+    process-wide; prod Gemini answers are labeled `:ungrounded`. The
+    "4 real engines with grounding" promise (roadmap 2b, methodology page)
+    is 3.75/4 honest until operator item B2(a) lands: enable billing →
+    redeploy → grounded re-activates with no code change. Also: lite-tier
+    prices ($0.10/$0.40 per 1M) are pinned UNVERIFIED (folds into #23), and
+    ListModels is NOT an availability signal — only a real generateContent
+    probe is (the retired `gemini-2.5-flash` was still listed).
