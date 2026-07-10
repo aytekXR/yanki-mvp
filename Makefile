@@ -72,8 +72,9 @@ typecheck: ## Type-check backend (mypy) + frontend (tsc --noEmit)
 migrate: ## Apply Alembic migrations locally (alembic upgrade head)
 	cd backend && uv run alembic upgrade head
 
-gen-types: ## Regenerate shared/contracts/openapi.json + frontend/lib/types.ts
+gen-types: ## Regenerate shared/contracts/openapi.json + checker_methodology.json + frontend/lib/types.ts
 	uv run --project backend python scripts/gen_openapi.py
+	uv run --project backend python scripts/gen_methodology.py
 	cd frontend && npm run gen-types
 
 e2e: ## Run the Playwright happy-path against a running stack (needs `make dev` up)

@@ -106,12 +106,15 @@ Ask the spine owner.
 
 ### Generated files — never hand-edit
 
-Two files are produced by `make gen-types` and are **checked in** so CI can diff
-them and fail on drift. Editing them by hand is always wrong — regenerate
+Three artifacts are produced by `make gen-types` and are **checked in** so CI can
+diff them and fail on drift. Editing them by hand is always wrong — regenerate
 instead:
 
 - `shared/contracts/openapi.json` — exported from `app.openapi()`.
 - `frontend/lib/types.ts` — produced from that JSON by `openapi-typescript`.
+- `shared/contracts/checker_methodology.json` — exported from the version-stamped
+  `checker_prompts` module by `scripts/gen_methodology.py`; the `/methodology`
+  page imports it at build time (P5.10).
 
 The flow is: change a Pydantic schema → `make gen-types` → commit the two
 regenerated files alongside your code. CI runs `make gen-types` and fails if the

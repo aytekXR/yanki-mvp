@@ -104,6 +104,14 @@ function CheckerResults() {
             : ''}
         </p>
         {content}
+        <footer className="border-t border-surface-border pt-6">
+          <Link
+            href="/methodology"
+            className="inline-flex min-h-[40px] items-center rounded text-sm font-medium text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            How we score this
+          </Link>
+        </footer>
       </div>
     </main>
   )

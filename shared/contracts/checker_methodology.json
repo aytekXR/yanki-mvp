@@ -1,0 +1,79 @@
+{
+  "engines": [
+    "anthropic",
+    "openai",
+    "gemini",
+    "perplexity"
+  ],
+  "language": "en",
+  "prompts": [
+    {
+      "category": "recommendation",
+      "index": 1,
+      "text": "What are the best solutions available today?"
+    },
+    {
+      "category": "recommendation",
+      "index": 2,
+      "text": "Which solutions offer the best value for the money?"
+    },
+    {
+      "category": "makers",
+      "index": 3,
+      "text": "Who are the leading solutions brands worldwide?"
+    },
+    {
+      "category": "makers",
+      "index": 4,
+      "text": "Which companies make the most popular solutions worldwide?"
+    },
+    {
+      "category": "comparison",
+      "index": 5,
+      "text": "How do the top solutions brands compare?"
+    },
+    {
+      "category": "comparison",
+      "index": 6,
+      "text": "What sets the best solutions providers apart from the rest?"
+    },
+    {
+      "category": "alternatives",
+      "index": 7,
+      "text": "What are good alternatives to the market leaders for solutions?"
+    },
+    {
+      "category": "alternatives",
+      "index": 8,
+      "text": "Besides the market leaders, which brands are worth considering for solutions?"
+    },
+    {
+      "category": "best-of",
+      "index": 9,
+      "text": "Which brands are known for the best solutions worldwide?"
+    },
+    {
+      "category": "best-of",
+      "index": 10,
+      "text": "What is the most trusted name in solutions right now?"
+    },
+    {
+      "category": "use-case",
+      "index": 11,
+      "text": "Which solutions would you recommend for everyday use, and why?"
+    },
+    {
+      "category": "use-case",
+      "index": 12,
+      "text": "If someone is shopping for solutions, which brands should they look at first?"
+    }
+  ],
+  "score_formula": {
+    "denominator": "total_responses",
+    "description": "The share of engine answers that mentioned the brand: the count of answers with a footprint divided by the total answers collected.",
+    "expression": "footprints / total_responses",
+    "numerator": "footprints",
+    "range": "0.0 to 1.0"
+  },
+  "version": "checker-en-v1"
+}

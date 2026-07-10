@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import CheckerForm from '@/components/CheckerForm'
 
 const STEPS = [
@@ -30,6 +31,16 @@ export default function CheckerPage() {
         <div className="max-w-xl">
           <CheckerForm />
         </div>
+        <p className="text-sm text-surface-subtle">
+          Curious how we score it?{' '}
+          <Link
+            href="/methodology"
+            className="font-medium text-primary hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            See our methodology
+          </Link>
+          .
+        </p>
       </section>
 
       <section className="mt-16 grid gap-6 sm:grid-cols-3" aria-label="How it works">
