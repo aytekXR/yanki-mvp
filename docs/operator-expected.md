@@ -7,48 +7,38 @@ remote, and CI status at start regardless. Nothing here blocks local
 development — `make dev` + `make test` work with zero keys and zero cost
 (DRY_RUN).*
 
-Last updated: 2026-07-10 (session 9 close: **nothing is urgent anymore, and
-nothing blocks the next session (P5.2).** The rate-limit hole you accepted
-when going live is CLOSED — **P5.0 is deployed and verified on prod**: the
-6th submit per IP per hour gets a 429, a global 100/day cap bounds
-worst-case abuse at **≈$1.62/day**, and setting either limit to 0 in
-`deploy/.env` is an instant kill-switch. **P5.1 also shipped**: the checker
-API (`POST /api/v1/checker` + lead capture + 24h per-brand reuse) is live
-but inert — checker runs stay queued at $0 until P5.2 wires the pipeline.
-Total live spend to date: **$0.056** (session-8 panel $0.0162 + session-9
-429-acceptance run $0.0201 + earlier P4.1 runs). Items 1–2 below are the
-same two from session 8, now lower stakes; say the word and they're ticked.)
+Last updated: 2026-07-10 (session 11: **items 0–2 all confirmed done by
+you — thank you. Nothing is expected from you right now.** Your follow-up
+"show full LLM responses, on demand" is being shipped this session:
+expandable rows in the response table, collapsed by default. Your KYC
+question answered: **nothing is hardcoded on prod — we really visit the
+site.** The pipeline's discovery step fetches your actual website (homepage
++ up to 5 same-domain pages; for JS-rendered SPA sites it also mines the
+site's own JS bundles for the embedded text), assembles ~20k chars of real
+site text, and ONE live LLM call (Claude Haiku 4.5) extracts the profile
+from that text under facts-only instructions — empty fields are preferred
+over guesses, and an empty location backfills from the domain (.com.tr →
+Türkiye). The only hardcoded profile anywhere is the deterministic mock
+used by `DRY_RUN=1` dev/CI runs, which prod does not use.)
 
-**Session-10 addendum:** your KYC bug report is **fixed and live-verified**.
-beyondtech.com.tr re-analyzed on prod: KYC now reads defense/unmanned-systems
-with the full BAZNA product line, and prompts are real user questions
-("Who are the leading unmanned aerial vehicles manufacturers in Turkey?" +
-two BAZNA-by-name brand probes). See item 0 below.
+## Do now
 
-## Do now (recommended, no longer urgent)
-
-- [ ] **0. Verify the KYC fix on your screen** (2 min):
-  https://yanki.beyondkaira.com/analyses/9e4b2746-ae07-49f8-bf77-d2443ee4bac2
-  — say if the prompt balance (8 category questions / 2 brand probes) or any
-  shape needs tuning. Root cause was your site being a JS-rendered SPA: the
-  crawler now mines your JS bundle for the real content.
-
-- [ ] **1. Set hard spend caps in both provider consoles** (~5 min). Code-side
-  rate limiting now bounds abuse at ≈$1.62/day, so this is defense-in-depth
-  rather than the only barrier — still worth doing because only you can cap
-  a *provider-side* surprise (pricing change, a bug on our side):
-  - **Anthropic:** console.anthropic.com → Billing/Limits → monthly spend
-    limit (e.g. $10).
-  - **OpenAI:** platform.openai.com → Billing → usage limits (e.g. $10/mo).
-  - Escape hatches any time: `ANALYSES_DAILY_CAP=0` in `deploy/.env` +
-    `sg docker -c "make deploy"` → every submit 429s (kill-switch); or
-    `DRY_RUN=1` + redeploy → $0 mock mode.
-- [ ] **2. Eyeball the KYC card + live result** (2 minutes, no tooling):
-  https://yanki.beyondkaira.com/analyses/17164747-a6a7-40ab-bc3b-d4d4d6e9ee62
-  — score gauge, then the "Company profile (KYC)" card, then prompts and the
-  response table. Say if you want the card's content or order changed.
+Nothing. All operator items are done or parked (items 12–14 below come due
+at P5.7/P5.11).
 
 ## Done (this session and before)
+
+- [x] **0. KYC fix verified on the operator's screen** (2026-07-10,
+  session 11): beyondtech.com.tr profile confirmed correct.
+- [x] **1. Provider-console spend caps in place: $10** on both Anthropic
+  and OpenAI (2026-07-10, session 11). Combined with code-side limits
+  (5/IP/hour, 100/day ≈ $1.62/day worst case), the maximum blast radius is
+  now doubly bounded. Escape hatches remain: `ANALYSES_DAILY_CAP=0` +
+  redeploy (429 kill-switch) or `DRY_RUN=1` + redeploy ($0 mock).
+- [x] **2. KYC card design reviewed** — good for now; operator will
+  integrate a UI design (brandkit) later, so no card changes requested.
+  Follow-up shipped instead: full LLM answers viewable on demand in the
+  response table (this session).
 
 - [x] **3. Run-mode decision → LIVE.** Flipped + redeployed 2026-07-10
   (session 8), on your directive.

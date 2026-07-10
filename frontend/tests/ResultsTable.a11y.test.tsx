@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import ResultsTable from '@/components/ResultsTable'
 import type { AnalysisResponse, Prompt } from '@/lib/contracts'
 import { axeCheck } from './a11y'
@@ -39,6 +40,22 @@ describe('ResultsTable accessibility', () => {
         <ResultsTable responses={responses} prompts={prompts} />
       </main>,
     )
+    expect(await axeCheck(container)).toHaveNoViolations()
+  })
+
+  it('has no axe violations with a full-answer row expanded', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <main>
+        <ResultsTable responses={responses} prompts={prompts} />
+      </main>,
+    )
+    await user.click(
+      screen.getAllByRole('button', { name: /show full answer/i })[0],
+    )
+    expect(
+      screen.getByRole('button', { name: /hide full answer/i }),
+    ).toHaveAttribute('aria-expanded', 'true')
     expect(await axeCheck(container)).toHaveNoViolations()
   })
 })
