@@ -198,6 +198,18 @@ acknowledge the company on brand probes). 99 backend tests; session live
 spend $0.045 across three acceptance runs. This consumed the session P5.2
 was slated for; the checker ETA shifts ~1 session.
 
+✅ **Session 11 (2026-07-10): operator confirmations + full-answer
+expansion.** Operator confirmed items 0–2 (KYC fix verified; **$10 spend
+caps set in both provider consoles** — blast radius now doubly bounded;
+card design approved pending their brandkit integration). Their follow-up
+shipped via workflow (commit `3106cae`, ship, zero defects): every response
+row on the result page now expands to the **full verbatim LLM answer**
+(collapsed by default, aria/axe-tested both states) — the first slice of
+the "every raw answer one click away" wedge. Frontend-only; 31/31 tests;
+deployed. Their KYC question answered on the record: profiles are
+extracted live from the genuinely-fetched site text, nothing hardcoded
+outside the DRY_RUN mock.
+
 ➡️ **Next up: P5.2 (checker pipeline branch: seed KYC + fixed 12-prompt
 set + cache upsert) — then P5.3.** Remember: P5.2 removes the session-9
 `claim_next` checker guard; its fixed checker prompt set should follow the

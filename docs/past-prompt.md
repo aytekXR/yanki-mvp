@@ -159,3 +159,14 @@ prompt + ccTLD location fallback, category-first prompt templates with
 brand probes. Live-verified on prod (score 0.0→0.1, KYC correct). See
 [sessions/2026-07-10-08.md](sessions/2026-07-10-08.md); the next brief is
 session 9's §6 (P5.2 → P5.3) with that log's §6 amendments.
+
+## Session 11 (2026-07-10, #09) — operator confirmations + full LLM answers
+
+Operator ticked items 0–2 ($10 console caps set; KYC fix verified; card
+approved pending brandkit), asked how KYC is generated (answered: live
+fetch + live LLM extraction, nothing hardcoded outside DRY_RUN), and asked
+for on-demand full LLM responses — shipped via workflow (3106cae):
+expandable per-row full answers in ResultsTable, axe-tested both states,
+deployed. See [sessions/2026-07-10-09.md](sessions/2026-07-10-09.md);
+the next brief remains session 9's §6 (P5.2 → P5.3) with the session
+10/11 amendments.
