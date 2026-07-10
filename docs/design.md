@@ -705,6 +705,23 @@ decision → consequences**, with one line on why the alternative was rejected.
   now (needs live per-tier prices unavailable this session — deferred to the
   P5.11 retune); a non-grounded Gemini call (grounding is the whole point of a
   *search* engine on the panel and is required by the card).
+- **Addendum (2026-07-10, live-incident fix):** a real MVP run 404'd on
+  `generateContent` — `gemini-2.5-flash` (and `-lite`) are *listed* by ListModels
+  but "no longer available to NEW USERS", and the operator's key is a new
+  account, so ListModels is not an availability signal. Fixes: (1) switch the
+  model to the rolling alias **`gemini-flash-lite-latest`** (survives pinned-id
+  retirement, matches the cheapest-models directive; alias price drift stays
+  inside the cost-approximation caveat). (2) **Grounded-to-ungrounded fallback
+  with a memo:** free-tier keys have zero Google-Search-grounding quota and 429
+  on grounded requests, so we try grounded, fall back to an ungrounded retry on
+  429, and set a process-wide flag so the rest of a 12-prompt run skips the
+  grounded attempt; a worker restart re-tries grounded once, so **enabling
+  billing then redeploying re-activates grounding** (operator-tracked). (3) The
+  reported `model` string gains a **`:grounded` / `:ungrounded`** marker so the
+  ResultsTable surfaces the degradation. (4) A 503/5xx or timeout is retried
+  once (~2s) then raised. (5) `thoughtsTokenCount` (gemini-3 family thinking
+  tokens) is billed as output. Placeholder flash-lite prices $0.10/$0.40 per 1M
+  are UNVERIFIED — tech-debt 23 and operator item B2 own the retune.
 
 ### ADR-24 — Brandkit v2 ("echo") adoption across the existing frontend (P5.12)
 - **Context:** the operator handed down brandkit v2

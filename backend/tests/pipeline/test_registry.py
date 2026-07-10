@@ -45,5 +45,8 @@ def test_non_dry_run_builds_real_engines():
     )
     panel = registry.get_panel(settings)
     assert [provider.name for provider in panel] == ["gemini", "perplexity"]
-    assert [provider.model for provider in panel] == ["gemini-2.5-flash", "sonar"]
+    assert [provider.model for provider in panel] == [
+        "gemini-flash-lite-latest",
+        "sonar",
+    ]
     assert all(not isinstance(provider, MockProvider) for provider in panel)
