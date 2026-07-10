@@ -448,6 +448,33 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WaitlistRequest": {
+        "description": "A public waitlist signup. The email is validated + normalized server-side\n(trim + lowercase) so a malformed address is a 422 before any row is written,\nand the stored value matches the unique lowercased column.",
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "WaitlistRequest",
+        "type": "object"
+      },
+      "WaitlistResponse": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "WaitlistResponse",
+        "type": "object"
       }
     }
   },
@@ -622,6 +649,47 @@
           }
         },
         "summary": "Submit Checker Lead",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/v1/waitlist": {
+      "post": {
+        "operationId": "join_waitlist_api_v1_waitlist_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitlistRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Join Waitlist",
         "tags": [
           "analyses"
         ]

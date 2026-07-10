@@ -75,6 +75,17 @@ class Settings(BaseSettings):
     # cost is 0, so any positive cap never trips.
     checker_daily_usd_cap: float = 5.0
 
+    # Transactional email via the Resend REST API (P5.13). Fail-open + env-gated:
+    # send_email is a NO-OP unless emails_enabled is True AND resend_api_key is
+    # non-empty, and it never raises (see ADR-25). Default OFF so no environment
+    # sends mail until the operator opts in. email_from must be a Resend-verified
+    # domain before real recipients receive anything — the default onboarding@
+    # resend.dev only delivers to the Resend account owner (testing mode).
+    emails_enabled: bool = False
+    resend_api_key: str = ""
+    notify_email: str = ""
+    email_from: str = "onboarding@resend.dev"
+
 
 @lru_cache
 def get_settings() -> Settings:

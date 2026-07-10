@@ -20,8 +20,20 @@ from app.config import Settings, get_settings
 from app.db.models import Analysis
 from app.db.session import SessionLocal
 from app.jobs.queue import claim_next
+from app.services.emailer import send_run_alert
 
 logger = logging.getLogger("yanki.worker")
+
+
+def _alert(analysis: Analysis, settings: Settings) -> None:
+    """Best-effort terminal-status alert (P5.13). The run is already recorded in
+    ``analyses``; this email is only telemetry, so a failure or disabled email
+    must NEVER change the pipeline result — hence the belt-and-braces guard even
+    though ``send_run_alert`` itself never raises."""
+    try:
+        send_run_alert(analysis, settings)
+    except Exception:
+        logger.warning("run alert email failed for %s", analysis.id)
 
 
 def run_once(settings: Settings) -> bool:
@@ -46,6 +58,7 @@ def run_once(settings: Settings) -> bool:
                 failed.status = "failed"
                 failed.error = str(exc)[:500]
                 session.commit()
+                _alert(failed, settings)
             logger.exception("analysis %s failed", analysis_id)
             return True
 
@@ -55,6 +68,7 @@ def run_once(settings: Settings) -> bool:
             done.progress = 100
             done.current_step = None
             session.commit()
+            _alert(done, settings)
         return True
     finally:
         session.close()

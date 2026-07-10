@@ -47,6 +47,10 @@ export type CreateAnalysisResponse = Schemas['CreateAnalysisResponse']
 // checker aggregates that ride on the shared result envelope.
 export type CheckerSubmitResponse = Schemas['CheckerSubmitResponse']
 
+// Public product-updates waitlist (P5.13). The backend records + normalizes the
+// email and returns a simple ok envelope; the request carries only the email.
+export type WaitlistSignupResponse = Schemas['WaitlistResponse']
+
 export type EnginePresence = Schemas['EnginePresence']
 
 export type CompetitorMention = Schemas['CompetitorMention']

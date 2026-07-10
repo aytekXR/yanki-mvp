@@ -61,6 +61,26 @@ class CheckerLeadRequest(BaseModel):
         return v.strip()
 
 
+class WaitlistRequest(BaseModel):
+    """A public waitlist signup. The email is validated + normalized server-side
+    (trim + lowercase) so a malformed address is a 422 before any row is written,
+    and the stored value matches the unique lowercased column."""
+
+    email: str
+
+    @field_validator("email")
+    @classmethod
+    def _valid_email(cls, v: str) -> str:
+        normalized = v.strip().lower()
+        if not _EMAIL_RE.match(normalized):
+            raise ValueError("invalid email")
+        return normalized
+
+
+class WaitlistResponse(BaseModel):
+    ok: bool
+
+
 class PromptOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -747,3 +747,40 @@ decision → consequences**, with one line on why the alternative was rejected.
   text token against a dark fill — out of scope, deferred to the checker UI);
   inventing new hexes to hit contrast (unnecessary — every implemented pair
   already clears its floor).
+
+### ADR-25 — Waitlist signups + transactional email over the Resend REST API (P5.13)
+- **Context:** the landing page needs a waitlist capture, and both a new signup
+  and a terminal pipeline run should alert the operator by email. The record of
+  a signup lives in a table and a run lives in `analyses` — email is only
+  telemetry on top, so it must never be able to fail either write.
+- **Decision:** call Resend's REST `POST /emails` directly over plain `httpx`
+  (Bearer `resend_api_key`, 5s timeout) rather than adding the Resend SDK — zero
+  new dependencies and trivially pinnable under `respx` (same reasoning as
+  ADR-23's raw REST adapters). `send_email` is **fail-open** and **env-gated**: a
+  NO-OP unless `emails_enabled` AND `resend_api_key` is non-empty, and it NEVER
+  raises — every error is swallowed, logged as a short warning naming neither the
+  recipient nor the key, and returned as `False`. The waitlist insert is an
+  `INSERT ... ON CONFLICT DO NOTHING RETURNING id` on the unique normalized
+  (trim + lowercase) `email`; NEW-vs-duplicate is decided by the **RETURNING row
+  being present**, never by `rowcount` (psycopg3 reports `-1` for this
+  statement). The endpoint **always** answers `202 {ok: true}` for new and
+  duplicate alike (no enumeration), guarded by a per-IP 10/hour limit reusing the
+  P5.0 rate-limit pattern; a malformed email is a 422 from the schema before any
+  row is written. Emails fire only on a new signup (thank-you to the joiner +
+  operator notification with the total count); the worker fires a best-effort
+  operator alert on `done`/`failed`, wrapped so even a raising alert cannot
+  change the run result.
+- **Consequences:** `waitlist_signups` is an additive-only table
+  (`0004_waitlist_signups`, single head off `0003_checker_fields`). Four new
+  settings (`emails_enabled` off, `resend_api_key`/`notify_email` empty,
+  `email_from` = `onboarding@resend.dev`) documented in `deploy/.env.example`;
+  the default from-address is Resend testing mode and delivers only to the
+  account owner, so a Resend-verified domain is required before real recipients
+  receive anything. The dialect-specific `insert` is chosen at call time so the
+  same ON CONFLICT statement runs on Postgres (prod) and SQLite (tests).
+- **Rejected:** the Resend SDK (a dependency for one POST, harder to pin under
+  `respx`); detecting new signups by `rowcount` (unreliable on psycopg3);
+  returning a distinct status for a duplicate (enumeration leak); letting an
+  email failure surface (would lose an already-recorded signup or run); a
+  separate salt for the waitlist `ip_hash` (reuses the existing `ip_hash_salt`,
+  consistent with P5.6).

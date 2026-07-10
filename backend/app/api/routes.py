@@ -17,6 +17,8 @@ from app.api.schemas import (
     PromptOut,
     ResponseOut,
     ResultOut,
+    WaitlistRequest,
+    WaitlistResponse,
 )
 from app.config import Settings, get_settings
 from app.db.models import Analysis
@@ -30,14 +32,18 @@ from app.services.checker import (
     normalize_triple,
 )
 from app.services.checker_summary import summarize_checker
+from app.services.emailer import send_waitlist_emails
 from app.services.rate_limit import (
+    WAITLIST_RATE_LIMIT_PER_IP_HOUR,
     RateLimitExceeded,
     check_checker_rate_limit,
     check_rate_limit,
+    check_waitlist_rate_limit,
     checker_daily_cost_exceeded,
     client_ip,
     hash_ip,
 )
+from app.services.waitlist import create_waitlist_signup, normalize_email, signup_count
 
 router = APIRouter(prefix="/api/v1", tags=["analyses"])
 
@@ -167,6 +173,34 @@ def submit_checker_lead(
     if submission is None:
         raise HTTPException(status_code=404, detail="submission not found")
     return {"status": "ok"}
+
+
+@router.post("/waitlist", status_code=202, response_model=WaitlistResponse)
+def join_waitlist(
+    payload: WaitlistRequest,
+    request: Request,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+) -> WaitlistResponse:
+    # Malformed email is a 422 from the schema before we get here, so a bad
+    # submit records nothing and never 500s. Rate-limit per IP BEFORE the insert
+    # so a throttled client never gets a row.
+    ip_hash = hash_ip(client_ip(request) or "unknown", settings.ip_hash_salt)
+    try:
+        check_waitlist_rate_limit(session, ip_hash, WAITLIST_RATE_LIMIT_PER_IP_HOUR)
+    except RateLimitExceeded as exc:
+        raise HTTPException(
+            status_code=429,
+            detail="rate limit exceeded",
+            headers={"Retry-After": str(exc.retry_after)},
+        ) from exc
+
+    signup_id = create_waitlist_signup(session, payload.email, ip_hash=ip_hash)
+    # Emails fire ONLY on a genuinely new signup (non-null returned id); a
+    # duplicate is silent. Either way we answer 202 {ok: true} — no enumeration.
+    if signup_id is not None:
+        send_waitlist_emails(normalize_email(payload.email), signup_count(session), settings)
+    return WaitlistResponse(ok=True)
 
 
 @router.get("/analyses/{analysis_id}", response_model=AnalysisOut)

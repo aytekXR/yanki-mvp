@@ -131,6 +131,27 @@ class CheckerSubmission(Base):
     )
 
 
+class WaitlistSignup(Base):
+    """One waitlist signup (P5.13) — a landing-page email capture.
+
+    ``email`` is stored NORMALIZED (trim + lowercase) and is UNIQUE, so the
+    submit path is an ``INSERT ... ON CONFLICT DO NOTHING RETURNING id``: a
+    returned row means a genuinely new signup (which triggers the thank-you +
+    notification emails), a null return means a duplicate (still answered 202,
+    no enumeration). ``ip_hash`` reuses the existing salted-hash helper and stays
+    null for any non-HTTP caller; the raw IP is never stored.
+    """
+
+    __tablename__ = "waitlist_signups"
+
+    id: Mapped[uuid.UUID] = mapped_column(sa.Uuid, primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(sa.Text, nullable=False, unique=True)
+    ip_hash: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+
 class LlmCache(Base):
     __tablename__ = "llm_cache"
 

@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Join Waitlist */
+        post: operations["join_waitlist_api_v1_waitlist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -278,6 +295,21 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * WaitlistRequest
+         * @description A public waitlist signup. The email is validated + normalized server-side
+         *     (trim + lowercase) so a malformed address is a 422 before any row is written,
+         *     and the stored value matches the unique lowercased column.
+         */
+        WaitlistRequest: {
+            /** Email */
+            email: string;
+        };
+        /** WaitlistResponse */
+        WaitlistResponse: {
+            /** Ok */
+            ok: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -406,6 +438,39 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    join_waitlist_api_v1_waitlist_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaitlistRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitlistResponse"];
                 };
             };
             /** @description Validation Error */

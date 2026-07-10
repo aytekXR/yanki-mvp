@@ -2,6 +2,7 @@ import type {
   Analysis,
   CheckerSubmitResponse,
   CreateAnalysisResponse,
+  WaitlistSignupResponse,
 } from './contracts'
 
 // Thin fetch wrapper. All paths are relative — Next rewrites proxy them to the
@@ -88,6 +89,27 @@ export async function submitLead(
           : await readErrorMessage(res)
     throw new ApiError(message, res.status)
   }
+}
+
+export async function joinWaitlist(
+  email: string,
+): Promise<WaitlistSignupResponse> {
+  // Product-updates waitlist (P5.13). The email is validated + normalized
+  // server-side; a malformed address is a 422 before any row is written. 202 on
+  // success with an { ok: true } envelope.
+  const res = await fetch('/api/v1/waitlist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  if (!res.ok) {
+    const message =
+      res.status === 422
+        ? 'Enter a valid email address.'
+        : await readErrorMessage(res)
+    throw new ApiError(message, res.status)
+  }
+  return (await res.json()) as WaitlistSignupResponse
 }
 
 export async function getAnalysis(id: string): Promise<Analysis> {

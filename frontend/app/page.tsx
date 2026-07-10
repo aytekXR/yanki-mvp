@@ -1,4 +1,5 @@
 import UrlForm from '@/components/UrlForm'
+import WaitlistForm from '@/components/WaitlistForm'
 
 const STEPS = [
   {
@@ -45,6 +46,8 @@ export default function HomePage() {
           </div>
         ))}
       </section>
+
+      <WaitlistForm />
     </main>
   )
 }

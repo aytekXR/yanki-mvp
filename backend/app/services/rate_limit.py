@@ -32,7 +32,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.db.models import Analysis, CheckerSubmission, Response
+from app.db.models import Analysis, CheckerSubmission, Response, WaitlistSignup
+
+# Waitlist signups per client IP per rolling hour (P5.13). Fixed here rather than
+# in Settings — the endpoint spends no money and needs no per-env tuning knob.
+WAITLIST_RATE_LIMIT_PER_IP_HOUR = 10
 
 
 class RateLimitExceeded(Exception):
@@ -227,6 +231,40 @@ def check_checker_rate_limit(
             else int(day_window.total_seconds())
         )
         raise RateLimitExceeded(retry, "checker_brand")
+
+
+def check_waitlist_rate_limit(session: Session, ip_hash: str, limit: int) -> None:
+    """Enforce the waitlist's per-IP hourly limit; raise on breach.
+
+    Reuses the ``check_rate_limit`` idiom: count this ``ip_hash``'s rows created
+    in the last rolling hour and reject once they reach ``limit`` (``>=`` so a
+    ``limit`` of 0 is a clean kill-switch, never a 500 on the empty window).
+    ``Retry-After`` is the time until the oldest counted row ages out. Because a
+    duplicate email inserts no row (ON CONFLICT DO NOTHING), the counter tracks
+    genuinely recorded signups from the IP — the same "count the rows" shape as
+    the analyses and checker guards.
+    """
+    now = datetime.now(UTC)
+    hour_window = timedelta(hours=1)
+    ip_rows = (
+        session.execute(
+            select(WaitlistSignup.created_at)
+            .where(
+                WaitlistSignup.ip_hash == ip_hash,
+                WaitlistSignup.created_at >= now - hour_window,
+            )
+            .order_by(WaitlistSignup.created_at)
+        )
+        .scalars()
+        .all()
+    )
+    if len(ip_rows) >= limit:
+        retry = (
+            _retry_after(ip_rows[0], hour_window, now)
+            if ip_rows
+            else int(hour_window.total_seconds())
+        )
+        raise RateLimitExceeded(retry, "waitlist_ip")
 
 
 # Conservative planning estimate of ONE fresh checker run's LLM cost, used only
