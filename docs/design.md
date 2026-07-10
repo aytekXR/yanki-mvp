@@ -577,4 +577,98 @@ decision → consequences**, with one line on why the alternative was rejected.
   no grouping/stoplist (leaks sentence-starters like `Some` and brand fragments
   like `Demo Co`); making the fields non-nullable or MVP-populated (they are a
   checker-only view, meaningless for a URL crawl, so they stay null there).
+
+### ADR-22 — Checker public hardening: kill-switch + per-IP/per-brand limits + daily cost cap, all exempting the $0 cache hit (P5.6)
+- **Context:** P5.2 made `kind='checker'` rows actually run the pipeline, so
+  `POST /api/v1/checker` — anonymous, unauthenticated — will spend real LLM money
+  the moment `DRY_RUN` is off. It shipped with no throttle (tech-debt #21) behind
+  the P5.0 `analyses` caps but with none of its own. Before any public URL it
+  needs four things the card calls out: a master kill-switch so the surface stays
+  dark until go-live, a per-IP limit, a per-brand limit (one hot brand hammered
+  from many IPs), and a daily cost cap — plus a privacy-preserving `ip_hash`.
+  The wrinkle unique to the checker is P5.1's **24h result cache**: a repeat of a
+  recently-`done` triple reuses one `analyses` row and performs **no LLM work**,
+  yet it must still return that id and record a `checker_submissions` row because
+  the email gate posts a lead against the submission. So a $0 cache hit cannot be
+  treated like a fresh, spending run.
+- **Decision:** enforce all guards in the route **before** enqueuing, pivoting on
+  one question answered first — **is this triple a cache hit?** The route peeks
+  with a new shared helper `services/checker.find_cached_checker_analysis` (the
+  same lookup `create_checker_analysis` uses, extracted so both share ONE
+  definition of "cache hit"). A cache hit is **exempt from every guard**: it
+  costs nothing and must always return its id, so it skips the kill-switch, both
+  rate limits, and the cost cap, records its submission, and 202s. A **fresh**
+  run runs the guards **in order**: (1) kill-switch — `CHECKER_ENABLED` defaults
+  `False`, and while off a fresh submit is parked with a friendly **503** and
+  records **nothing** (no analysis, no submission); (2) per-IP — count this
+  `ip_hash`'s `checker_submissions` rows in the last rolling hour, `>= limit`
+  → **429** + `Retry-After`; (3) per-brand — count FRESH runs (`kind='checker'`
+  `analyses` rows) of the normalized triple in the last rolling day, `>= limit`
+  → **429**; (4) cost cap — sum today's checker `responses.cost_usd` (rolling
+  24h), add a projection of in-flight fresh runs when real keys are live (see
+  (iv)), and if the total is `>= CHECKER_DAILY_USD_CAP` refuse with a friendly
+  at-capacity **503**. Four deliberate sub-decisions: **(i)** the guards live in
+  `services/rate_limit.py` beside P5.0's, reusing `hash_ip` / `client_ip` /
+  `_retry_after` and the **existing `ip_hash_salt`** — there is deliberately **no
+  second salt** (the card's `rate_limit_salt` name was aspirational; the live
+  config is `ip_hash_salt`, so we reuse it). **(ii)** All three numeric knobs use
+  the P5.0 `>=` idiom so a value of **0 is a clean kill-switch** (rejects every
+  fresh run, never a 500 on the empty window); under `DRY_RUN` every response
+  costs 0, so any positive cost cap never trips by default. **(iii)** The cost
+  window is **rolling 24h**, matching P5.0's daily cap rather than a calendar
+  "today" — the simplest defensible reading, with no UTC-midnight reset cliff and
+  no timezone-of-record question. **(iv)** The cost cap is **completion-lagged**:
+  `responses.cost_usd` is written by the worker only *after* a run finishes, so a
+  just-enqueued run reads as $0 at submit time. Naked, that is a real bypass — a
+  distinct-triple, XFF-spoofed burst dodges the per-brand and per-IP caps and
+  could enqueue an unbounded backlog past the lagging sum, which the worker then
+  spends far past the cap. So when real keys are live the cap also **projects**
+  in-flight fresh runs (`queued`/`running` `kind='checker'` rows in the window)
+  at a conservative module estimate `_EST_CHECKER_RUN_COST_USD`, bounding the
+  concurrent backlog to about `cap / est`. The projection is **skipped under
+  `DRY_RUN`** — there every run completes at $0, so a phantom projection would
+  wrongly trip the cap; instead the recorded sum stays 0 and any positive cap
+  never trips, exactly as the card requires. This makes the cap a *leading*
+  guard, not a lagging report; residual overshoot is a *small multiple* of the
+  cap (if true per-run cost drifts above the estimate), not unbounded.
+- **Consequences:** the public surface is **dark by default** (`CHECKER_ENABLED=0`
+  in `deploy/.env.example`; the operator flips it at P5.11) — safe in every
+  environment. A rejected fresh submit records nothing (consistent with P5.0's
+  "a throttled client gets no row"), while a cache hit always records its
+  submission (the email gate depends on it). The change is **additive to the
+  contract**: the route gains a `Request` param (excluded from the OpenAPI schema)
+  and new 429/503 error paths (HTTPException, not declared responses), so
+  `gen-types` stays green with zero drift. Tech-debt #21 is repaid. **Residuals,
+  reported honestly:** fresh-run spend is bounded to *roughly the daily cap*, not
+  eliminated — (a) with the sub-decision (iv) projection the completion-lag bypass
+  is closed, but residual overshoot is a small multiple of the cap if the true
+  per-run cost drifts above `_EST_CHECKER_RUN_COST_USD` (retune it with the price
+  tables and at P5.7); (b) the per-IP hash comes from the first `X-Forwarded-For`
+  entry, which is **client-controlled** even behind the shared Caddy (same caveat
+  as tech-debt #2), so the per-IP cap is spoofable — the per-brand cap and the
+  projected cost cap are the real backstops against a spoofed-IP burst; (c)
+  because a cache hit is exempt from the per-IP limit too, an abuser hammering an
+  *already-cached* brand can still grow `checker_submissions` rows unboundedly —
+  but at **$0** (no LLM spend, one shared analysis row), a much cheaper surface;
+  a per-IP submissions cap that also counted cache hits would, when a brand is
+  hammered-then-cached, start 429-ing that brand's own legitimate cache hits and
+  break their email gate, which is why cache hits are exempt. `test_checker_api.py`
+  now pins `CHECKER_ENABLED=1` (permissive limits) since a fresh submit is 503 by
+  default; the guards themselves are covered by `test_checker_ratelimit.py`.
+- **Rejected:** a second `rate_limit_salt` config (duplicates `ip_hash_salt` for
+  no benefit and risks two divergent salts); **blocking cache hits** under the
+  kill-switch or cost cap (they cost nothing and the email gate needs their id —
+  the whole point of the P5.1 cache); applying the per-brand or per-IP limit to
+  cache hits (a brand hammered to the fresh-run cap and then cached would have its
+  own subsequent $0 cache hits 429'd, contradicting "a cache hit always returns
+  its id"); a **calendar-day** cost window (needs a timezone of record and resets
+  in a cliff at midnight that an abuser can straddle); recording a
+  `checker_submissions` row for a *rejected fresh* submit (the card says a
+  parked/throttled fresh submit records nothing, and it would let a throttled
+  attacker still inflate the demand signal); a **separate checker rate-limit
+  module** (the guards are the same shape as P5.0's and belong beside them); a
+  **new global fresh-run count config knob** as the completion-lag backstop (a
+  fifth checker var beyond the card's four; the projection reuses the existing
+  `CHECKER_DAILY_USD_CAP` and a tunable module constant, keeping the operator's
+  env surface exactly what the card specifies while still bounding the backlog).
 </content>

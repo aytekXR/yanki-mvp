@@ -23,11 +23,18 @@ from app.db.models import Analysis
 from app.db.session import get_session
 from app.net_guard import is_public_url
 from app.services.analyses import create_analysis, get_analysis
-from app.services.checker import attach_lead, create_checker_analysis
+from app.services.checker import (
+    attach_lead,
+    create_checker_analysis,
+    find_cached_checker_analysis,
+    normalize_triple,
+)
 from app.services.checker_summary import summarize_checker
 from app.services.rate_limit import (
     RateLimitExceeded,
+    check_checker_rate_limit,
     check_rate_limit,
+    checker_daily_cost_exceeded,
     client_ip,
     hash_ip,
 )
@@ -107,14 +114,46 @@ def submit_analysis(
 @router.post("/checker", status_code=202, response_model=CheckerSubmitResponse)
 def submit_checker(
     payload: CheckerSubmitRequest,
+    request: Request,
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> CheckerSubmitResponse:
     # Blank brand/category is rejected by the schema (422) before we get here, so
-    # an invalid submit records nothing. This route does NOT rate-limit or gate
-    # on a kill-switch — that is P5.6's job (which also fills ip_hash).
+    # an invalid submit records nothing.
+    #
+    # P5.6 hardening: this is an anonymous, LLM-spending public endpoint, so all
+    # guards run BEFORE enqueuing. The pivot is whether this triple is a $0 24h
+    # cache hit: a cache hit performs no LLM work and MUST always return its id
+    # (the email gate posts against the submission), so it is EXEMPT from every
+    # guard. A fresh run passes, in order: kill-switch, per-IP + per-brand rate
+    # limits, then the daily cost cap. A rejected fresh run records nothing.
+    ip_hash = hash_ip(client_ip(request) or "unknown", settings.ip_hash_salt)
+    triple = normalize_triple(payload.brand, payload.category, payload.lang)
+    is_cache_hit = find_cached_checker_analysis(session, triple, settings) is not None
+
+    if not is_cache_hit:
+        if not settings.checker_enabled:
+            # Master kill-switch OFF: park the fresh submit and record nothing.
+            raise HTTPException(
+                status_code=503,
+                detail="the free checker is not open yet",
+            )
+        try:
+            check_checker_rate_limit(session, ip_hash, triple, settings)
+        except RateLimitExceeded as exc:
+            raise HTTPException(
+                status_code=429,
+                detail="rate limit exceeded",
+                headers={"Retry-After": str(exc.retry_after)},
+            ) from exc
+        if checker_daily_cost_exceeded(session, settings):
+            raise HTTPException(
+                status_code=503,
+                detail="the free checker is at capacity today",
+            )
+
     analysis, submission = create_checker_analysis(
-        session, payload.brand, payload.category, payload.lang, settings
+        session, payload.brand, payload.category, payload.lang, settings, ip_hash=ip_hash
     )
     return CheckerSubmitResponse(id=analysis.id, submission_id=submission.id)
 

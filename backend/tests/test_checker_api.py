@@ -8,7 +8,29 @@ marking a submitted analysis ``done`` in the DB before the repeat submit.
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
+from app.api.main import app
+from app.config import Settings, get_settings
 from app.db.models import Analysis, CheckerSubmission
+
+
+@pytest.fixture(autouse=True)
+def _enable_checker():
+    """Open the checker with permissive P5.6 guards for the P5.1 behavior suite.
+
+    P5.6 defaults ``checker_enabled`` OFF (a fresh submit → parked 503), so these
+    submit/reuse/lead tests — which predate and are orthogonal to the guards —
+    pin the endpoint ON with wide-open limits and cost cap. The guards themselves
+    are exercised in ``test_checker_ratelimit.py``. Cleared by the ``client``
+    fixture's teardown, which clears all dependency overrides.
+    """
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        checker_enabled=True,
+        checker_rate_limit_per_ip_hour=10_000,
+        checker_rate_limit_per_brand_day=10_000,
+        checker_daily_usd_cap=1_000_000.0,
+    )
 
 
 def _submit(client, brand="Nike", category="Running Shoes", lang="en"):
@@ -48,7 +70,9 @@ def test_submit_returns_202_with_id_and_submission_id(client, db_session):
     submission = db_session.get(CheckerSubmission, uuid.UUID(body["submission_id"]))
     assert submission is not None
     assert submission.analysis_id == analysis.id
-    assert submission.ip_hash is None  # populated in P5.6
+    # P5.6 populates ip_hash with a salted hash of the client IP (never the raw
+    # IP); the salted-not-raw contract is exercised in test_checker_ratelimit.py.
+    assert submission.ip_hash is not None
     assert submission.email is None
 
 

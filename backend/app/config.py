@@ -48,6 +48,31 @@ class Settings(BaseSettings):
     # a hot brand costs $0 on repeat and can't be hammered into new LLM spend.
     checker_result_cache_hours: int = 24
 
+    # Checker public hardening (P5.6) — POST /api/v1/checker is the anonymous,
+    # LLM-spending public endpoint. Every guard below runs BEFORE enqueuing, and
+    # a $0 24h cache hit is exempt from all of them (it must always return its id
+    # so the email gate can post against the submission). The IP hash reuses the
+    # existing ``ip_hash_salt`` above — there is deliberately no second salt.
+    #
+    # Master kill-switch. Default OFF: while False a FRESH submit is parked with
+    # a friendly 503 and records nothing; the operator flips it True at P5.11
+    # go-live, so the public surface stays dark in every environment until then.
+    checker_enabled: bool = False
+    # Per-IP: max checker submissions from one ip_hash per rolling hour; over
+    # this a fresh submit gets 429 + Retry-After. 0 is a kill-switch (rejects
+    # every fresh submit), the same 0-semantics as the analyses limits above.
+    checker_rate_limit_per_ip_hour: int = 10
+    # Per-brand: max FRESH runs (new kind='checker' rows) of one normalized
+    # (brand, category, lang) per rolling day; over this a fresh submit gets 429.
+    # Bounds a single hot brand hammered from many IPs. A cache-served repeat is
+    # not a fresh run and never counts. 0 = kill-switch.
+    checker_rate_limit_per_brand_day: int = 20
+    # Daily USD cap on summed checker responses.cost_usd (rolling 24h, matching
+    # the analyses daily-cap window). At/over the cap a fresh run is refused with
+    # a friendly at-capacity 503; a cache hit still returns. Under DRY_RUN every
+    # cost is 0, so any positive cap never trips.
+    checker_daily_usd_cap: float = 5.0
+
 
 @lru_cache
 def get_settings() -> Settings:

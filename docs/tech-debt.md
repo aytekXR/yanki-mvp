@@ -4,7 +4,11 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (P5.2: **items 6 and 19 REPAID** — `execute._write_cache`
+Last updated: 2026-07-10 (P5.6: **item 21 REPAID** — `POST /api/v1/checker` now
+carries a salted `ip_hash`, a default-OFF `CHECKER_ENABLED` kill-switch, per-IP
+and per-brand rate limits, and a rolling-24h daily cost cap, all enforced before
+enqueuing and all exempting the $0 24h cache hit; the endpoint is safe to expose
+(see ADR-22). Earlier — P5.2: **items 6 and 19 REPAID** — `execute._write_cache`
 is now a concurrency-safe `ON CONFLICT DO NOTHING` upsert (Postgres-gated race
 test), and `run_pipeline` branches on `kind` so the `claim_next` checker
 skip-guard is removed and checker rows run through all six steps with no crawl;
@@ -197,9 +201,38 @@ devDependencies).)
     15s timeout ≈ 135s theoretical worst case, under but not comfortably
     under `STALE_CLAIM_SECONDS=300` (interacts with debt #5's no-heartbeat-
     inside-a-step). Observed real case: ~0.25s. Revisit if slow sites appear.
-21. **`POST /api/v1/checker` has no rate limit until P5.6** (deliberate lane
+21. ~~**`POST /api/v1/checker` has no rate limit until P5.6** (deliberate lane
     ownership — P5.6 adds ip_hash population, limits, kill-switch, cost cap).
     Exposure today is $0 (worker skips checker rows, see #19) and cache hits
     are free, but an abuser can grow the `analyses`/`checker_submissions`
-    tables unboundedly. Sequence P5.6 promptly after P5.2 makes checker rows
-    actually run.
+    tables unboundedly.~~ **REPAID (P5.6, see ADR-22):** the checker endpoint now
+    derives a salted `ip_hash` (reusing the existing `ip_hash_salt` — no second
+    salt) and, for a FRESH run only, enforces in order a `CHECKER_ENABLED` master
+    kill-switch (default OFF → friendly parked 503, records nothing), a per-IP
+    submissions/hour 429, a per-brand fresh-runs/day 429, and a rolling-24h daily
+    USD cost cap (at-capacity 503). A $0 24h cache hit is exempt from all four so
+    it still returns its id for the email gate. Fresh-run LLM spend is bounded to
+    roughly the daily cap, not eliminated — see the residuals below.
+    (The P5.6 card said "tech-debt #3 marked repaid" — a **stale renumbering
+    artifact**; the real item is **#21**, repaid here.) Residuals, reported
+    honestly: **(a)** the cost cap is **completion-lagged** — it sums
+    `responses.cost_usd`, which the worker writes only *after* a run finishes, so
+    a just-enqueued run counts as $0 at submit time. Left naked this is a real
+    bypass: a distinct-triple, XFF-spoofed burst evades the per-brand and per-IP
+    caps and could enqueue an unbounded backlog the worker later spends far past
+    the cap. So with real keys the cap also **projects** in-flight fresh runs
+    (queued/running `kind='checker'` rows) at a conservative per-run estimate
+    (`_EST_CHECKER_RUN_COST_USD`), bounding the concurrent backlog to about
+    `cap / est`. Residual overshoot is therefore **bounded to a small multiple of
+    the cap** (if true per-run cost drifts above the estimate), not unbounded;
+    retune the estimate with the price tables and at P5.7 when Gemini/Perplexity
+    stop being $0 stubs. **(b)** the per-IP hash is derived from the first
+    `X-Forwarded-For` entry, which is **client-controlled** even behind the
+    shared Caddy (same caveat as item #2), so the per-IP cap is spoofable; the
+    per-brand cap and the projected daily cost cap are the real backstops against
+    a spoofed-IP burst. **(c)** a cache hit is exempt from the per-IP limit too,
+    so an abuser hammering an *already-cached* brand can still grow
+    `checker_submissions` rows at $0 (no spend, one shared analysis) — a far
+    cheaper surface than fresh runs; making the per-IP cap count cache hits would
+    429 a hammered-then-cached brand's own legitimate cache hits and break their
+    email gate, so cache hits stay exempt.

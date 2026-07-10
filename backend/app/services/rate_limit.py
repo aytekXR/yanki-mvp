@@ -3,8 +3,16 @@
 P5.0 wires this into ``POST /api/v1/analyses`` — the LIVE endpoint that is
 already public with real keys, so a rejection must land BEFORE any ``analyses``
 row is created or money is spent. The helpers here are deliberately
-endpoint-agnostic: P5.6 reuses ``hash_ip`` / ``client_ip`` for the future
-``/api/v1/checker`` endpoint (which owns its own salt config).
+endpoint-agnostic: P5.6 reuses ``hash_ip`` / ``client_ip`` (with the SAME
+``ip_hash_salt`` — there is no second salt) plus ``_retry_after`` for the
+anonymous ``/api/v1/checker`` endpoint. ``check_checker_rate_limit`` and
+``checker_daily_cost_exceeded`` add the checker's per-IP, per-brand, and
+daily-cost guards; the route calls them only for a FRESH run, because a $0 24h
+cache hit is exempt from every guard (see ADR-22). Because recorded
+``responses.cost_usd`` LAGS the worker (a just-enqueued run has spent nothing
+yet), the cost guard also projects the spend of in-flight fresh runs at a
+conservative per-run estimate whenever real keys are live, so a distinct-triple
+burst cannot slip an unbounded backlog past the lagging sum (see ADR-22).
 
 Timestamp note: ``analyses.created_at`` is ``DateTime(timezone=True)`` with a
 Python-side aware default. On Postgres reads come back tz-aware; on the SQLite
@@ -24,15 +32,16 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.db.models import Analysis
+from app.db.models import Analysis, CheckerSubmission, Response
 
 
 class RateLimitExceeded(Exception):
     """Raised when a rate limit is hit.
 
     ``retry_after`` is seconds until the oldest counted row leaves the window
-    (always >= 1), suitable for a ``Retry-After`` header. ``scope`` is ``"ip"``
-    or ``"global"`` to aid logging/tests.
+    (always >= 1), suitable for a ``Retry-After`` header. ``scope`` names the
+    breached guard for logging/tests: ``"ip"`` / ``"global"`` (the analyses
+    endpoint) or ``"checker_ip"`` / ``"checker_brand"`` (the checker endpoint).
     """
 
     def __init__(self, retry_after: int, scope: str) -> None:
@@ -141,3 +150,147 @@ def check_rate_limit(session: Session, ip_hash: str, settings: Settings) -> None
             else int(day_window.total_seconds())
         )
         raise RateLimitExceeded(retry, "global")
+
+
+def check_checker_rate_limit(
+    session: Session,
+    ip_hash: str,
+    triple: tuple[str, str, str],
+    settings: Settings,
+) -> None:
+    """Enforce the checker's per-IP and per-brand limits; raise on breach.
+
+    - Per-IP: reject when this ``ip_hash`` already has
+      ``checker_rate_limit_per_ip_hour`` rows in ``checker_submissions`` created
+      in the last rolling hour. The counter includes any cache-hit submissions
+      the IP made (they are real rows), bounding one IP's total demand.
+    - Per-brand: reject when this normalized ``(brand, category, lang)`` already
+      has ``checker_rate_limit_per_brand_day`` FRESH runs (``kind='checker'``
+      ``analyses`` rows) created in the last rolling day — the guard against one
+      hot brand hammered from many IPs. A cache-served repeat creates no
+      ``analyses`` row, so it neither counts nor is counted here.
+
+    Both use the ``>=`` idiom of ``check_rate_limit`` so a limit of ``0`` is a
+    clean kill-switch (rejects every fresh submit, never a 500 on the empty
+    window). ``Retry-After`` is the time until the oldest counted row ages out.
+
+    The route calls this ONLY for a fresh submit: a $0 cache hit is exempt from
+    every guard so it always returns its id for the email gate (ADR-22). Call it
+    BEFORE ``create_checker_analysis`` so a rejected client records nothing.
+    """
+    now = datetime.now(UTC)
+
+    # --- Per-IP hourly limit (submission rows) -------------------------------
+    hour_window = timedelta(hours=1)
+    ip_rows = (
+        session.execute(
+            select(CheckerSubmission.created_at)
+            .where(
+                CheckerSubmission.ip_hash == ip_hash,
+                CheckerSubmission.created_at >= now - hour_window,
+            )
+            .order_by(CheckerSubmission.created_at)
+        )
+        .scalars()
+        .all()
+    )
+    if len(ip_rows) >= settings.checker_rate_limit_per_ip_hour:
+        retry = (
+            _retry_after(ip_rows[0], hour_window, now)
+            if ip_rows
+            else int(hour_window.total_seconds())
+        )
+        raise RateLimitExceeded(retry, "checker_ip")
+
+    # --- Per-brand daily limit (fresh checker runs of this triple) -----------
+    nbrand, ncategory, nlang = triple
+    day_window = timedelta(hours=24)
+    brand_rows = (
+        session.execute(
+            select(Analysis.created_at)
+            .where(
+                Analysis.kind == "checker",
+                Analysis.brand == nbrand,
+                Analysis.category == ncategory,
+                Analysis.lang == nlang,
+                Analysis.created_at >= now - day_window,
+            )
+            .order_by(Analysis.created_at)
+        )
+        .scalars()
+        .all()
+    )
+    if len(brand_rows) >= settings.checker_rate_limit_per_brand_day:
+        retry = (
+            _retry_after(brand_rows[0], day_window, now)
+            if brand_rows
+            else int(day_window.total_seconds())
+        )
+        raise RateLimitExceeded(retry, "checker_brand")
+
+
+# Conservative planning estimate of ONE fresh checker run's LLM cost, used only
+# to project the spend of runs already enqueued but not yet costed by the worker
+# (see ``checker_daily_cost_exceeded``). Derived from the panel shape — roughly
+# ``PROMPT_COUNT`` prompts fanned across the paid engines, with Claude Haiku
+# ($1/$5 per 1M in/out tokens) dominating — and rounded up so the projection
+# errs toward refusing. It only needs to stay within a small factor of the true
+# per-run cost: the backstop bounds concurrently in-flight fresh runs to about
+# ``cap / this value``, so any drift caps backlog overshoot at a small multiple
+# of the cap rather than leaving it unbounded. Retune alongside the price tables
+# (and when P5.7 turns Gemini/Perplexity from $0 stubs into real spend).
+_EST_CHECKER_RUN_COST_USD = 0.05
+
+
+def checker_daily_cost_exceeded(session: Session, settings: Settings) -> bool:
+    """Return True when today's checker spend has reached the daily cap.
+
+    Sums ``responses.cost_usd`` over rows belonging to ``kind='checker'``
+    analyses within a rolling 24h window (the same window shape as the analyses
+    daily cap — the simplest defensible reading of "today", avoiding a
+    UTC-midnight reset cliff and any timezone-of-record question; see ADR-22).
+
+    Recorded cost LAGS actual spend: the guard runs at submit time but a run's
+    ``responses`` are written by the worker later, so a just-enqueued run counts
+    as $0 until it finishes. Without a backstop, a distinct-triple burst (each
+    triple evading the per-brand cap, each spoofed IP evading the per-IP cap)
+    could enqueue an unbounded backlog past this lagging sum, which the worker
+    would then spend far past the cap. So with real keys live the guard also
+    PROJECTS in-flight fresh runs (``kind='checker'`` analyses still ``queued``
+    or ``running`` in the window) at ``_EST_CHECKER_RUN_COST_USD`` each, bounding
+    the concurrently enqueued backlog to about ``cap / est``. The projection is
+    deliberately skipped under ``DRY_RUN``: there every run completes at $0, so
+    projecting a phantom cost would wrongly trip the cap — instead the recorded
+    sum stays 0 and any positive cap never trips, exactly as the card requires.
+    (A ``running`` run whose partial cost is already summed is also projected in
+    full; that double-count is an intentional, documented safety margin.)
+
+    Uses ``>=`` so a cap of ``0`` refuses every fresh run (kill-switch idiom).
+    The route calls this ONLY for a fresh run; a $0 cache hit is exempt.
+    """
+    now = datetime.now(UTC)
+    day_window = timedelta(hours=24)
+    recorded = session.execute(
+        select(func.coalesce(func.sum(Response.cost_usd), 0))
+        .select_from(Response)
+        .join(Analysis, Response.analysis_id == Analysis.id)
+        .where(
+            Analysis.kind == "checker",
+            Response.created_at >= now - day_window,
+        )
+    ).scalar_one()
+    projected = float(recorded)
+
+    if not settings.dry_run:
+        in_flight = session.execute(
+            select(func.count())
+            .select_from(Analysis)
+            .where(
+                Analysis.kind == "checker",
+                Analysis.status.in_(("queued", "running")),
+                Analysis.created_at >= now - day_window,
+            )
+        ).scalar_one()
+        projected += in_flight * _EST_CHECKER_RUN_COST_USD
+
+    return projected >= settings.checker_daily_usd_cap

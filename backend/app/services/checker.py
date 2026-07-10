@@ -34,6 +34,41 @@ def normalize_triple(brand: str, category: str, lang: str) -> tuple[str, str, st
     return brand.strip().casefold(), category.strip().casefold(), lang.strip().casefold()
 
 
+def find_cached_checker_analysis(
+    session: Session, triple: tuple[str, str, str], settings: Settings
+) -> Analysis | None:
+    """Return the reusable ``done`` checker analysis for this normalized triple.
+
+    A hit is the most recent ``kind='checker'`` / ``status='done'`` row for the
+    triple that is younger than ``checker_result_cache_hours``; otherwise
+    ``None`` (a fresh run is needed). Extracted so ``create_checker_analysis``
+    and P5.6's route guard share ONE definition of "cache hit": the route peeks
+    with this to decide whether the kill-switch, rate limits, and cost cap apply
+    (a $0 cache hit is exempt from all of them — see ADR-22), then
+    ``create_checker_analysis`` re-resolves it authoritatively.
+    """
+    nbrand, ncategory, nlang = triple
+    now = datetime.now(UTC)
+    window = timedelta(hours=settings.checker_result_cache_hours)
+    return (
+        session.execute(
+            select(Analysis)
+            .where(
+                Analysis.kind == "checker",
+                Analysis.status == "done",
+                Analysis.brand == nbrand,
+                Analysis.category == ncategory,
+                Analysis.lang == nlang,
+                Analysis.created_at >= now - window,
+            )
+            .order_by(Analysis.created_at.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+
 def create_checker_analysis(
     session: Session,
     brand: str,
@@ -58,25 +93,7 @@ def create_checker_analysis(
     """
     nbrand, ncategory, nlang = normalize_triple(brand, category, lang)
 
-    now = datetime.now(UTC)
-    window = timedelta(hours=settings.checker_result_cache_hours)
-    existing = (
-        session.execute(
-            select(Analysis)
-            .where(
-                Analysis.kind == "checker",
-                Analysis.status == "done",
-                Analysis.brand == nbrand,
-                Analysis.category == ncategory,
-                Analysis.lang == nlang,
-                Analysis.created_at >= now - window,
-            )
-            .order_by(Analysis.created_at.desc())
-            .limit(1)
-        )
-        .scalars()
-        .first()
-    )
+    existing = find_cached_checker_analysis(session, (nbrand, ncategory, nlang), settings)
 
     if existing is not None:
         analysis = existing
