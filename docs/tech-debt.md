@@ -4,7 +4,11 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (session 9: **item 2 REPAID** — P5.0 landed and is
+Last updated: 2026-07-10 (P5.2: **items 6 and 19 REPAID** — `execute._write_cache`
+is now a concurrency-safe `ON CONFLICT DO NOTHING` upsert (Postgres-gated race
+test), and `run_pipeline` branches on `kind` so the `claim_next` checker
+skip-guard is removed and checker rows run through all six steps with no crawl;
+see ADR-20. Earlier — session 9: **item 2 REPAID** — P5.0 landed and is
 verified live on prod (5/IP/hour + 100/day rolling caps, 429 + Retry-After
 before any row or spend; worst-case abuse now bounded at ≈$1.62/day at the
 measured $0.0162/analysis); the item is rewritten below as the narrower
@@ -64,10 +68,16 @@ devDependencies).)
    `STALE_CLAIM_SECONDS` (300s) could be reclaimed mid-run. Idempotent
    delete-before-rerun makes this safe but wasteful. Fix only if real runs
    approach 300s.
-6. **`llm_cache` read-then-insert race** under concurrent workers could raise
-   on the unique key. Single-worker MVP → not reachable today; guard with
-   upsert when a second worker ships. **Planned repayment: P5.2**'s
-   `ON CONFLICT DO NOTHING` upsert (decomposed session 3, not yet built).
+6. ~~**`llm_cache` read-then-insert race** under concurrent workers could raise
+   on the unique key.~~ **REPAID (P5.2):** `execute._write_cache` is now an
+   upsert — delete any stale row on the key (keeps the refresh-with-fresh-
+   timestamp semantic), then `INSERT … ON CONFLICT (cache_key) DO NOTHING` via
+   the Postgres/SQLite dialect `insert`, then re-read. A second worker racing
+   the same key is a no-op, not an `IntegrityError`; proven by the Postgres-gated
+   `tests/pipeline/test_execute_race.py`. Residual (minor): the delete-first step
+   means a losing concurrent writer can drop a rival's just-committed fresh row
+   and replace it with its own — harmless (both answers valid, timestamp stays
+   fresh, response cost is recorded from the generated result, not the cache row).
 7. **The Caddy publish step is manual, non-idempotent, and coupled two-way to
    pulse-prod** (rewritten session 7 — the wiring itself is now PROVEN live by
    P4.2: aliases `yanki-web`/`yanki-api` on `pulse-prod_default`, loopback
@@ -161,14 +171,14 @@ devDependencies).)
     the runtime image also carries dev packages. Correct fix later: a
     multi-stage Dockerfile (build with dev deps, run with `npm ci --omit=dev`
     or Next standalone output). Cost today: image size only.
-19. **`claim_next` skips `kind='checker'` rows — a deliberate P5.1 stopgap
-    that P5.2 MUST remove.** Without the P5.2 runner branch, the live worker
-    would claim checker rows, fail to crawl `checker://…`, mark them
-    `failed`, and thereby kill the 24h reuse cache (reuse requires `done`).
-    Until P5.2 lands, checker submits sit `queued` forever ($0, invisible to
-    the worker). Guard + its `test_claim_next_skips_checker_rows` live in
-    `backend/app/jobs/queue.py` / `backend/tests/test_queue.py`; the P5.2
-    card carries the removal instruction.
+19. ~~**`claim_next` skips `kind='checker'` rows — a deliberate P5.1 stopgap
+    that P5.2 MUST remove.**~~ **REPAID (P5.2):** `run_pipeline` now branches on
+    `kind` (a checker row seeds KYC from its brand+category instead of crawling
+    its synthetic `checker://` url), so the guard is gone and the worker claims
+    checker rows in ordinary FIFO order. `test_claim_next_skips_checker_rows` is
+    replaced by `test_claim_next_claims_checker_rows` in
+    `backend/tests/test_queue.py`. (Sequence P5.6 — checker rate limit, #21 —
+    promptly, since checker rows now actually run and spend on real providers.)
 20. **Lead email validation is a minimal regex, not RFC/deliverability
     validation** (`email-validator` isn't installed; the card allowed this).
     Some technically-invalid addresses will be accepted into

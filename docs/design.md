@@ -463,4 +463,62 @@ decision → consequences**, with one line on why the alternative was rejected.
   Postgres; the ORM carries matching `default=` so SQLite `create_all` agrees)
   plus the new `checker_submissions` table. Safe to apply on the live table
   during a redeploy; `down_revision = "0002_analyses_ip_hash"`.
+
+### ADR-20 — Checker pipeline branch (seed KYC, versioned fixed prompt set) + `llm_cache` upsert (P5.2)
+- **Context:** ADR-19 landed the checker's schema and submit endpoint but left
+  the rows unrunnable: `run_pipeline` only knew how to crawl a URL, and a checker
+  row's `url` is a synthetic `checker://<brand>/<category>` with no crawl target,
+  so `jobs/queue.py::claim_next` deliberately skipped `kind='checker'` rows
+  (tech-debt #19) — they sat `queued` forever. We need the *same six steps* to
+  run for a checker row without a crawl, keeping the locked `progress`/
+  `current_step` (`StepProgress`) mapping byte-identical to the MVP path. Second,
+  the public checker will run more than one worker, and `execute._write_cache`
+  was a read-then-delete-then-insert that could raise a unique-key
+  `IntegrityError` when two workers wrote the same `cache_key` at once
+  (tech-debt #6).
+- **Decision:** branch `run_pipeline` on `analysis.kind` at exactly two points
+  and leave every other step untouched. Step 1 (discovery): a checker row builds
+  a seed string `f"Brand: {brand}. Category: {category}."` with **no** HTTP
+  instead of `discovery.discover(url)`; `current_step='discovery'`/`progress=15`
+  are set identically, so the contract is unchanged. Step 3 (prompts): a checker
+  row uses a **fixed, `VERSION`-stamped 12-prompt set**
+  (`checker_prompts.generate(kyc, lang)`) instead of the templated
+  `PROMPT_COUNT` generator. Steps 2 (KYC, run as-is on the seed) and 4-6 are
+  shared verbatim. The kind test is `analysis.kind == "checker"`, so NULL/`'mvp'`
+  rows keep the byte-identical MVP path. The checker prompt set deliberately asks
+  only **category** questions and never names the brand (the checker measures
+  whether the brand appears *unprompted*; `footprint.detect` finds it in the
+  *answers*); it is built from KYC fields with deterministic fallbacks so a
+  sparse KYC still yields 12 unique, non-empty prompts, and it is byte-stable per
+  KYC so repeat runs and the 24h result cache stay consistent. English is wired;
+  an unrecognised `lang` (e.g. the `'tr'` submits the checker accepts today)
+  falls back to the English set rather than failing a legal job — Turkish wording
+  arrives in P5.8. Separately, `execute._write_cache` becomes an upsert: it
+  deletes any stale row on the key (preserving the refresh-with-a-fresh-timestamp
+  semantic) then inserts with `ON CONFLICT (cache_key) DO NOTHING` (via the
+  Postgres or SQLite dialect `insert`) and re-reads the persisted row, so a
+  racing second writer is a harmless no-op. The `claim_next` skip-guard is
+  removed in the same change so checker rows are actually claimed.
+- **Consequences:** the whole English checker vertical is DRY_RUN-green — a
+  `kind='checker'` submit walks all six steps with no crawl, produces exactly 12
+  prompts and 48 responses (12 x 4 mock engines, ≤ `MAX_RESPONSES_PER_JOB=60`),
+  and lands `done` at `progress=100` with a meaningful non-zero `geo_score`. The
+  diff is minimal: one boolean and two `if` branches in the runner, one rewritten
+  cache-write helper, one deleted guard. `_write_cache` still deletes-then-inserts,
+  so under concurrency a losing writer's delete can drop a rival's just-committed
+  fresh row and replace it with its own — harmless (both answers are valid, the
+  timestamp stays fresh, response cost is recorded from the generated result, not
+  from the cache row). Because DRY_RUN's mock always returns the fixed "Yanki
+  Demo Co" KYC regardless of the seed, every DRY_RUN checker run scores the mock
+  company; the seed only shapes real-provider runs (matches ADR-19's existing
+  DRY_RUN posture).
+- **Rejected:** a separate checker runner or worker (duplicates five identical
+  steps for a two-point difference); `ON CONFLICT DO UPDATE` for the cache
+  (updates fresh rows needlessly and drifts from the "insert on miss" model —
+  DO NOTHING + delete-stale expresses "refresh only stale" exactly and matches
+  the card); a Python-side `try/except IntegrityError` retry around the insert
+  (racier and dialect-fragile versus a single atomic upsert both dialects
+  support); passing `brand`/`category` straight into the prompt generator
+  (step 3 takes only `kyc`, so the seed→KYC path is the single source of truth
+  and real runs get an LLM-enriched profile, not two raw strings).
 </content>

@@ -6,6 +6,15 @@ scoring, advancing ``current_step`` and ``progress`` and heartbeating
 partial results stay queryable. On success it marks the analysis ``done``.
 The worker owns claiming the job and turning any raised exception into a
 ``failed`` status.
+
+Two flavours share these six steps (P5.2). An MVP crawl analysis
+(``kind`` NULL or ``'mvp'``) starts step 1 with an HTTP crawl of ``url`` and
+templates a ``PROMPT_COUNT`` prompt set in step 3. A checker analysis
+(``kind='checker'``) has a synthetic ``checker://`` url with no crawl target, so
+step 1 seeds KYC from the submitted brand + category with **no** HTTP, and step
+3 uses the fixed, versioned ``checker_prompts`` set. The progress mapping,
+``current_step`` values, and steps 2 and 4-6 are identical for both — only the
+discovery source and the prompt generator branch on ``kind``.
 """
 
 from __future__ import annotations
@@ -15,7 +24,7 @@ from datetime import UTC, datetime
 from sqlalchemy import delete, select
 
 from app.db.models import Analysis, Prompt, Response
-from app.pipeline import discovery
+from app.pipeline import checker_prompts, discovery
 from app.pipeline import execute as execute_step
 from app.pipeline import footprint as footprint_step
 from app.pipeline import kyc as kyc_step
@@ -63,9 +72,18 @@ def run_pipeline(session, analysis_id, settings) -> Analysis:
     session.execute(delete(Prompt).where(Prompt.analysis_id == analysis.id))
     session.commit()
 
+    is_checker = analysis.kind == "checker"
+
     # 1. discovery
     _start_step(session, analysis, "discovery")
-    text = discovery.discover(analysis.url)
+    if is_checker:
+        # A checker row has no crawl target (synthetic ``checker://`` url), so
+        # seed KYC from the submitted brand + category instead of an HTTP crawl.
+        # ``current_step``/``progress`` stay exactly as the MVP path sets them,
+        # so the locked StepProgress contract is untouched.
+        text = f"Brand: {analysis.brand}. Category: {analysis.category}."
+    else:
+        text = discovery.discover(analysis.url)
     _complete_step(session, analysis, _DISCOVERY_DONE)
 
     # 2. kyc
@@ -78,9 +96,15 @@ def run_pipeline(session, analysis_id, settings) -> Analysis:
 
     # 3. prompts
     _start_step(session, analysis, "prompts")
-    specs = prompts_step.generate_prompts(
-        kyc, getattr(settings, "prompt_count", 10)
-    )
+    if is_checker:
+        # Fixed, versioned 12-prompt set (English wired; Turkish in P5.8). An
+        # unwired lang falls back to English inside ``generate`` so a legal
+        # submit never fails the job.
+        specs = checker_prompts.generate(kyc, analysis.lang or "en")
+    else:
+        specs = prompts_step.generate_prompts(
+            kyc, getattr(settings, "prompt_count", 10)
+        )
     prompt_rows = []
     for spec in specs:
         row = Prompt(analysis_id=analysis.id, text=spec.text, category=spec.category)
