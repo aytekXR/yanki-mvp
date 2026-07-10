@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     # Provider credentials (blank in DRY_RUN)
     anthropic_api_key: str = ""
     openai_api_key: str = ""
+    gemini_api_key: str = ""
+    perplexity_api_key: str = ""
 
     # Pipeline behaviour
     dry_run: bool = True

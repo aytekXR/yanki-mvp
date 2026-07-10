@@ -33,9 +33,17 @@ def test_panel_honours_custom_engine_list():
     assert [provider.name for provider in panel] == ["anthropic", "gemini"]
 
 
-def test_non_dry_run_builds_stub_engines():
-    # gemini/perplexity are stubs and need no API key, so this is safe to build.
-    settings = SimpleNamespace(dry_run=False, panel_engines="gemini,perplexity")
+def test_non_dry_run_builds_real_engines():
+    # gemini/perplexity are now real REST adapters (P5.7). Construction is
+    # offline — no key needed to build, no live call until generate() — so this
+    # is safe with blank keys and never touches the network.
+    settings = SimpleNamespace(
+        dry_run=False,
+        panel_engines="gemini,perplexity",
+        gemini_api_key="",
+        perplexity_api_key="",
+    )
     panel = registry.get_panel(settings)
     assert [provider.name for provider in panel] == ["gemini", "perplexity"]
-    assert all(provider.model == "stub" for provider in panel)
+    assert [provider.model for provider in panel] == ["gemini-2.5-flash", "sonar"]
+    assert all(not isinstance(provider, MockProvider) for provider in panel)

@@ -30,11 +30,11 @@ def _build_real(engine: str, settings) -> Provider:
     if engine == "gemini":
         from app.providers.gemini_provider import GeminiProvider
 
-        return GeminiProvider()
+        return GeminiProvider(api_key=getattr(settings, "gemini_api_key", ""))
     if engine == "perplexity":
         from app.providers.perplexity_provider import PerplexityProvider
 
-        return PerplexityProvider()
+        return PerplexityProvider(api_key=getattr(settings, "perplexity_api_key", ""))
     # Unknown engine name → fall back to a mock so the pipeline never crashes.
     return MockProvider(engine)
 

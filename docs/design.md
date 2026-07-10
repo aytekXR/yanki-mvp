@@ -672,3 +672,33 @@ decision → consequences**, with one line on why the alternative was rejected.
   `CHECKER_DAILY_USD_CAP` and a tunable module constant, keeping the operator's
   env surface exactly what the card specifies while still bounding the backlog).
 </content>
+
+### ADR-23 — Gemini & Perplexity are real search-grounded adapters (P5.7)
+- **Context:** the checker's headline promise is *four real engines*; a "show
+  your work" page cannot display canned stub text under a live engine's name.
+  ADR-9 stubbed Gemini and Perplexity for the MVP behind the `Provider` protocol,
+  a single-file swap left for later — this is that swap.
+- **Decision:** replace both stubs with real REST adapters that satisfy the same
+  `Provider` protocol. **Gemini** calls the `v1beta …:generateContent` endpoint
+  (`gemini-2.5-flash`) with **Google Search grounding** enabled via the
+  `google_search` tool in the request body, authed with the `x-goog-api-key`
+  header. **Perplexity** POSTs `chat/completions` (model `sonar`, search-grounded
+  by default) with Bearer auth. Both use `httpx` directly (not a vendor SDK), so
+  CI intercepts them with `respx` and never makes a live call. `cost_usd` is
+  computed from the reported usage token counts times a **pinned per-model price
+  table constant** (Gemini $0.30/$2.50 per 1M in/out; Perplexity sonar $1.00/$1.00
+  per 1M), mirroring the Anthropic/OpenAI adapters.
+- **Consequences:** `DRY_RUN` is **unaffected** — the registry still returns four
+  `MockProvider`s under `DRY_RUN=1`; the real adapters wire in only when
+  `DRY_RUN=0`, keyed by the new `gemini_api_key` / `perplexity_api_key` settings
+  (`GEMINI_API_KEY` / `PERPLEXITY_API_KEY` in `deploy/.env.example`, blank in
+  DRY_RUN). This **supersedes ADR-9's stubs for the checker panel**. Grounded
+  requests also carry a per-request search fee (billed per request, not per token)
+  that the token-only `cost_usd` does **not** model — an accepted approximation,
+  with an exact retune against the live price tables tracked for P5.11 week-1
+  (tech-debt, same caveat as ADR-22's cost estimate).
+- **Rejected:** the vendor SDKs (an extra dependency each, and harder to pin
+  under `respx` than a plain `httpx` call); modelling the per-request search fee
+  now (needs live per-tier prices unavailable this session — deferred to the
+  P5.11 retune); a non-grounded Gemini call (grounding is the whole point of a
+  *search* engine on the panel and is required by the card).

@@ -1,31 +1,74 @@
-"""Gemini stub provider.
+"""Real Gemini provider via the REST ``generateContent`` endpoint.
 
-Real Gemini is out of scope for the MVP (see docs/02-mvp.md). This returns a
-deterministic, plausible canned answer at $0 cost, and — like a real engine —
-sometimes mentions no specific brand at all.
+Search grounding is enabled by sending the ``google_search`` tool in the request
+body, so answers reflect a live web search (the checker's "four real engines"
+promise). Auth is the ``x-goog-api-key`` header. Cost is estimated from the token
+usage the API reports, using a pinned price-table constant. Only ever called when
+``DRY_RUN`` is off; CI exercises it under ``respx`` and never makes a live call.
 """
 
 from __future__ import annotations
 
-import hashlib
+from typing import Any
+
+import httpx
 
 from app.providers.base import ProviderResult
 
-_ANSWERS = [
-    "Based on what is generally known, there are several credible providers in "
-    "this space. Popular names include Acme, Globex and Initech.",
-    "I do not have enough specific information to single out one option here.",
-    "A few well-regarded choices come up often, such as Umbrella and Stark, "
-    "though the best fit depends on your requirements.",
-    "There isn't a clear single winner; the market has a healthy mix of "
-    "established and newer players.",
-]
+MODEL = "gemini-2.5-flash"
+MAX_OUTPUT_TOKENS = 1024
+TIMEOUT_SECONDS = 30.0
+ENDPOINT = (
+    "https://generativelanguage.googleapis.com/v1beta/models/"
+    f"{MODEL}:generateContent"
+)
+
+# Gemini 2.5 Flash list price: $0.30 / 1M input tokens, $2.50 / 1M output tokens.
+# NOTE: grounded requests also carry a per-request Google Search fee (billed per
+# grounded request, not per token) that is NOT modelled here — cost_usd is a
+# token-only approximation. Exact retune against the live price tables is a P5.11
+# week-1 read (tech-debt), consistent with ADR-22's cost-estimate caveat.
+INPUT_PRICE_PER_TOKEN = 0.30 / 1_000_000
+OUTPUT_PRICE_PER_TOKEN = 2.50 / 1_000_000
+
+
+def _extract_text(data: dict[str, Any]) -> str:
+    candidates = data.get("candidates") or []
+    if not candidates:
+        return ""
+    parts = candidates[0].get("content", {}).get("parts", []) or []
+    return "".join(part.get("text", "") for part in parts)
 
 
 class GeminiProvider:
     name = "gemini"
-    model = "stub"
+    model = MODEL
+
+    def __init__(self, api_key: str) -> None:
+        self._api_key = api_key
 
     def generate(self, prompt: str) -> ProviderResult:
-        index = hashlib.sha256(prompt.encode("utf-8")).digest()[0] % len(_ANSWERS)
-        return ProviderResult(text=_ANSWERS[index], model=self.model, cost_usd=0.0)
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            # Search grounding: the google_search tool makes the model answer
+            # from a live web search rather than parametric memory only.
+            "tools": [{"google_search": {}}],
+            "generationConfig": {"maxOutputTokens": MAX_OUTPUT_TOKENS},
+        }
+        response = httpx.post(
+            ENDPOINT,
+            headers={"x-goog-api-key": self._api_key},
+            json=payload,
+            timeout=TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+        data = response.json()
+        text = _extract_text(data)
+        usage = data.get("usageMetadata", {})
+        prompt_tokens = usage.get("promptTokenCount", 0)
+        output_tokens = usage.get("candidatesTokenCount", 0)
+        cost = (
+            prompt_tokens * INPUT_PRICE_PER_TOKEN
+            + output_tokens * OUTPUT_PRICE_PER_TOKEN
+        )
+        return ProviderResult(text=text, model=self.model, cost_usd=round(cost, 6))
