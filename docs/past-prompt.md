@@ -91,3 +91,24 @@ Old debt #10 repaid (hygiene tail renumbered). **No key-free work remains**
 brief lives at the end of that log (§6).
 
 ---
+
+## Session 6 — 2026-07-10
+
+**Prompts executed:** "which part of the roadmap is remained for the mvp? …
+we will be serving the product from this vps on yanki.beyondkaira.com dns is
+set. Put this also to the roadmap." (deploy retarget — landed as session-5
+post-close addendum), then "Use the cheapist models from antropic and openai
+x2", then "Just added the api keys" → per the standing brief, keys present ⇒
+**P4.1**.
+
+**Outcome:** OpenAI provider switched to `gpt-5-nano` ($0.05/$0.40; Anthropic
+already on Haiku 4.5, the cheapest); **first live run completed** — real KYC +
+`geo_score=0.2` for anthropic.com in ~40s, measured **$0.0132/analysis**
+(Anthropic leg) ≈ 1% of the $49 plan (NFR-1 bar: <35%). Discovered the
+operator's OpenAI key has `insufficient_quota` (new operator item 1b); the
+OpenAI cost leg records after billing is fixed. P4.1 done → MVP 31/32 ≈ 97%,
+readiness ~85%; only P4.2 (supervised deploy) remains. See
+[sessions/2026-07-10-04.md](sessions/2026-07-10-04.md); the session-7 brief
+lives at the end of that log (§6).
+
+---

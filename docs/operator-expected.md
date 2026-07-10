@@ -7,11 +7,13 @@ remote, and CI status at start regardless. Nothing here blocks local
 development — `make dev` + `make test` work today with zero keys and zero
 cost (DRY_RUN).*
 
-Last updated: 2026-07-10 (session 5 close + post-close: deploy retargeted to
-**yanki.beyondkaira.com on this VPS** at your direction — DNS verified done,
-deploy configs reconciled with the real topology, CI still 5/5 green (run
-29064538453). The last key-free task is done — **everything that remains
-needs you**).
+Last updated: 2026-07-10 (session 6 close: **keys added → first LIVE run
+succeeded — P4.1 done**. Real KYC + score for anthropic.com in ~40s;
+measured cost **$0.0132/analysis** on the Anthropic leg ≈ 1% of the $49
+plan — the NFR-1 margin holds with ~35× headroom. Providers now on the
+cheapest models per your directive: Claude Haiku 4.5 (already was) +
+`gpt-5-nano` (switched from gpt-4o-mini, 3× cheaper input). One finding
+needs you: **your OpenAI key has no usable quota** — see item 1b.)
 
 **Session-5 result: the final key-free task landed** — the frontend lint
 script migrated off the deprecated `next lint` to the ESLint CLI (old
@@ -24,20 +26,24 @@ proof only you can trigger. **There is now NO session work left that doesn't
 need you first:** real keys (item 1), then the supervised first deploy
 (items 4–7). A session started with no keys can only verify and close.
 
-## Do now — the one thing everything else waits on
+## Do now
 
-- [ ] **1. Real API keys → unblocks P4.1 (cost validation), then P4.2 (deploy).**
-  This is the Week-1 finance exercise (NFR-1) and it spends real money, so
-  timing is your call. As of session 5 there is **no key-free fallback left**
-  — until keys land, sessions have nothing to build.
-  ```bash
-  cp deploy/.env.example deploy/.env
-  # then edit: ANTHROPIC_API_KEY=…, OPENAI_API_KEY=…, DRY_RUN=0
-  make dev        # submit one real URL at the web port
-  ```
-  The agent then records measured cost per analysis (the `cost_usd` columns);
-  you read the two provider dashboards and compare cost per analysis against
-  the plan margins in [00-first-mvp-draft.md](00-first-mvp-draft.md).
+- [x] **1. Real API keys → P4.1 (cost validation).** ✅ Done (2026-07-10,
+  session 6): you added the keys, the agent ran one real analysis
+  (`https://www.anthropic.com`) end-to-end in ~40s — correct KYC profile,
+  `geo_score=0.2`, **measured panel cost $0.0132/analysis** (10 × Claude
+  Haiku 4.5, ~$0.0013/response, from the `cost_usd` columns). Margin vs
+  [00-first-mvp-draft.md](00-first-mvp-draft.md): daily full-panel ≈
+  $0.45/mo/customer ≈ **1% of the $49 plan** (bar: <35%). Optional
+  cross-check: your Anthropic console should show ~13 Haiku calls / ~$0.02
+  total for 2026-07-10.
+- [ ] **1b. NEW — your OpenAI key has no usable quota.** Every call returned
+  `429 insufficient_quota` ("check your plan and billing details") — that's
+  billing, not rate limiting: add credits / enable billing for that key's
+  org at platform.openai.com → Billing. The provider is already switched to
+  the cheapest model (`gpt-5-nano`, $0.05/$0.40 per MTok); once quota
+  exists, the next session runs one cheap re-run (~$0.02) to record the
+  OpenAI cost leg. Until then the panel runs live-Anthropic + stubs.
 
 ## Done
 
@@ -65,7 +71,7 @@ need you first:** real keys (item 1), then the supervised first deploy
   cd frontend && sudo npx playwright install-deps chromium
   ```
 
-## Later — at first deploy (P4.2, after item 1)
+## Do next — the first deploy (P4.2 — the LAST MVP task, now unblocked)
 
 *Retargeted 2026-07-10 at your direction: Yanki serves from **this VPS** at
 **`yanki.beyondkaira.com`**, co-tenant with the live sites (pulse-prod, Ant

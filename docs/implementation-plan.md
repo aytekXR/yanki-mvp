@@ -101,39 +101,55 @@ Next 16 bump — new tech-debt #16 records the coupling (`--ext` and
 `.eslintrc.json` both die under flat config; migrate together, manually —
 the official codemod is buggy, vercel/next.js#85679).
 
-➡️ **Next up: the operator-gated pair — P4.1 — real-key smoke + Week-1
-invoice check** (needs keys in `deploy/.env`; the only thing expected from
-the operator), then **P4.2 — deploy to yanki.beyondkaira.com** (supervised, on this VPS next to the live sites).
-With CI fully green, the Phase-5 build gate is missing only P4.1 + P4.2.
-**No key-free fallback remains** — old tech-debt #10 was the last one and
-session 5 repaid it; a keyless session 6 would be a no-op close.
+✅ **Session 6 (2026-07-10): P4.1 done — the first LIVE run.** The operator
+added keys mid-session and directed "use the cheapest models" — Anthropic
+was already on Claude Haiku 4.5 (cheapest current Anthropic model); OpenAI
+switched to `gpt-5-nano` ($0.05/$0.40, 3× cheaper input than gpt-4o-mini;
+prices verified against the official pages, not memory). The live run
+completed end-to-end in ~40s: real KYC for anthropic.com, `geo_score=0.2`,
+**measured cost $0.0132/analysis** (Anthropic leg) ≈ 1% of the $49 plan at a
+daily cadence — the NFR-1 margin holds with ~35× headroom. One blocker
+discovered: the **OpenAI key has `insufficient_quota`** (billing) — its leg
+(~+$0.002/analysis est.) gets recorded once the operator adds credits.
+Full suite stayed green (64 backend + 20 frontend; ruff + mypy clean).
+
+➡️ **Next up: P4.2 — deploy to yanki.beyondkaira.com** (supervised, on this
+VPS next to the live sites): needs the operator's shared-Caddy edit + a
+supervised `make deploy`. Small parallel item: OpenAI billing → one cheap
+re-run to record the OpenAI leg. The Phase-5 build gate now lacks only P4.2.
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 5 close + post-close deploy retarget).
+Last updated: 2026-07-10 (session 6 close — first live run).
 
-- **MVP plan completion (Phases 0–4): 30 / 32 tasks ≈ 94%.** Phases 0–3:
-  26/26 done. Phase 4: P4.3 + P4.4 + P4.5 + P4.6 done (P4.4 proven in CI,
-  session 4), P4.1 + P4.2 operator-gated. Nothing key-free remains at all:
-  the last fallback (old hygiene debt #10, the ESLint CLI migration) was
-  repaid in session 5 — every open task now needs the operator.
+- **MVP plan completion (Phases 0–4): 31 / 32 tasks ≈ 97%.** Phases 0–3:
+  26/26 done. Phase 4: P4.1 + P4.3 + P4.4 + P4.5 + P4.6 done (P4.1's
+  OpenAI leg pends operator billing — a residual, not a blocker), leaving
+  only **P4.2** (supervised deploy). Every remaining step needs the
+  operator (Caddy edit in ams-pulse + supervising `make deploy`; OpenAI
+  credits for the cost-record residual).
 - **Phase 5 (post-MVP checker): decomposed, 0 / 11 built.** P4.6's deliverable
   is the P5.1–P5.11 breakdown below — planning only; its build gate now lacks
-  only P4.1 + P4.2 (the all-five-green CI leg was met 2026-07-10). Counting
-  Phase 5, the enlarged plan stands at 30 / 43 ≈ 70%.
-- **Production readiness: ~75%** (session 3 closed at ~70%, post-close CI
-  nudged it to ~72%; the full CI proof adds the rest). Code, tests (64
-  backend + 20 frontend), docs, CI, secret scanning, and accessibility are
-  done — and **all five CI jobs are proven green on a real runner** (runs
-  29059944092 + 29060093072, 2026-07-10), including the first-ever Playwright
-  spec execution. Still missing, in order: real-key cost validation (P4.1,
-  operator), first supervised deploy (P4.2, operator) — plus rate limiting
-  before any public URL (accepted debt #3, planned task P5.6).
+  only **P4.2** (CI leg met 2026-07-10; P4.1 leg met session 6). Counting
+  Phase 5, the enlarged plan stands at 31 / 43 ≈ 72%.
+- **Production readiness: ~85%** (session 5 closed at ~75%; the first live
+  run adds the real-world proof). Code, tests (64 backend + 20 frontend),
+  docs, CI (5/5 green on a real runner), secret scanning, accessibility —
+  and now **the pipeline proven live with real Claude Haiku 4.5 calls**:
+  end-to-end in ~40s, correct KYC, measured $0.0132/analysis ≈ 1% of the
+  $49 plan (NFR-1 margin holds ~35×). Still missing, in order: first
+  supervised deploy (P4.2, operator), the OpenAI cost leg (operator
+  billing), and rate limiting before any public URL (accepted debt #3,
+  planned task P5.6).
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
-  unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate). No new
-  deviation this session — session 5 executed exactly the no-keys branch of
-  the session-4 brief (the ESLint CLI fallback, debt #10). **One post-close
-  operator-driven TARGET change (not scope):** the deploy is now
+  unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate).
+  **Session-6 operator-driven change (models, not scope): "use the cheapest
+  models"** — OpenAI provider switched `gpt-4o-mini` → `gpt-5-nano`
+  (Anthropic already on Haiku 4.5, the cheapest); P4.1 then ran live with an
+  Anthropic-only panel because the OpenAI key lacks quota. Session 5 executed
+  exactly the no-keys branch of the session-4 brief (the ESLint CLI fallback,
+  debt #10). **One session-5 post-close operator-driven TARGET change (not
+  scope):** the deploy is now
   `yanki.beyondkaira.com` on the shared VPS the dev host runs on, co-tenant
   with live sites (was `test.beyondkaira.com`); the P4.2 card, deploy
   configs, and operator checklist were updated in the same commit
@@ -359,7 +375,7 @@ partial results after every step (FR-3–FR-5, FR-8). Build test-first
 ### P2.2 — Real + stub providers
 - **Goal:** `anthropic_provider.py` (real, `claude-haiku-4-5-20251001`, anthropic
   SDK, `max_tokens=1024`, cost = tokens × a price-table constant);
-  `openai_provider.py` (real, `gpt-4o-mini`, openai SDK); `gemini_provider.py` +
+  `openai_provider.py` (real, `gpt-5-nano` — cheapest, operator directive session 6, openai SDK); `gemini_provider.py` +
   `perplexity_provider.py` (STUBS: canned plausible answer that *sometimes
   mentions nothing*, model `"stub"`, cost 0).
 - **Why now:** completes the panel shape; real adapters are exercised only via
@@ -596,7 +612,25 @@ happy path renders a score.**
   code unless a bug surfaces.
 - **Acceptance:** a real run completes within the caps; the measured cost is
   recorded; no secret is committed.
-- **Status:** todo
+- **Status:** done (session 6, 2026-07-10) — **Anthropic leg proven live;
+  OpenAI leg blocked on the operator's OpenAI billing.** The operator added
+  keys and directed "cheapest models ×2": Anthropic was already on the
+  cheapest (`claude-haiku-4-5-20251001`, $1/$5 per MTok); OpenAI switched
+  `gpt-4o-mini` → **`gpt-5-nano`** ($0.05/$0.40 — verified vs the official
+  pricing/deprecations pages; needs `max_completion_tokens` +
+  `reasoning_effort="minimal"`). First live attempt failed: the OpenAI key
+  returns `429 insufficient_quota` (billing, not rate-limit) — operator item.
+  Re-run with a live-Anthropic panel (`PANEL_ENGINES=anthropic,gemini,
+  perplexity`, stubs free) **completed end-to-end in ~40s**: real KYC profile
+  for `https://www.anthropic.com` (Anthropic PBC, correct industry/keywords/
+  products), `geo_score=0.2` (6/30; stubs dilute by design),
+  **measured panel cost $0.0132 / analysis** (10 Haiku responses,
+  ~$0.0013 each; `cost_usd` columns work). Margin check vs
+  [00-first-mvp-draft.md](00-first-mvp-draft.md) NFR-1: even daily full-panel
+  scans ≈ $0.45/mo/customer ≈ **1% of the $49 plan** — far under the 35%
+  ceiling; no repricing needed. Residual: record the OpenAI leg (~+$0.002/
+  analysis est.) once the operator fixes quota; KYC-call cost is not
+  persisted to the DB (small gap, noted in tech-debt #2).
 
 ### P4.2 — Deploy to yanki.beyondkaira.com (this VPS, co-tenant with live sites)
 - **Goal:** first real supervised deploy. Target retargeted by the operator

@@ -4,7 +4,9 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (session 5: **item 10 repaid** — the frontend `lint`
+Last updated: 2026-07-10 (session 6: **item 2 rewritten** — first live run;
+Anthropic leg proven, OpenAI leg blocked on operator quota, KYC-cost gap
+noted. Earlier session 5: **item 10 repaid** — the frontend `lint`
 script now calls the ESLint CLI directly (`eslint . --ext .js,.jsx,.ts,.tsx
 --max-warnings 0`), verified by mirroring the CI frontend job locally and on
 the real runner (run 29062634057) — and the hygiene tail was **renumbered
@@ -21,10 +23,21 @@ shared-Caddy network wiring added, all unexercised until P4.2.)
    Written to the ams-pulse pattern, `bash -n`-clean, logic reviewed (rollback
    rebuilds the last-good SHA via `git checkout`; check_env gate wired), but
    the first `make deploy` must be supervised. Cleared by P4.2.
-2. **Real Anthropic/OpenAI providers never called.** No live run, no cost
-   validation (NFR-1 Week-1 invoice check pending — P4.1), and no
-   respx-style contract tests asserting the real adapters' request/response
-   shape. Price table in the providers is hardcoded from public pricing.
+2. **Real-provider coverage is half-proven (Anthropic ✅ live, OpenAI ❌).**
+   Session 6 (2026-07-10) ran the pipeline live: the Anthropic adapter
+   (Claude Haiku 4.5) worked end-to-end — real KYC + 10 panel responses,
+   `cost_usd` math validated against reported usage ($0.0132/analysis).
+   Remaining: (a) the **OpenAI adapter (`gpt-5-nano`) has never returned a
+   successful response** — the operator's key has `insufficient_quota`, so
+   the new `max_completion_tokens` + `reasoning_effort="minimal"` params are
+   verified against docs but not live (the 429s prove auth + endpoint + SDK
+   plumbing work); re-run once quota exists. (b) The **KYC call's cost is
+   not persisted** — `responses.cost_usd` covers the panel only, so the
+   recorded per-analysis cost understates by ~1 call (~$0.002 at Haiku
+   prices with page text as input); fold KYC cost into the analysis row if
+   precise invoicing ever matters. (c) Still no respx-style contract tests
+   for the adapters; price tables remain hardcoded from (now verified)
+   public pricing.
 
 ## Accepted MVP shortcuts (by design, revisit before/at launch)
 
