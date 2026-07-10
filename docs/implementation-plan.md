@@ -174,10 +174,36 @@ for `" YANKISMOKE "`→`yankismoke`, lead attached, worker skipped checker
 rows (attempts=0); smoke rows deleted. Suite: 82 backend + 25 frontend,
 ruff/mypy/tsc clean, CI green on P5.0 (P5.1 run pending at close).
 
+✅ **Session 10 (2026-07-10): operator-directed KYC/prompt quality fix —
+SPA sites now produce real profiles.** The operator reported KYC was
+flat-wrong for beyondtech.com.tr (a defense/drone company profiled as
+"generic IT services") and prompts read as mad-libs with no product
+questions. Diagnosis: the site is an 890-byte JS-rendered SPA shell —
+discovery fed KYC 21 chars of text; all real content (BAZNA/Tayron/Liftron,
+TR+EN) lives in the 458KB JS bundle as string literals. Two workflow rounds
+(commits `c8a1932`, `e120f56`): **discovery** harvests metadata everywhere,
+prefers content-ful links (EN+TR keywords, diacritic-folded), and mines up
+to 3 same-origin JS bundles (SSRF-guarded, 2MB cap) for prose literals —
+non-ASCII-first ranking keeps framework noise out of the 20k cap
+(verifier-caught live failure in round 1; round-2 verdict was "ship", zero
+defects); **kyc** prompt forbids guessing, demands verbatim product names,
+backfills empty locations from the ccTLD (com.tr → Türkiye); **prompts**
+use category topics (keywords > short services > industry first-segment) in
+question slots, never product model names, plus ≤count/4 brand-probe
+prompts naming product+company, and a makers shape matching the operator's
+example ("Who are the leading UAV manufacturers in Turkey?"). Live
+before/after on prod for the same URL: KYC "IT solutions company" → real
+defense profile with the full BAZNA line; score 0.0 → 0.1 (4/40 — engines
+acknowledge the company on brand probes). 99 backend tests; session live
+spend $0.045 across three acceptance runs. This consumed the session P5.2
+was slated for; the checker ETA shifts ~1 session.
+
 ➡️ **Next up: P5.2 (checker pipeline branch: seed KYC + fixed 12-prompt
 set + cache upsert) — then P5.3.** Remember: P5.2 removes the session-9
-`claim_next` checker guard. Parked operator items: Gemini/Perplexity keys
-(P5.7+), checker product decisions (P5.11), brandkit v2.
+`claim_next` checker guard; its fixed checker prompt set should follow the
+session-10 template idiom (category questions + brand probes). Parked
+operator items: Gemini/Perplexity keys (P5.7+), checker product decisions
+(P5.11), brandkit v2.
 
 ### Readiness snapshot (updated at each session close)
 

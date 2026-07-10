@@ -148,3 +148,14 @@ cache-hit + lead smoke at $0). Verifier catches: a latent 500 on limit=0
 would fail checker:// rows — guarded until P5.2). See
 [sessions/2026-07-10-07.md](sessions/2026-07-10-07.md); the session-10
 brief (P5.2 → P5.3) lives at the end of that log (§6).
+
+## Session 10 (2026-07-10, #08) — operator bug report: KYC wrong on SPA sites
+
+No archived brief ran: the operator reported live KYC failures ("KYC could
+not get the correct things from the company website… prompts too generic…
+solve this problem first"), preempting P5.2. Two workflow rounds (c8a1932,
+e120f56): SPA JS-bundle text mining in discovery, anti-hallucination KYC
+prompt + ccTLD location fallback, category-first prompt templates with
+brand probes. Live-verified on prod (score 0.0→0.1, KYC correct). See
+[sessions/2026-07-10-08.md](sessions/2026-07-10-08.md); the next brief is
+session 9's §6 (P5.2 → P5.3) with that log's §6 amendments.

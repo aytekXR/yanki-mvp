@@ -19,7 +19,19 @@ Total live spend to date: **$0.056** (session-8 panel $0.0162 + session-9
 429-acceptance run $0.0201 + earlier P4.1 runs). Items 1–2 below are the
 same two from session 8, now lower stakes; say the word and they're ticked.)
 
+**Session-10 addendum:** your KYC bug report is **fixed and live-verified**.
+beyondtech.com.tr re-analyzed on prod: KYC now reads defense/unmanned-systems
+with the full BAZNA product line, and prompts are real user questions
+("Who are the leading unmanned aerial vehicles manufacturers in Turkey?" +
+two BAZNA-by-name brand probes). See item 0 below.
+
 ## Do now (recommended, no longer urgent)
+
+- [ ] **0. Verify the KYC fix on your screen** (2 min):
+  https://yanki.beyondkaira.com/analyses/9e4b2746-ae07-49f8-bf77-d2443ee4bac2
+  — say if the prompt balance (8 category questions / 2 brand probes) or any
+  shape needs tuning. Root cause was your site being a JS-rendered SPA: the
+  crawler now mines your JS bundle for the real content.
 
 - [ ] **1. Set hard spend caps in both provider consoles** (~5 min). Code-side
   rate limiting now bounds abuse at ≈$1.62/day, so this is defense-in-depth

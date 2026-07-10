@@ -175,6 +175,18 @@ devDependencies).)
     `checker_submissions.email`. Fine for a lead gate; `pydantic[email]` is a
     drop-in swap if lead quality ever matters (relates to operator decision
     on email-gate strength, operator-expected item 13).
+19a. **SPA bundle mining prioritizes non-ASCII (localized) literals** to keep
+    framework noise out of the 20k text cap — so an **English-only**
+    client-rendered SPA whose bundle front-loads runtime strings could still
+    have real content truncated away (the live Turkish target works because
+    its copy carries Turkish letters). If an English-only SPA misfires the
+    same way, add a content-keyword ranking pass. Also: bundle fetches trust
+    the `content-length` header + post-hoc truncation, not true streaming —
+    a >2MB body without the header downloads fully before truncation.
+19b. **Discovery worst-case latency grew**: homepage + 5 links + 3 bundles ×
+    15s timeout ≈ 135s theoretical worst case, under but not comfortably
+    under `STALE_CLAIM_SECONDS=300` (interacts with debt #5's no-heartbeat-
+    inside-a-step). Observed real case: ~0.25s. Revisit if slow sites appear.
 21. **`POST /api/v1/checker` has no rate limit until P5.6** (deliberate lane
     ownership — P5.6 adds ip_hash population, limits, kill-switch, cost cap).
     Exposure today is $0 (worker skips checker rows, see #19) and cache hits
