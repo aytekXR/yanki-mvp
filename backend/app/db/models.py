@@ -35,6 +35,10 @@ class Analysis(Base):
     progress: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=0)
     current_step: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     error: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
+    # Salted hash of the submitter's client IP (P5.0 rate limiting). Nullable:
+    # rows created before this column, and any future non-HTTP callers, leave it
+    # null. Never stores the raw IP.
+    ip_hash: Mapped[str | None] = mapped_column(sa.Text, nullable=True)
     kyc: Mapped[dict[str, Any] | None] = mapped_column(
         sa.JSON().with_variant(JSONB, "postgresql"), nullable=True
     )

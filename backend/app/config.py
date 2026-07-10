@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     worker_poll_seconds: int = 2
     stale_claim_seconds: int = 300
 
+    # Rate limiting (P5.0) — the LIVE POST /api/v1/analyses is public with real
+    # keys; these guard it before any row is created or money is spent.
+    analyses_rate_limit_per_ip_hour: int = 5
+    analyses_daily_cap: int = 100
+    ip_hash_salt: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

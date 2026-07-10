@@ -9,9 +9,13 @@ from sqlalchemy.orm import Session
 from app.db.models import Analysis
 
 
-def create_analysis(session: Session, url: str) -> Analysis:
-    """Insert a new queued analysis and return it."""
-    analysis = Analysis(url=url)
+def create_analysis(session: Session, url: str, ip_hash: str | None = None) -> Analysis:
+    """Insert a new queued analysis and return it.
+
+    ``ip_hash`` is the salted hash of the submitter's IP (P5.0 rate limiting);
+    it stays optional so existing callers/tests remain valid.
+    """
+    analysis = Analysis(url=url, ip_hash=ip_hash)
     session.add(analysis)
     session.commit()
     return analysis

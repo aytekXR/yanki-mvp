@@ -183,7 +183,8 @@ time, not by a sweeper.
 Submit:
   Browser ── POST /api/v1/analyses {url} ──▶ api
                                             api validates URL (http/https only)
-                                            invalid → 422 (Pydantic shape)
+                                            invalid → 422 (Pydantic shape / SSRF)
+                                            rate-limited → 429 + Retry-After
                                             valid   → INSERT analyses (status=queued)
   Browser ◀─────────── 202 {id} ───────────  (returns immediately; no work yet)
 
@@ -197,6 +198,24 @@ Poll (every 2s):
 
 `result` is always present so the frontend renders partial state as the pipeline
 fills it in. See the locked response shape in SPEC §"API contract".
+
+### Rate limiting the submit endpoint (P5.0)
+
+`POST /api/v1/analyses` is public with real keys, so `services/rate_limit.py`
+rejects abusive traffic **before** any row is created or money is spent (the
+SSRF `422` check runs first, so `422`-rejected submits never count). The client
+IP — first `X-Forwarded-For` entry (the shared Caddy sets it) else the socket
+peer — is stored as a salted hash in the nullable `analyses.ip_hash` column;
+the raw IP is never persisted. Two rolling-window guards, both returning `429`
+with a `Retry-After` header:
+
+| Env var | Default | Meaning |
+|---|---|---|
+| `ANALYSES_RATE_LIMIT_PER_IP_HOUR` | 5 | Max submits per client IP per rolling hour. |
+| `ANALYSES_DAILY_CAP` | 100 | Global backstop: max submits across all IPs per rolling 24h. |
+| `IP_HASH_SALT` | *(empty)* | Salt mixed into `sha256(salt+ip)`; blank is fine for the MVP. |
+
+P5.6 reuses the `hash_ip` / `client_ip` helpers for the checker endpoint.
 
 ---
 
