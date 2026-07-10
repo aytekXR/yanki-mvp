@@ -1,4 +1,8 @@
-import type { Analysis, CreateAnalysisResponse } from './contracts'
+import type {
+  Analysis,
+  CheckerSubmitResponse,
+  CreateAnalysisResponse,
+} from './contracts'
 
 // Thin fetch wrapper. All paths are relative — Next rewrites proxy them to the
 // backend (see next.config.ts), so there is no CORS and no base URL to configure.
@@ -41,6 +45,49 @@ export async function createAnalysis(url: string): Promise<CreateAnalysisRespons
     throw new ApiError(message, res.status)
   }
   return (await res.json()) as CreateAnalysisResponse
+}
+
+export async function createCheckerAnalysis(
+  brand: string,
+  category: string,
+): Promise<CheckerSubmitResponse> {
+  // lang is intentionally omitted — the backend defaults it to 'en' (EN-only).
+  const res = await fetch('/api/v1/checker', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ brand, category }),
+  })
+  if (!res.ok) {
+    const message =
+      res.status === 422
+        ? 'Enter a brand and a category to check.'
+        : await readErrorMessage(res)
+    throw new ApiError(message, res.status)
+  }
+  return (await res.json()) as CheckerSubmitResponse
+}
+
+export async function submitLead(
+  submissionId: string,
+  email: string,
+): Promise<void> {
+  // The email gate (P5.5). The backend attaches the email to this one submission
+  // row (append-only — a second lead on the same cached analysis never
+  // overwrites another submission's email). 202 on success; body is ignored.
+  const res = await fetch('/api/v1/checker/leads', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ submission_id: submissionId, email }),
+  })
+  if (!res.ok) {
+    const message =
+      res.status === 422
+        ? 'Enter a valid email address.'
+        : res.status === 404
+          ? "We couldn't find that check to unlock."
+          : await readErrorMessage(res)
+    throw new ApiError(message, res.status)
+  }
 }
 
 export async function getAnalysis(id: string): Promise<Analysis> {

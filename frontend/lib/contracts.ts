@@ -41,6 +41,16 @@ export type AnalysisResponse = Schemas['ResponseOut']
 
 export type CreateAnalysisResponse = Schemas['CreateAnalysisResponse']
 
+// Public checker (P5.4). The submit returns both the analysis id (polled via the
+// shared getAnalysis) and a submission_id carried to the results route for
+// P5.5's email gate. EnginePresence / CompetitorMention are the read-time
+// checker aggregates that ride on the shared result envelope.
+export type CheckerSubmitResponse = Schemas['CheckerSubmitResponse']
+
+export type EnginePresence = Schemas['EnginePresence']
+
+export type CompetitorMention = Schemas['CompetitorMention']
+
 export type AnalysisResult = Omit<Schemas['ResultOut'], 'kyc'> & {
   kyc: KYC | null
 }

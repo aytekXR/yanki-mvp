@@ -1,0 +1,65 @@
+import type { EnginePresence } from '@/lib/contracts'
+
+// Friendly labels for the panel engines; unknown keys fall back to the raw id.
+const ENGINE_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  gemini: 'Gemini',
+  perplexity: 'Perplexity',
+}
+
+interface EnginePresenceMapProps {
+  presence: EnginePresence[]
+}
+
+// Per-engine footprint: how many answers from each engine named the brand.
+// Never color-only — every bar is backed by the "N of M answers" count and an
+// accessible progressbar label (brandkit v2 §7).
+export default function EnginePresenceMap({ presence }: EnginePresenceMapProps) {
+  return (
+    <section className="space-y-3" aria-labelledby="engine-presence-heading">
+      <h2
+        id="engine-presence-heading"
+        className="text-xl font-semibold text-surface-foreground"
+      >
+        Engine presence
+      </h2>
+      <ul className="space-y-3">
+        {presence.map((engine) => {
+          const label = ENGINE_LABELS[engine.engine] ?? engine.engine
+          const pct =
+            engine.total > 0
+              ? Math.round((engine.mentioned / engine.total) * 100)
+              : 0
+          const countText = `Mentioned in ${engine.mentioned} of ${engine.total} answers`
+          return (
+            <li
+              key={engine.engine}
+              className="rounded-lg border border-surface-border bg-white p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-sm font-medium text-surface-foreground">
+                  {label}
+                </span>
+                <span className="text-sm text-surface-subtle">{countText}</span>
+              </div>
+              <div
+                role="progressbar"
+                aria-label={`${label}: ${countText}`}
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface-border"
+              >
+                <div
+                  className="h-full rounded-full bg-primary motion-safe:transition-[width] motion-safe:duration-500"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
+  )
+}
