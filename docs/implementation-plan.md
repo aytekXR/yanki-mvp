@@ -132,35 +132,55 @@ proven, coupling remains). DRY_RUN=1 on prod by design for now (mock
 pipeline, $0 — no rate limiting exists yet; going live-providers is an
 operator flip).
 
-➡️ **Next up: nothing in Phases 0–4 — the MVP plan is complete.** The
-Phase-5 build gate (P4.1 ✅ + P4.2 ✅ + CI ✅) is now **open**: next session
-starts P5.1 unless the operator redirects. Residuals that need the operator
-first: OpenAI billing (one ~$0.02 re-run to record that cost leg) and the
-DRY_RUN=0 decision for prod (see operator-expected.md).
+✅ **Session 8 (2026-07-10): prod went LIVE-PROVIDERS + KYC card + OpenAI
+leg recorded — the P4.1 residual is closed.** Operator directives: "run
+mode: live-providers; KYC is very important, show it on the result page;
+OpenAI is accessible now; Caddyfile pushed." Delivered: (1) an
+implement+verify workflow replaced the raw-JSON KYC dump with a structured
+`KycCard` (chips/dl idiom, hardened against missing fields, 5 new tests
+incl. axe, all four CI-mirror checks green — commit d75c852); (2) prod
+flipped to `DRY_RUN=0` and redeployed (last-good d75c852, co-tenants
+re-verified); (3) first FULL live panel ran ON PROD via the public URL:
+real KYC for anthropic.com, 10 Haiku 4.5 ($0.0135) + 10 `gpt-5-nano`
+($0.0026) responses — **measured full-panel cost $0.0162/analysis ≈ 1% of
+the $49 plan** (OpenAI quota pre-verified with one direct call; the
+provider's 1024-token budget clears gpt-5-nano's reasoning overhead).
+Consequence recorded honestly: tech-debt #2's "no rate limiting" risk is
+now ACTIVE on a public URL — and P5.6 only covers the future checker
+endpoint — so a new **P5.0** (minimal per-IP limit on `POST
+/api/v1/analyses`, S) was added as the first Phase-5 task, and the operator
+was asked to set provider-console spend caps meanwhile.
+
+➡️ **Next up: P5.0 (rate-limit the live endpoint) — then P5.1.** The
+Phase-5 build gate is open and nothing is operator-blocked; parked operator
+items: Gemini/Perplexity keys (P5.7+), checker product decisions (P5.11),
+brandkit v2.
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 7 close — P4.2 done, the site is live).
+Last updated: 2026-07-10 (session 8 close — live providers on prod, KYC
+card, OpenAI leg recorded).
 
-- **MVP plan completion (Phases 0–4): 32 / 32 tasks = 100%.** Phases 0–3:
-  26/26. Phase 4: 6/6 — P4.2 landed this session
-  (https://yanki.beyondkaira.com serves through the shared Caddy; deploy +
-  rollback both exercised; co-tenants verified undisturbed). The single
-  P4.1 residual stands: the OpenAI cost leg pends operator billing.
-- **Phase 5 (post-MVP checker): decomposed, 0 / 11 built — and its build
-  gate is now OPEN** (CI ✅ session 4, P4.1 ✅ session 6, P4.2 ✅ session 7).
-  Counting Phase 5, the enlarged plan stands at 32 / 43 ≈ 74%. Next session
-  starts **P5.1** unless the operator redirects.
-- **Production readiness: ~95%.** Code, tests (64 backend + 20 frontend),
-  docs, CI (5/5 green), secret scanning, accessibility, the pipeline proven
-  live (real Haiku 4.5 calls, $0.0132/analysis ≈ 1% of the $49 plan), and
-  now **the real deploy**: SHA-tagged images, migrations on boot, health
-  gate, last-good rollback, TLS via the shared Caddy — all exercised on the
-  real server. The missing ~5%: prod deliberately runs **DRY_RUN=1** (mock
-  pipeline) until the operator opts into live providers — because rate
-  limiting doesn't exist yet (accepted debt #2, planned P5.6) a public URL
-  with real keys would be unmetered spend; plus the OpenAI cost-leg
-  residual (operator billing).
+- **MVP plan completion (Phases 0–4): 32 / 32 tasks = 100%, all residuals
+  closed.** Phases 0–3: 26/26. Phase 4: 6/6, and session 8 closed P4.1's
+  last residual (the OpenAI cost leg, measured live on prod). The KYC card
+  and the live-mode flip are operator-directed polish/ops inside completed
+  surfaces, not new plan tasks.
+- **Phase 5 (post-MVP checker): 0 / 12 built** (was 11 — session 8 added
+  **P5.0**, the urgent rate-limit slice). Build gate OPEN, nothing
+  operator-blocked until P5.7 (keys) / P5.11 (go-live decisions). Counting
+  Phase 5, the enlarged plan stands at 32 / 44 ≈ 73%. Next session:
+  **P5.0, then P5.1**.
+- **Production readiness: ~97%.** Code, tests (64 backend + 25 frontend),
+  docs, CI (5/5 green), secret scanning, accessibility, deploy/rollback
+  exercised, TLS via the shared Caddy — and the product now runs **fully
+  live in production**: real Anthropic + OpenAI panel at a measured
+  **$0.0162/analysis ≈ 1% of the $49 plan** (NFR-1 headroom ~35×). The
+  missing ~3%, in priority order: **rate limiting on the now-live public
+  endpoint** (P5.0 — the one active risk, operator-accepted, console spend
+  caps requested meanwhile); KYC-cost persistence + adapter contract tests
+  (debt #1); multi-stage prod web image (debt #18). Gemini/Perplexity remain
+  stubs by design until P5.7.
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate).
   **Session-6 operator-driven change (models, not scope): "use the cheapest
@@ -911,7 +931,8 @@ native TR prompt set — P5.8; **ADR-25** a plain typed i18n dictionary (no
 
 ### Sequencing & lanes (parallelism map)
 
-Build order is P5.1 → P5.11. After **P5.1** lands the schema + submit endpoint, the
+Build order is **P5.0 first** (added session 8 — see its card), then
+P5.1 → P5.11. After **P5.1** lands the schema + submit endpoint, the
 pipeline and frontend lanes run in parallel against the contract; **P5.6**
 (hardening) and **P5.7** (real engines) are independent and can run any time;
 **P5.8/P5.9** (Turkish) layer onto the green English vertical; **P5.10**
@@ -921,6 +942,7 @@ is the strictly-last operator go-live.
 
 | Task | Lane | Depends on | Can parallel with |
 |---|---|---|---|
+| P5.0 minimal rate limit on the LIVE analyses endpoint | backend-spine | none (urgent) | all |
 | P5.1 checker submit + leads + 24h reuse | backend-spine | P4.1/P4.2/CI (gate) | — (unblocks the rest) |
 | P5.2 checker pipeline branch + fixed EN prompts + cache upsert | pipeline | P5.1 | P5.6, P5.7 |
 | P5.3 presence map + competitors (read-time) | backend-spine | P5.1, P5.2 | P5.6, P5.7 |
@@ -995,6 +1017,32 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
 `MAX_RESPONSES_PER_JOB=60`, so no cap change is needed.
 
 ---
+
+### P5.0 — Minimal per-IP rate limit on the LIVE `POST /api/v1/analyses` (added session 8)
+- **Goal:** stop unmetered spend on the endpoint that is ALREADY public with
+  real keys. Session 8 flipped prod to DRY_RUN=0 (operator directive), which
+  activated tech-debt #2's risk *now* — and P5.6-as-written only rate-limits
+  the future `/api/v1/checker` endpoint, not this one. Minimal slice: count
+  `analyses` rows created in the last hour (per hashed client IP, stored in a
+  new nullable `analyses.ip_hash` column, salted like P5.1's design) and
+  reject over `ANALYSES_RATE_LIMIT_PER_IP_HOUR` (default 5) with a 429 +
+  `Retry-After`; plus a global `ANALYSES_DAILY_CAP` (default 100/day across
+  all IPs) as the blunt cost backstop. No new infra — one migration, one
+  check in the POST route, config, tests.
+- **Why now:** the plan's original assumption was "rate limiting lands before
+  any public URL with real keys" (tech-debt #2). The operator chose to go
+  live first — this task restores the safety property with the smallest diff.
+- **Dependencies:** none (deliberately independent of the checker schema;
+  P5.1 may reuse the `ip_hash` column/salt helper).
+- **Complexity:** S
+- **Deliverables:** Alembic migration (nullable `analyses.ip_hash`),
+  `services/rate_limit.py` (reused later by P5.6), route check, config vars in
+  `deploy/.env.example` + architecture.md, backend tests (429 over-limit,
+  header, cap), OpenAPI regen if the error envelope changes.
+- **Acceptance:** 6th submit from one IP within an hour on prod returns 429
+  (verify live, then reset); existing e2e/CI stay green; a redeploy applies
+  the migration cleanly.
+- **Status:** todo — **do this before P5.1.**
 
 ### P5.1 — Checker submit endpoint + lead capture + per-brand 24h reuse
 - **Goal:** the checker's API surface, reusing the `analyses` table. One Alembic

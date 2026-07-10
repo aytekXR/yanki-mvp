@@ -4,7 +4,13 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (session 7: **old item 1 REPAID by P4.2** — the
+Last updated: 2026-07-10 (session 8: **item 1 largely repaid** — the OpenAI
+leg ran live on prod (10 × `gpt-5-nano`, measured $0.0026/analysis); what
+remains of #1 is KYC-cost persistence + adapter contract tests. **Item 2's
+risk is now ACTIVE**: the operator flipped prod to DRY_RUN=0, so the
+anonymous endpoint is public WITH real keys — mitigation task **P5.0**
+(minimal per-IP rate limit on `POST /api/v1/analyses`) added to the plan as
+the first Phase-5 task. Earlier session 7: **old item 1 REPAID by P4.2** — the
 deploy + rollback scripts ran for real on the shared VPS (deploy caught and
 fixed one real bug: the prod web image build omitted devDependencies). The
 list was **renumbered once more**: old 2→1, 3→2, 4→3, 5→4, 6→5, 7→6, 8→7,
@@ -19,30 +25,30 @@ devDependencies).)
 
 ## Untested / never exercised
 
-1. **Real-provider coverage is half-proven (Anthropic ✅ live, OpenAI ❌).**
-   Session 6 (2026-07-10) ran the pipeline live: the Anthropic adapter
-   (Claude Haiku 4.5) worked end-to-end — real KYC + 10 panel responses,
-   `cost_usd` math validated against reported usage ($0.0132/analysis).
-   Remaining: (a) the **OpenAI adapter (`gpt-5-nano`) has never returned a
-   successful response** — the operator's key has `insufficient_quota`, so
-   the new `max_completion_tokens` + `reasoning_effort="minimal"` params are
-   verified against docs but not live (the 429s prove auth + endpoint + SDK
-   plumbing work); re-run once quota exists. (b) The **KYC call's cost is
-   not persisted** — `responses.cost_usd` covers the panel only, so the
-   recorded per-analysis cost understates by ~1 call (~$0.002 at Haiku
-   prices with page text as input); fold KYC cost into the analysis row if
-   precise invoicing ever matters. (c) Still no respx-style contract tests
-   for the adapters; price tables remain hardcoded from (now verified)
-   public pricing.
+1. **Both live adapters are now proven (Anthropic ✅ session 6, OpenAI ✅
+   session 8) — two residuals stand.** Session 8 (2026-07-10) ran the full
+   live panel ON PROD: 10 × Claude Haiku 4.5 ($0.0135) + 10 × `gpt-5-nano`
+   ($0.0026) → **measured full-panel cost $0.0162/analysis** (gemini/
+   perplexity stubs $0; real KYC for anthropic.com; geo_score 0.225).
+   Remaining: (a) The **KYC call's cost is not persisted** —
+   `responses.cost_usd` covers the panel only, so the recorded per-analysis
+   cost understates by ~1 call (~$0.002 at Haiku prices with page text as
+   input); fold KYC cost into the analysis row if precise invoicing ever
+   matters. (b) Still no respx-style contract tests for the adapters; price
+   tables remain hardcoded from (now verified) public pricing.
 
 ## Accepted MVP shortcuts (by design, revisit before/at launch)
 
-2. **No rate limiting or per-IP quota on the anonymous `POST /api/v1/analyses`.**
-   Per-job caps exist (`PROMPT_COUNT`, `MAX_RESPONSES_PER_JOB`), but nothing
-   stops N parallel submissions. Fine while private; must land before any
-   public URL with real keys (roadmap "Next": checker rate limits).
-   **Planned repayment: P5.6** (kill-switch + per-IP/per-brand limits + daily
-   cost cap; decomposed session 3, not yet built).
+2. **No rate limiting or per-IP quota on the anonymous `POST /api/v1/analyses`
+   — and this risk is now LIVE** (session 8: operator flipped prod to
+   DRY_RUN=0, so the public URL runs real providers at ~$0.0162/analysis,
+   unmetered). Per-job caps exist (`PROMPT_COUNT`, `MAX_RESPONSES_PER_JOB`),
+   but nothing stops N parallel submissions. Operator-accepted; mitigations:
+   (a) **P5.6 does NOT cover this endpoint** (it rate-limits the future
+   `/api/v1/checker`), so a new **P5.0** task (minimal per-IP limit on
+   `POST /api/v1/analyses`) is now the FIRST Phase-5 task; (b) the operator
+   was asked to set hard spend caps in both provider consoles; (c)
+   `DRY_RUN=1` + redeploy reverts to mock mode any time.
 3. **DRY_RUN always analyzes the fixed mock company "Yanki Demo Co"**,
    regardless of the submitted URL (documented in architecture.md). Deliberate:
    keeps the mock deterministic end-to-end.

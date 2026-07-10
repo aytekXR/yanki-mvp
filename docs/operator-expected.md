@@ -4,96 +4,73 @@
 here, 2026-07-10). Maintained by the orchestrator at every session close.
 Tick items as you do them; the next session re-checks `deploy/.env`, the git
 remote, and CI status at start regardless. Nothing here blocks local
-development — `make dev` + `make test` work today with zero keys and zero
-cost (DRY_RUN).*
+development — `make dev` + `make test` work with zero keys and zero cost
+(DRY_RUN).*
 
-Last updated: 2026-07-10 (session 7 close: **P4.2 done — the deploy you
-asked for happened. https://yanki.beyondkaira.com is LIVE**, TLS by the
-shared Caddy, all four co-tenant sites verified undisturbed before and
-after (pulse 200 / apex 200 / www 301 / ams 200), `make rollback`
-exercised, a mock analysis ran end-to-end on prod. **The MVP plan is
-32/32 = 100%.** The session did items 4/6/7 for you under your "let's
-deploy" directive — including generating a real `POSTGRES_PASSWORD` —
-so what's left for you is below: **two decisions (items 1–2) and one
-30-second commit in your ams-pulse repo (item 3). Nothing blocks the
-next session** — it can start Phase 5 (P5.1) as is.)
+Last updated: 2026-07-10 (session 8 close: **your three directives are
+done** — (1) prod is **LIVE-PROVIDERS** (`DRY_RUN=0`, redeployed, verified:
+a real analysis ran through https://yanki.beyondkaira.com with 10 Claude +
+10 gpt-5-nano responses, real KYC for anthropic.com); (2) **KYC now renders
+as a proper profile card** on the result page (was a raw JSON dump) —
+see it live:
+https://yanki.beyondkaira.com/analyses/17164747-a6a7-40ab-bc3b-d4d4d6e9ee62 ;
+(3) the **OpenAI cost leg is recorded**: $0.0026/analysis → **measured
+full-panel cost $0.0162/analysis ≈ 1% of the $49 plan**. Your Caddyfile
+commit in ams-pulse (d538631) is confirmed. **One thing is now genuinely
+urgent and only you can do part of it: item 1 below.**)
 
-## Do now — decisions only you can make
+## Do now
 
-- [ ] **1. Decide: keep prod in mock mode, or go live-providers?** Prod
-  deliberately runs **`DRY_RUN=1`** (every analysis uses the $0 deterministic
-  mock — the deploy machinery, DB, worker, UI are all real). Reason: there is
-  **no rate limiting yet** (tech-debt #2, planned P5.6), so a public URL with
-  real keys is unmetered spend — anyone who finds the URL can trigger paid
-  LLM calls (measured $0.0132/analysis on the Anthropic leg; tiny per call,
-  unbounded in volume). When you want the live pipeline on prod (e.g. for a
-  design-partner demo):
-  ```bash
-  # in ~/repo/yanki-mvp: set DRY_RUN=0 in deploy/.env, then
-  sg docker -c "make deploy"        # or: cd deploy && sg docker -c "docker compose -p yanki-prod -f docker-compose.prod.yml up -d"
-  ```
-  Recommendation: flip it for supervised demos, flip back after — or wait for
-  P5.6 (rate limits + kill switch + daily cost cap).
-- [ ] **2. OpenAI billing (was 1b) — your OpenAI key still has no usable
-  quota.** Every call returned `429 insufficient_quota` (billing, not rate
-  limiting): add credits / enable billing for that key's org at
-  platform.openai.com → Billing. The provider is already on the cheapest
-  model (`gpt-5-nano`, $0.05/$0.40 per MTok); once quota exists, the next
-  session runs one cheap re-run (~$0.02) to record the OpenAI cost leg.
-  Until then the panel runs live-Anthropic + stubs (when DRY_RUN=0).
-- [ ] **3. Commit the Caddyfile edit in YOUR ams-pulse repo.** Publishing
-  yanki appended a site block to
-  `~/repo/ams-pulse/deploy/config/Caddyfile.prod` (that repo now shows
-  `M deploy/config/Caddyfile.prod`, +35 lines, nothing else touched). It is
-  **live and working** — but uncommitted in a repo this project doesn't own.
-  Commit it there so a future ams-pulse deploy doesn't clobber yanki's
-  routing. Heads-up for any future edit: never append the yanki block twice
-  (duplicate site key fails validation), and always
-  `docker exec pulse-prod-caddy-1 caddy validate --config /etc/caddy/Caddyfile`
-  before `caddy reload` — **never restart** that container.
+- [ ] **1. Set hard spend caps in both provider consoles.** Prod now runs
+  real keys on a public URL **with no rate limiting yet** (you accepted this
+  by going live; the code-side fix is P5.0, the first task of the next
+  session — until it lands, anyone who finds the URL can trigger
+  ~$0.0162-per-analysis spend without bound). Only you can cap the blast
+  radius today:
+  - **Anthropic:** console.anthropic.com → Billing/Limits → set a monthly
+    spend limit (e.g. $10).
+  - **OpenAI:** platform.openai.com → Billing → usage limits (e.g. $10/mo).
+  - Escape hatch any time: set `DRY_RUN=1` in `deploy/.env`, then
+    `sg docker -c "make deploy"` → back to $0 mock mode.
+- [ ] **2. Eyeball the KYC card + live result** (2 minutes, no tooling):
+  open the link in the header above — you should see the score gauge, then
+  a "Company profile (KYC)" card (company name large, description,
+  industry/locations rows, chip lists for products/competitors/etc.), then
+  prompts and the response table. Say if you want the card's content or
+  order changed — KYC being "very important" was implemented as
+  *prominent card directly under the score*.
 
-## FYI — done for you this session (nothing to do, just know it)
+## Done (this session and before)
 
-- [x] **4. `POSTGRES_PASSWORD` is now real.** The `change-me-in-prod`
-  placeholder in `deploy/.env` was replaced with a generated 32-char random
-  value before the first deploy (the prod DB volume was created fresh with
-  it). It lives only in the gitignored `deploy/.env` — copy it into your
-  password manager if you keep one. Also added there: explicit
-  `YANKI_PROD_WEB_PORT=8142` / `YANKI_PROD_API_PORT=8143` (previously
-  implicit defaults).
-- [x] **5. Shared-Caddy edit + reload (was item 6)** — done under your
-  "let's deploy" directive, validate-before-reload, co-tenants spot-checked
-  around it (see item 3 for the one follow-up: committing it).
-- [x] **6. First `make deploy` (was item 7)** — done, twice: the first run
-  caught a real bug (prod web image build omitted devDependencies →
-  `next build` failed; fixed in commit 3a84943), the second deployed clean.
-  `make rollback` also exercised. Old tech-debt #1 repaid.
-
-## Done earlier
-
-- [x] **7. Real API keys → P4.1 (cost validation).** ✅ 2026-07-10, session 6:
-  one real analysis end-to-end in ~40s, measured panel cost
-  **$0.0132/analysis** ≈ 1% of the $49 plan (bar: <35%).
-- [x] **8. Push to GitHub → CI.** ✅ `aytekXR/yanki-mvp`, all five jobs green
-  since session 4 (backend / frontend / contract / secrets / e2e).
-- [x] **9. DNS A record:** `yanki.beyondkaira.com → 161.97.172.146` ✅.
+- [x] **3. Run-mode decision → LIVE.** Flipped + redeployed 2026-07-10
+  (session 8), on your directive.
+- [x] **4. OpenAI billing.** Quota works; `gpt-5-nano` leg proven live on
+  prod ($0.0026/analysis).
+- [x] **5. Caddyfile committed in ams-pulse** (`d538631`) — verified clean
+  working tree there.
+- [x] **6. First deploy (P4.2)** — session 7; deploy + rollback exercised,
+  co-tenants undisturbed, TLS live.
+- [x] **7. Real API keys → P4.1** — session 6; now fully closed by the
+  session-8 OpenAI leg.
+- [x] **8. GitHub + CI** — `aytekXR/yanki-mvp`, 5/5 jobs green since
+  session 4.
+- [x] **9. DNS** — `yanki.beyondkaira.com → 161.97.172.146`.
+- [x] **10. `POSTGRES_PASSWORD`** — real 32-char value generated into
+  `deploy/.env` (session 7); copy to a password manager if you keep one.
 
 ## Optional
 
-- [ ] **10. Local browser e2e needs root once** (fully skippable — CI proves
+- [ ] **11. Local browser e2e needs root once** (fully skippable — CI proves
   the browser e2e on every push):
   ```bash
   cd frontend && sudo npx playwright install-deps chromium
   ```
 
-## Later — Phase 5, the public checker (build gate is now OPEN)
+## Later — Phase 5, the public checker (in build; these come due at P5.7/P5.11)
 
-The MVP is deployed, so Phase 5 (P5.1–P5.11) can start next session. These
-sit with you but block nothing until the tasks that need them come up:
-
-- [ ] **11. Two more API keys** when P5.7/P5.11 come up: `GEMINI_API_KEY` +
+- [ ] **12. Two more API keys** when P5.7/P5.11 come up: `GEMINI_API_KEY` +
   `PERPLEXITY_API_KEY`, plus a grounding/ToS sanity check for both.
-- [ ] **12. Checker product decisions** (needed before the checker goes live):
+- [ ] **13. Checker product decisions** (needed before the checker goes live):
   - **Turkish sign-off owner.** Native Turkish prompts + UI copy need a
     native-speaker sign-off before the loud launch; no sign-off → EN-only
     launch ("no Turkish beats bad Turkish") — who is the named decider?
@@ -105,7 +82,7 @@ sit with you but block nothing until the tasks that need them come up:
 
 ## Later — design (non-blocking)
 
-- [ ] **13. Brandkit v2 adoption decision.** You dropped `brandkit/` into the
+- [ ] **14. Brandkit v2 adoption decision.** You dropped `brandkit/` into the
   repo on 2026-07-10 and chose to **skip integrating it for now** — nothing
   happens until you say so. When you want it adopted, decide: does v2
   supersede `docs/frontend-brandkit.md` (v1) and should the frontend tokens

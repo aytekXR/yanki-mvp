@@ -124,3 +124,15 @@ workflows", so the deploy branch ran and completed: P4.2 done,
 https://yanki.beyondkaira.com live, MVP 32/32. See
 [sessions/2026-07-10-05.md](sessions/2026-07-10-05.md); the session-8 brief
 (start Phase 5 / P5.1) lives at the end of that log (§6).
+
+## Session 8 (2026-07-10, #06) — operator-directed: go live + KYC card
+
+No archived brief ran verbatim: the operator opened with direct directives
+("run mode: live-providers; KYC is very important — show it on the result
+page; OpenAI is accessible now; Caddyfile pushed"), which superseded the
+session-8 brief's P5.1 default. Delivered: KYC profile card
+(implement+verify workflow, d75c852), prod flipped to DRY_RUN=0, first full
+live panel on prod ($0.0162/analysis measured — P4.1 residual closed), and
+P5.0 (rate-limit slice) added to the plan as the new first Phase-5 task.
+See [sessions/2026-07-10-06.md](sessions/2026-07-10-06.md); the session-9
+brief (P5.0 → P5.1) lives at the end of that log (§6).
