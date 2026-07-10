@@ -86,8 +86,12 @@ queryable (FR-7).
   │
   ▼
 ┌───────────────┐  discovery.discover(url) -> str
-│ 1. discovery  │  httpx GET (15s, UA "YankiBot/0.1"), BeautifulSoup strip
-│               │  script/style/nav; homepage + ≤5 same-domain links; ~20k cap
+│ 1. discovery  │  httpx GET (15s, UA "YankiBot/0.1"); harvest title/description/
+│               │  keywords/OpenGraph + visible text (BeautifulSoup strip
+│               │  script/style/nav); homepage + ≤5 same-domain links, content-ful
+│               │  paths first (about/product/... incl. TR hakkinda/urun/hizmet).
+│               │  SPA fallback: if visible text <800 chars, mine ≤3 same-origin
+│               │  JS bundles for prose string literals (TR-safe). ~20k cap;
 │               │  unreachable/empty -> PipelineError("could not read the site")
 └──────┬────────┘  ── on complete: progress = 15, current_step advances
        ▼
@@ -98,8 +102,10 @@ queryable (FR-7).
 └──────┬────────┘  ── progress = 30
        ▼
 ┌───────────────┐  prompts.generate_prompts(kyc, count) -> list[PromptSpec]
-│ 3. prompts    │  DETERMINISTIC templates, NO LLM. cycles categories
-│               │  recommendation/comparison/alternatives/best-of/use-case
+│ 3. prompts    │  DETERMINISTIC natural-language templates, NO LLM. cycles
+│               │  recommendation/makers/comparison/alternatives/best-of/use-case;
+│               │  topics are specific-first (products > services > industry >
+│               │  keywords) so ≥~1/3 of prompts name a real product/service.
 │               │  exactly PROMPT_COUNT, non-empty, no duplicates -> prompts rows
 └──────┬────────┘  ── progress = 45
        ▼

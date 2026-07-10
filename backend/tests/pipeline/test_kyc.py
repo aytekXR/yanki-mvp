@@ -3,8 +3,17 @@ from __future__ import annotations
 import pytest
 
 from app.pipeline.errors import PipelineError
-from app.pipeline.kyc import KYC, generate_kyc
+from app.pipeline.kyc import KYC, build_prompt, generate_kyc
 from app.providers.base import ProviderResult
+
+
+def test_prompt_forbids_guessing_and_keeps_mock_coupling():
+    prompt = build_prompt("some site text", "https://x.com")
+    # Anti-hallucination instruction is present.
+    assert "Use ONLY facts stated in the website text" in prompt
+    assert "Do NOT guess" in prompt
+    # The mock provider keys off this substring (case-insensitive) - keep it.
+    assert "json object" in prompt.lower()
 
 
 class _CannedProvider:

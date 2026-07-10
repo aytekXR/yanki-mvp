@@ -36,6 +36,15 @@ aliases (array of strings), products (array of strings),
 services (array of strings), keywords (array of strings),
 locations (array of strings), competitors (array of strings).
 
+Rules:
+- Use ONLY facts stated in the website text. Do NOT guess, infer, or invent
+  anything. Prefer an empty string or empty array over a guess.
+- Extract SPECIFIC product and model names exactly as written (the actual
+  product or model name, never a generic category).
+- If the text is in another language (for example Turkish), still write the
+  fields in English, but keep proper nouns and product/model names verbatim.
+- List competitors ONLY if they are literally named in the text.
+
 Respond with ONLY the JSON object - no prose, no markdown fences.
 
 Website URL: {url}

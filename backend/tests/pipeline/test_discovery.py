@@ -97,3 +97,131 @@ def test_caps_text_length():
     )
     text = discover(HOME)
     assert len(text) == MAX_CHARS
+
+
+@respx.mock
+def test_harvests_page_metadata():
+    html = (
+        "<html><head>"
+        "<title>Beyond Technologies</title>"
+        '<meta name="description" content="Defense systems and drones.">'
+        '<meta property="og:description" content="FPV kamikaze drones and UGVs.">'
+        "</head><body><p>Home.</p></body></html>"
+    )
+    respx.get(HOME).mock(return_value=httpx.Response(200, html=html))
+    text = discover(HOME)
+    assert "Beyond Technologies" in text
+    assert "Defense systems and drones." in text
+    assert "FPV kamikaze drones and UGVs." in text
+
+
+# A thin SPA homepage: one visible word, one script bundle carrying the content.
+_SPA_HOME = (
+    "<html><head><title>Beyond Technologies</title></head><body>"
+    "<div id='root'>Beyond Technologies</div>"
+    '<script type="module" src="/assets/index-DJ8r56aJ.js"></script>'
+    "</body></html>"
+)
+
+# Bundle strings: two prose backtick literals (one English, one Turkish) plus
+# junk that MUST be filtered (a URL, an asset path, minified code).
+_SPA_BUNDLE = (
+    "const a=`Beyond Technologies designs and manufactures the BAZNA FPV "
+    "kamikaze drone and the Tayron UGV for modern defense operations.`;"
+    "const b=`Beyond Teknoloji, savunma sanayii icin kamikaze insansiz hava "
+    "araclari ve yer araclari uretmektedir ve Liftron sistemini sunar.`;"
+    'const u="https://cdn.example.com/assets/index-DJ8r56aJ.js";'
+    'const p="/assets/vendor-1a2b3c.css";'
+    "function r(){return a+b;};var x=1,y=2,z=3;o={q:1,w:2,e:3,r:4,t:5};"
+)
+
+
+@respx.mock
+def test_spa_fallback_extracts_bundle_prose():
+    # Explicit root path so the home route only matches "/", not the bundle URL.
+    respx.get("https://example.com/").mock(
+        return_value=httpx.Response(200, html=_SPA_HOME)
+    )
+    bundle = respx.get("https://example.com/assets/index-DJ8r56aJ.js").mock(
+        return_value=httpx.Response(
+            200, text=_SPA_BUNDLE, headers={"content-type": "application/javascript"}
+        )
+    )
+    text = discover(HOME)
+
+    # Product names and prose (both languages) survive extraction.
+    assert "BAZNA" in text
+    assert "Tayron UGV" in text
+    assert "insansiz hava araclari" in text  # Turkish prose kept, not ASCII-filtered
+    # Junk is filtered out.
+    assert "cdn.example.com" not in text
+    assert "/assets/vendor" not in text
+    assert "function r()" not in text
+    # The bundle fetch went through the shared (SSRF-guarded) client.
+    assert bundle.called
+
+
+@respx.mock
+def test_localized_bundle_content_survives_truncation():
+    # A bundle whose framework runtime (ASCII English prose) is emitted *before*
+    # the site's own Turkish content, larger than MAX_CHARS combined. The
+    # localized content must still land in the capped output.
+    noise = "".join(
+        f"const n{i}=`This React router framework noise string number {i} is "
+        f"plain English and appears early in the bundle source order here.`;"
+        for i in range(400)
+    )
+    turkish = (
+        "const c=`Beyond Teknoloji savunma sanayii icin BAZNA kamikaze "
+        "insansiz hava araci ve otonom sistemler gelistirir sirketimiz.`;"
+    ).replace("icin", "için").replace("gelistirir", "geliştirir")
+    respx.get("https://example.com/").mock(
+        return_value=httpx.Response(200, html=_SPA_HOME)
+    )
+    respx.get("https://example.com/assets/index-DJ8r56aJ.js").mock(
+        return_value=httpx.Response(200, text=noise + turkish)
+    )
+    text = discover(HOME)
+    assert len(text) == MAX_CHARS
+    assert "BAZNA" in text  # localized content prioritised over framework noise
+
+
+@respx.mock
+def test_non_spa_does_not_fetch_bundles():
+    # Plenty of server-rendered text -> the SPA fallback must not trigger.
+    body = "<p>" + ("This company builds industrial robots. " * 40) + "</p>"
+    html = (
+        "<html><body>" + body + '<script src="/assets/app.js"></script></body></html>'
+    )
+    respx.get(HOME).mock(return_value=httpx.Response(200, html=html))
+    bundle = respx.get("https://example.com/assets/app.js").mock(
+        return_value=httpx.Response(200, text="ignored")
+    )
+    text = discover(HOME)
+    assert "industrial robots" in text
+    assert not bundle.called
+
+
+@respx.mock
+def test_prefers_content_ful_turkish_links():
+    home = "https://example.com/"
+    home_html = (
+        "<html><body><p>Home.</p>"
+        '<a href="/login">Login</a>'
+        '<a href="/urunler">Ürünler</a>'
+        '<a href="/contact">Contact</a>'
+        "</body></html>"
+    )
+    respx.get(home).mock(return_value=httpx.Response(200, html=home_html))
+    urunler = respx.get("https://example.com/urunler").mock(
+        return_value=httpx.Response(200, html="<p>Product catalogue.</p>")
+    )
+    respx.get("https://example.com/login").mock(
+        return_value=httpx.Response(200, html="<p>Login form.</p>")
+    )
+    respx.get("https://example.com/contact").mock(
+        return_value=httpx.Response(200, html="<p>Contact page.</p>")
+    )
+    text = discover(home)
+    assert "Product catalogue." in text
+    assert urunler.called  # the content-ful Turkish path was crawled
