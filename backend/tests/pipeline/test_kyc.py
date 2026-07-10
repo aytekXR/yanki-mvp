@@ -67,6 +67,31 @@ def test_domain_alias_skips_multipart_public_suffix():
     assert "com" not in comtr_aliases
 
 
+def test_cctld_fills_empty_location():
+    # A two-level suffix (.com.tr) still resolves to the ccTLD "tr" -> Türkiye.
+    raw = '{"company": "Beyond", "description": "d", "industry": "i"}'
+    kyc = generate_kyc("text", "https://example.com.tr", _CannedProvider(raw))
+    assert kyc.locations == ["Türkiye"]
+
+    de = generate_kyc("text", "https://example.de", _CannedProvider(raw))
+    assert de.locations == ["Germany"]
+
+
+def test_cctld_does_not_fire_for_generic_tld():
+    raw = '{"company": "Beyond", "description": "d", "industry": "i"}'
+    kyc = generate_kyc("text", "https://example.com", _CannedProvider(raw))
+    assert kyc.locations == []
+
+
+def test_cctld_never_overrides_reported_location():
+    raw = (
+        '{"company": "Beyond", "description": "d", "industry": "i",'
+        ' "locations": ["Ankara"]}'
+    )
+    kyc = generate_kyc("text", "https://example.de", _CannedProvider(raw))
+    assert kyc.locations == ["Ankara"]
+
+
 def test_invalid_json_raises_pipeline_error():
     with pytest.raises(PipelineError):
         generate_kyc("text", "https://x.com", _CannedProvider("not json at all"))

@@ -4,6 +4,12 @@ Makes one LLM call asking for strict JSON, parses it tolerantly (stripping any
 ```json fences), and validates against the ``KYC`` model. Aliases always include
 the company name and the registrable domain name (without TLD) so footprint
 detection has something to match on.
+
+When the model reports no locations, we fall back to the country implied by the
+URL's country-code TLD (``.com.tr`` -> Türkiye, ``.de`` -> Germany, ...). That
+is a fact about the domain, not a guess about the text, so prompts can still ask
+"in Türkiye" instead of "worldwide". A non-empty ``locations`` is never
+overridden, and the JSON contract/fields are unchanged.
 """
 
 from __future__ import annotations
@@ -90,6 +96,34 @@ def _registrable_name(url: str) -> str:
     return labels[0] if labels else ""
 
 
+# Country-code TLDs we map to a country name for the location fallback. The
+# ccTLD is always the final label, so two-level suffixes (com.tr, co.uk) are
+# handled for free by looking at that last label.
+_CCTLD_COUNTRIES = {
+    "tr": "Türkiye",
+    "de": "Germany",
+    "fr": "France",
+    "it": "Italy",
+    "es": "Spain",
+    "nl": "Netherlands",
+    "uk": "United Kingdom",
+    "us": "United States",
+    "sa": "Saudi Arabia",
+    "ae": "United Arab Emirates",
+}
+
+
+def _cctld_country(url: str) -> str:
+    """Country name implied by the URL's country-code TLD, or "" if none."""
+    parsed = urlparse(url)
+    host = parsed.netloc or parsed.path
+    host = host.split("@")[-1].split(":")[0]
+    labels = [label for label in host.split(".") if label]
+    if not labels:
+        return ""
+    return _CCTLD_COUNTRIES.get(labels[-1].lower(), "")
+
+
 def _ensure_alias(kyc: KYC, value: str) -> None:
     value = (value or "").strip()
     if value and value.lower() not in [alias.lower() for alias in kyc.aliases]:
@@ -112,4 +146,12 @@ def generate_kyc(text: str, url: str, provider) -> KYC:
 
     _ensure_alias(kyc, kyc.company)
     _ensure_alias(kyc, _registrable_name(url))
+
+    # Deterministic location fallback from the domain's ccTLD (never overrides a
+    # location the model actually found).
+    if not kyc.locations:
+        country = _cctld_country(url)
+        if country:
+            kyc.locations = [country]
+
     return kyc
