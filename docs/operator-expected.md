@@ -31,16 +31,14 @@ B1). Next session = P5.11 at your pace: answer A1, do B1+B2, then B3.
 
 ## B. Actions only you can do (in priority order)
 
-- [ ] **B1. Resend: verify a sending domain** (required before waitlist
-  emails actually deliver; P5.13 is LIVE on prod, your key is in
-  gitignored `deploy/.env` only). Until `beyondkaira.com` (or a subdomain)
-  is verified in the Resend dashboard (DKIM/SPF DNS records they show),
-  Resend testing mode delivers only FROM `onboarding@resend.dev` TO your
-  own account email — thank-you mails to strangers and notifications to
-  `info@beyondkaira.com` are accepted by the API but not delivered. After
-  verifying: set `EMAIL_FROM=yanki@beyondkaira.com` (or your pick) in
-  `deploy/.env` and redeploy. Code fails open — undelivered email never
-  breaks a signup or an analysis.
+- [x] **B1. Resend sending domain — DONE 2026-07-10** (you verified
+  `beyondkaira.com` and supplied a new key + sender). Prod now sends as
+  `Yanki <aytek@beyondkaira.com>` (new key in gitignored `deploy/.env`,
+  redeployed same day). Live-proven: a fresh waitlist signup delivered the
+  thank-you to the joiner and the alert to `info@beyondkaira.com` with no
+  errors. If you'd rather send from a different mailbox (e.g.
+  `yanki@beyondkaira.com`), change `EMAIL_FROM` in `deploy/.env` and
+  redeploy — the domain is what's verified, not the mailbox.
 - [ ] **B2. Vendor ToS + pricing check for Gemini/Perplexity** (before
   P5.11 go-live) — **updated after the 2026-07-10 prod incident** (a live
   analysis failed; fixed same day, commit `7ff580f`): Google retired
@@ -59,9 +57,10 @@ B1). Next session = P5.11 at your pace: answer A1, do B1+B2, then B3.
 - [ ] **B3. P5.11 go-live itself stays yours** (after A1 + B2): flip
   `CHECKER_ENABLED=1` in `deploy/.env`, redeploy, supervise the live
   4-engine smoke. No agent will flip it.
-- [ ] **B4. Rotate the Resend API key when convenient** — it was pasted
-  into a chat transcript; rotate in the dashboard, re-paste into
-  `deploy/.env`.
+- [ ] **B4. Rotate the Resend API key when convenient** — BOTH keys you
+  used today were pasted into chat transcripts (the original and the
+  2026-07-10 replacement `re_6ZpH…`); rotate in the dashboard, re-paste
+  into `deploy/.env`, redeploy.
 - [ ] **B5. (Optional) local browser deps, one root command:**
   `cd frontend && sudo npx playwright install-deps chromium` — enables
   local `make e2e` + native screenshots. Fully skippable: CI proves the
