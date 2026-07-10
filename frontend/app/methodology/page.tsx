@@ -4,7 +4,9 @@ import Link from 'next/link'
 // into `make gen-types`). It is exported from the same version-stamped
 // checker_prompts module the runner executes, so this page can never drift from
 // what actually runs. Never hand-edit the JSON — regenerate it.
-import methodology from '../../../shared/contracts/checker_methodology.json'
+// Generated copy inside frontend/ (the Docker build context cannot reach
+// ../shared); canonical artifact: shared/contracts/checker_methodology.json.
+import methodology from '../../lib/checker_methodology.json'
 
 export const metadata: Metadata = {
   title: 'Methodology — how the Yanki AI visibility checker works',

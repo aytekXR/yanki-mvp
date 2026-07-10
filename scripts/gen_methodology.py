@@ -26,6 +26,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 BACKEND_DIR = REPO_ROOT / "backend"
 OUT_PATH = REPO_ROOT / "shared" / "contracts" / "checker_methodology.json"
+# Second, byte-identical copy INSIDE frontend/: the web Docker build's context
+# is ../frontend alone, so an import reaching up into shared/ does not exist
+# there (first caught by a failed prod image build, 2026-07-10). Mirrors the
+# openapi.json -> frontend/lib/types.ts precedent; both copies are tracked and
+# drift-gated.
+FRONTEND_COPY_PATH = REPO_ROOT / "frontend" / "lib" / "checker_methodology.json"
 
 # Make `import app...` resolve against the backend package.
 sys.path.insert(0, str(BACKEND_DIR))
@@ -62,9 +68,11 @@ def main() -> None:
         },
     }
 
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps(artifact, indent=2, sort_keys=True) + "\n")
-    print(f"wrote {OUT_PATH.relative_to(REPO_ROOT)}")
+    payload = json.dumps(artifact, indent=2, sort_keys=True) + "\n"
+    for path in (OUT_PATH, FRONTEND_COPY_PATH):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(payload)
+        print(f"wrote {path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

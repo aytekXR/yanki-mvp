@@ -4,7 +4,7 @@ import MethodologyPage from '@/app/methodology/page'
 // Assert against the SAME generated artifact the page renders, never string
 // literals: a re-export via `make gen-types` must flow through to the page with
 // no test edit. This is the anti-drift guarantee, tested.
-import methodology from '../../shared/contracts/checker_methodology.json'
+import methodology from '../lib/checker_methodology.json'
 
 describe('Methodology page', () => {
   it('renders the version stamp from the artifact', () => {
