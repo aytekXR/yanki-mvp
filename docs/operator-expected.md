@@ -7,25 +7,26 @@ remote, and CI status at start regardless. Nothing here blocks local
 development — `make dev` + `make test` work today with zero keys and zero
 cost (DRY_RUN).*
 
-Last updated: 2026-07-10 (session 4 post-close: operator files merged;
-**CI is fully green: 5/5 jobs**).
+Last updated: 2026-07-10 (session 5 close: the last key-free task is done —
+**everything that remains needs you**).
 
-**Session-4 result: the e2e job is fixed and ALL FIVE CI jobs are green**
-(runs 29059944092 + 29060093072) — the Playwright happy path executed for the
-first time anywhere and passed (`1 passed, 6.6s`), and the deprecated-action
-annotations are cleared. **Where we stand:** MVP plan (Phases 0–4) ≈ 94%
+**Session-5 result: the final key-free task landed** — the frontend lint
+script migrated off the deprecated `next lint` to the ESLint CLI (old
+tech-debt #10; the future Next 16 bump is no longer lint-blocked), verified
+locally against every CI frontend step and green on the real runner. CI
+remains 5/5 green. **Where we stand:** MVP plan (Phases 0–4) ≈ 94%
 (30 of 32 tasks; counting the 11 frozen Phase-5 tasks, 30/43 ≈ 70%);
 production readiness ≈ 75% — the missing ~25% is entirely the outside-world
-proof only you can trigger. The MVP build is done except for the two things
-only you can unblock: real keys (item 1), then the supervised first deploy
-(items 4–7).
+proof only you can trigger. **There is now NO session work left that doesn't
+need you first:** real keys (item 1), then the supervised first deploy
+(items 4–7). A session started with no keys can only verify and close.
 
 ## Do now — the one thing everything else waits on
 
 - [ ] **1. Real API keys → unblocks P4.1 (cost validation), then P4.2 (deploy).**
   This is the Week-1 finance exercise (NFR-1) and it spends real money, so
-  timing is your call. Until then, sessions have only one small hygiene
-  fallback left (ESLint CLI migration, debt #10).
+  timing is your call. As of session 5 there is **no key-free fallback left**
+  — until keys land, sessions have nothing to build.
   ```bash
   cp deploy/.env.example deploy/.env
   # then edit: ANTHROPIC_API_KEY=…, OPENAI_API_KEY=…, DRY_RUN=0

@@ -4,13 +4,14 @@
 are not. Every session appends here and removes what it repays. Ordered
 roughly by risk.*
 
-Last updated: 2026-07-10 (session 4: **items 2 and 3 repaid** — the e2e CI job
-went green after the install-order fix and the Playwright spec had its
-first-ever run, `1 passed (6.6s)` in run 29059944092 — and the list was
-**renumbered** (old 4→2, 5→3, 6→4, 7→5, 8→6, 9→7, 10→8, 11→10, 12→11, 13→12,
-14→13, 15→14, 16→15; archived session logs cite the old numbers). Two small
-items added: #9 (e2e egress dependency) and #16 (`npm ci || npm install`
-fallback).)
+Last updated: 2026-07-10 (session 5: **item 10 repaid** — the frontend `lint`
+script now calls the ESLint CLI directly (`eslint . --ext .js,.jsx,.ts,.tsx
+--max-warnings 0`), verified by mirroring the CI frontend job locally and on
+the real runner (run 29062634057) — and the hygiene tail was **renumbered
+again** (old 11→10, 12→11, 13→12, 14→13, 15→14, 16→15; items 1–9 unchanged;
+the session-4 header carried the previous map, archived logs cite the numbers
+of their day). One new item: #16 (flat config + ESLint 9 deferred to the
+Next 16 bump).)
 
 ## Untested / never exercised
 
@@ -62,36 +63,50 @@ fallback).)
 
 ## Hygiene / small
 
-10. **`next lint` is deprecated (removed in Next 16) and now CI-blocking.** The
-    frontend CI job's Lint step runs `npm run lint`, i.e. `next lint` (Next is
-    pinned at `^15.1.0`). Migrating to the ESLint CLI is no longer optional: a
-    Next 16 bump must land it in the same change or CI breaks. **This is the
-    one remaining key-free fallback task** (session-5 brief).
-11. **Node 20 on the dev host vs README's recommended 22 LTS** — everything
+10. **Node 20 on the dev host vs README's recommended 22 LTS** — everything
     green on 20; upgrade opportunistically.
-12. **StepProgress / ResultsTable still have no behavior unit tests.** Partially
+11. **StepProgress / ResultsTable still have no behavior unit tests.** Partially
     repaid: both now carry axe a11y tests
     (`tests/StepProgress.a11y.test.tsx`, `tests/ResultsTable.a11y.test.tsx`), but
     nothing exercises their rendering logic. Add when they grow logic.
-13. **gitleaks is pinned in two places that must move in lockstep.** `ci.yml`'s
+12. **gitleaks is pinned in two places that must move in lockstep.** `ci.yml`'s
     `secrets` job (`GITLEAKS_VERSION` + `GITLEAKS_SHA256`) and
     `.pre-commit-config.yaml` (`rev: v8.28.0`). Bump both together — and
     recompute the SHA256 from the release `checksums.txt` — or the CI layer and
     the local hook run different scanner versions.
-14. **The pre-commit gitleaks hook is `language: golang`.** pre-commit
+13. **The pre-commit gitleaks hook is `language: golang`.** pre-commit
     auto-provisions its own Go toolchain to build it, so the first
     `pre-commit run` (or first commit) is heavy and needs network; an offline or
     otherwise constrained first run will stall. No system Go is required, and
     later runs are fast.
-15. **Contrast fixes are guarded only by manually computed ratios.** axe's
+14. **Contrast fixes are guarded only by manually computed ratios.** axe's
     `color-contrast` rule is disabled under jsdom (it has no layout or paint —
     see `tests/a11y.ts`), so the P4.5 WCAG ratios are verified by hand, not by a
     running test. A token/color change that regresses contrast would pass CI.
     Re-check the ratios manually when touching the `*-soft` fills or the text
     tokens layered on them.
-16. **`npm ci || npm install` fallback can mask lockfile drift.** Used in the
+15. **`npm ci || npm install` fallback can mask lockfile drift.** Used in the
     frontend/contract/e2e CI jobs and both Dockerfiles (originally for the
     no-lockfile bootstrap). With `package-lock.json` now committed, a failing
     `npm ci` silently falls back to `npm install`, which may resolve different
-    versions — a green job then doesn't prove the locked tree. Drop the
-    fallback when convenient (low risk, low priority).
+    versions — a green job then doesn't prove the locked tree. Extra edge since
+    session 5: a fallback `npm install` could pull a newer in-range
+    eslint-config-next whose new warnings would trip the `--max-warnings 0`
+    gate in a way the committed lockfile can't reproduce. Drop the fallback
+    when convenient (low risk, low priority).
+16. **ESLint 8.57 (EOL) + legacy `.eslintrc.json` deliberately kept; flat
+    config + ESLint 9 deferred to the Next 16 bump.** Session 5 repaid old
+    debt #10 with the minimal-risk diff: only the `lint` script changed
+    (`next lint` → `eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0`), so
+    the Next-16-blocking `next lint` call is gone with zero dependency/lockfile
+    churn. The deferred half: `--ext` and `.eslintrc.json` BOTH stop working
+    under ESLint 9's flat config, so the Next 16 / eslint-config-next 16 bump
+    must swap in an `eslint.config.mjs` (FlatCompat pattern, port
+    `ignorePatterns` → `ignores`) and drop `--ext` in the same change — plan it
+    manually, the official `next-lint-to-eslint-cli` codemod's legacy-config
+    conversion is buggy (vercel/next.js#85679). Two accepted quirks meanwhile:
+    `--max-warnings 0` is deliberately stricter than `next lint` (warnings now
+    fail CI — treat a future warning-level failure as a real gate, not a
+    flake), and `postcss.config.mjs` stays unlinted (`.mjs` not in `--ext`;
+    `next lint` never covered it either). Note: Next 16 also stops linting
+    during `next build`, making this script the ONLY lint gate.

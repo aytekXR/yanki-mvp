@@ -84,22 +84,39 @@ usage; setup-uv capped at v7 because v8 dropped floating major tags); run
 29060093072 stayed **5/5 green** with the deprecation annotations cleared.
 Tech-debt items 2–3 repaid (list renumbered; see tech-debt.md header).
 
+✅ **Session 5 (2026-07-10): the last key-free task landed — `next lint` →
+ESLint CLI (old tech-debt #10 repaid).** Gate check first: `deploy/.env`
+still has empty keys, so P4.1 stayed blocked and the brief's fallback ran.
+Minimal-risk diff (2 lines): the frontend `lint` script is now
+`eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0` (the Next-16-blocking
+`next lint` call is gone; ESLint 8.57 + `.eslintrc.json` deliberately kept —
+no dependency or lockfile churn), plus `next-env.d.ts` added to
+`ignorePatterns` (Next regenerates it; the official codemod ignores it too).
+Coverage widened as a side effect: `eslint .` also lints `tests/`, `e2e/`,
+and the root config files `next lint` never touched (verified 0 errors /
+0 warnings). Verified by mirroring the CI frontend job locally (tsc, lint,
+vitest 20/20, `next build` with its build-time lint still on) and on the
+real runner. The flat-config + ESLint 9 move is deliberately deferred to the
+Next 16 bump — new tech-debt #16 records the coupling (`--ext` and
+`.eslintrc.json` both die under flat config; migrate together, manually —
+the official codemod is buggy, vercel/next.js#85679).
+
 ➡️ **Next up: the operator-gated pair — P4.1 — real-key smoke + Week-1
 invoice check** (needs keys in `deploy/.env`; the only thing expected from
 the operator), then **P4.2 — deploy to test.beyondkaira.com** (supervised).
-With CI fully green, the Phase-5 build gate is missing only P4.1 + P4.2. The
-one remaining key-free fallback: tech-debt #10 (`next lint` → ESLint CLI
-migration).
+With CI fully green, the Phase-5 build gate is missing only P4.1 + P4.2.
+**No key-free fallback remains** — old tech-debt #10 was the last one and
+session 5 repaid it; a keyless session 6 would be a no-op close.
 
 ### Readiness snapshot (updated at each session close)
 
-Last updated: 2026-07-10 (session 4 close).
+Last updated: 2026-07-10 (session 5 close).
 
 - **MVP plan completion (Phases 0–4): 30 / 32 tasks ≈ 94%.** Phases 0–3:
   26/26 done. Phase 4: P4.3 + P4.4 + P4.5 + P4.6 done (P4.4 proven in CI,
-  session 4), P4.1 + P4.2 operator-gated. Nothing key-free remains on the
-  critical path: every open task now needs the operator (the sole key-free
-  fallback is hygiene debt #10, the ESLint CLI migration).
+  session 4), P4.1 + P4.2 operator-gated. Nothing key-free remains at all:
+  the last fallback (old hygiene debt #10, the ESLint CLI migration) was
+  repaid in session 5 — every open task now needs the operator.
 - **Phase 5 (post-MVP checker): decomposed, 0 / 11 built.** P4.6's deliverable
   is the P5.1–P5.11 breakdown below — planning only; its build gate now lacks
   only P4.1 + P4.2 (the all-five-green CI leg was met 2026-07-10). Counting
@@ -114,11 +131,10 @@ Last updated: 2026-07-10 (session 4 close).
   before any public URL (accepted debt #3, planned task P5.6).
 - **On track vs. original plan: yes, with sequencing changes only.** Scope is
   unchanged (02-mvp.md §4 frozen; Phase 5 stays behind its build gate). No new
-  deviation this session — session 4 executed the push-branch of the
-  session-3 brief (fix e2e, prove five green) plus the opportunistic action
-  bumps that brief pre-authorized. The P4.4 authored-vs-proven split is
-  resolved (proven). Prior recorded deviations stand: P4.3/P4.5 before P4.1
-  (key-blocked fallback), P4.3 without a `.gitleaks.toml`.
+  deviation this session — session 5 executed exactly the no-keys branch of
+  the session-4 brief (the ESLint CLI fallback, debt #10). Prior recorded
+  deviations stand: P4.3/P4.5 before P4.1 (key-blocked fallback), P4.3
+  without a `.gitleaks.toml`.
 
 ### Agent lanes (parallelism map)
 

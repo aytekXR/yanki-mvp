@@ -70,3 +70,24 @@ annotations cleared. Tech-debt 2–3 repaid (list renumbered). See
 brief lives at the end of that log (§6).
 
 ---
+
+## Session 5 — 2026-07-10
+
+**Prompt executed:** "Using workflows, continue implementation. Is anything
+expected from me? IF so, log here and also to a operater expected md file.
+Start from @docs/resume-prompt.md" — resolved via the session-4 brief
+(sessions/2026-07-10-02.md §6): `deploy/.env` still had empty keys, so the
+no-keys branch ran — the last key-free task, hygiene debt #10 (`next lint`
+→ ESLint CLI).
+
+**Outcome:** lint script migrated to `eslint . --ext .js,.jsx,.ts,.tsx
+--max-warnings 0` with `next-env.d.ts` ignored (2-line diff, `fa13839`;
+ESLint 8 + eslintrc deliberately kept, flat config + ESLint 9 deferred to
+the Next 16 bump as new debt #16); verified by an exact local mirror of the
+CI frontend job + adversarial review, then CI run 29062634057 = 5/5 green.
+Old debt #10 repaid (hygiene tail renumbered). **No key-free work remains**
+— everything now waits on the operator (keys → P4.1, then P4.2). See
+[sessions/2026-07-10-03.md](sessions/2026-07-10-03.md); the next-session
+brief lives at the end of that log (§6).
+
+---
