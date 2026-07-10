@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Yankı — Product UI (MVP)</title>
+  <meta name="design_doc_mode" content="canvas">
+  <link rel="icon" href="../logo/yanki-favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #E7EDEE; }
+    body { font-family: 'Sora', 'Segoe UI', system-ui, sans-serif; color: #0C1E28; -webkit-font-smoothing: antialiased; }
+    a { color: #0E7569; text-decoration: none; }
+    a:hover { color: #0A5B51; text-decoration: underline; }
+    @keyframes yPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(14,117,105,0.35); } 50% { box-shadow: 0 0 0 8px rgba(14,117,105,0); } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+</helmet>
+
+<section id="1a" style="padding: 48px 56px 96px; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; align-items: center; gap: 16px">
+    <span style="background: #0B1D26; color: #3BD1B5; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 4px 10px; border-radius: 6px">1a</span>
+    <h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.3px">Yankı — MVP product UI</h1>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">landing · progress · results · failure</span>
+  </div>
+
+  <div style="display: flex; align-items: flex-start; gap: 56px">
+
+    <!-- ============ SCREEN 1: LANDING ============ -->
+    <div data-screen-label="Landing" style="display: flex; flex-direction: column; gap: 12px; flex: none">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">01 · Landing — submit a URL (anonymous)</span>
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1180 }}" height="{{ 880 }}" url="yanki.app" hint-size="1180px,880px">
+        <div style="background: #F5F8F8; min-height: 100%; display: flex; flex-direction: column">
+          <nav style="display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; background: #F5F8F8">
+            <img src="../logo/yanki-logo-horizontal.svg" alt="yankı" style="height: 30px">
+            <div style="display: flex; align-items: center; gap: 28px">
+              <a href="#1a" style="font-size: 14px; color: #4E6B78">Methodology</a>
+              <a href="#1a" style="font-size: 14px; color: #4E6B78">Sample report</a>
+            </div>
+          </nav>
+
+          <main style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 72px 48px 0; text-align: center">
+            <span style="display: inline-flex; align-items: center; gap: 8px; background: #E2F3EF; color: #0A5B51; font-size: 12px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; padding: 6px 14px; border-radius: 999px">GEO — generative engine visibility</span>
+            <h1 style="margin: 24px 0 0; font-size: 48px; font-weight: 600; letter-spacing: -1.5px; line-height: 1.15; max-width: 15em; text-wrap: pretty">See how AI answers talk about your brand.</h1>
+            <p style="margin: 20px 0 0; font-size: 17px; line-height: 1.6; color: #4E6B78; max-width: 36em; text-wrap: pretty">People ask ChatGPT, Claude, Gemini, and Perplexity what to buy. Yankı asks them the questions your buyers ask — and shows you every raw answer behind your score.</p>
+
+            <form style="margin-top: 36px; display: flex; gap: 12px; width: 100%; max-width: 620px">
+              <label for="url-input" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Company URL</label>
+              <input id="url-input" type="url" placeholder="https://your-company.com" style="flex: 1; height: 52px; padding: 0 18px; font-family: 'Sora', system-ui, sans-serif; font-size: 15px; color: #0C1E28; background: #FFFFFF; border: 1px solid #4E6B78; border-radius: 8px; outline: none" style-focus="border-color: #0E7569; box-shadow: 0 0 0 3px rgba(14,117,105,0.18)">
+              <button type="button" style="height: 52px; padding: 0 28px; font-family: 'Sora', system-ui, sans-serif; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #0E7569; border: none; border-radius: 6px; cursor: pointer" style-hover="background: #0A5B51">Run analysis</button>
+            </form>
+            <p style="margin: 14px 0 0; font-size: 13px; color: #4E6B78">Free check · no signup · results in ~10 minutes</p>
+
+            <div style="margin-top: 40px; display: flex; align-items: center; gap: 10px">
+              <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: #4E6B78">Engine panel</span>
+              <div style="display: flex; gap: 8px">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28; background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 999px; padding: 6px 14px">Claude</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28; background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 999px; padding: 6px 14px">OpenAI</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28; background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 999px; padding: 6px 14px">Gemini</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28; background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 999px; padding: 6px 14px">Perplexity</span>
+              </div>
+            </div>
+          </main>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; padding: 56px 48px 40px; max-width: 1000px; margin: 0 auto; width: 100%; box-sizing: border-box">
+            <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 8px; text-align: left">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0E7569">1 — read</span>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 600">We read your site</h3>
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Yankı crawls your homepage and builds a profile of your company — what you do, for whom.</p>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 8px; text-align: left">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0E7569">2 — ask</span>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 600">We ask the engines</h3>
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Real buyer questions — recommendations, comparisons, alternatives — across the engine panel.</p>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 8px; text-align: left">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0E7569">3 — score</span>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 600">You see every answer</h3>
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">GEO score = mentions ÷ answers. Simple, published, and every raw answer is one click away.</p>
+            </div>
+          </div>
+
+          <footer style="display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; border-top: 1px solid #DCE6E9">
+            <span style="font-size: 13px; color: #4E6B78">© 2026 Yankı</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E6B78">methodology is public — scores show their work</span>
+          </footer>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 2: PROGRESS ============ -->
+    <div data-screen-label="Progress" style="display: flex; flex-direction: column; gap: 12px; flex: none">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">02 · /analyses/{id} — live pipeline (polls every 2s)</span>
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 900 }}" height="{{ 880 }}" url="yanki.app/analyses/a3f8c2" hint-size="900px,880px">
+        <div style="background: #F5F8F8; min-height: 100%; display: flex; flex-direction: column">
+          <nav style="display: flex; align-items: center; justify-content: space-between; padding: 20px 40px">
+            <img src="../logo/yanki-logo-horizontal.svg" alt="yankı" style="height: 26px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E6B78">analysis a3f8c2</span>
+          </nav>
+          <main style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 48px 40px" aria-live="polite">
+            <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; box-shadow: 0 1px 2px rgba(11,29,38,0.06); padding: 40px 44px; width: 100%; max-width: 620px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <h1 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.5px">Analyzing lumapay.com</h1>
+                <p style="margin: 0; font-size: 15px; color: #4E6B78">Analyzing… this takes a few minutes.</p>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div role="progressbar" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100" style="height: 6px; background: #DCE6E9; border-radius: 999px; overflow: hidden">
+                  <div style="height: 100%; background: #0E7569; border-radius: 999px; width: {{ progressPct }}"></div>
+                </div>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E6B78">{{ progressLabel }} complete</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <sc-for list="{{ steps }}" as="step" hint-placeholder-count="6">
+                  <div style="display: flex; align-items: flex-start; gap: 16px; padding: 10px 0">
+                    <span style="{{ step.circleStyle }}">{{ step.icon }}</span>
+                    <div style="display: flex; flex-direction: column; gap: 2px; padding-top: 3px">
+                      <span style="{{ step.nameStyle }}">{{ step.name }}</span>
+                      <span style="font-size: 13px; color: #4E6B78">{{ step.desc }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <p style="margin: 24px 0 0; font-size: 13px; color: #4E6B78">You can leave this page open — it updates on its own.</p>
+          </main>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 3: RESULTS ============ -->
+    <div data-screen-label="Results" style="display: flex; flex-direction: column; gap: 12px; flex: none">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">03 · /analyses/{id} — done: score + every raw answer</span>
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1180 }}" height="{{ 1560 }}" url="yanki.app/analyses/a3f8c2" hint-size="1180px,1560px">
+        <div style="background: #F5F8F8; min-height: 100%; display: flex; flex-direction: column">
+          <nav style="display: flex; align-items: center; justify-content: space-between; padding: 20px 48px">
+            <img src="../logo/yanki-logo-horizontal.svg" alt="yankı" style="height: 26px">
+            <div style="display: flex; align-items: center; gap: 24px">
+              <a href="#1a" style="font-size: 14px; color: #4E6B78">Methodology</a>
+              <a href="#1a" style="font-size: 14px; font-weight: 600; color: #0E7569">Run another analysis</a>
+            </div>
+          </nav>
+          <main style="flex: 1; padding: 24px 48px 56px; max-width: 980px; margin: 0 auto; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.5px">Analysis results</h1>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">https://lumapay.com · July 10, 2026 · 40 responses · 4 engines</span>
+            </div>
+
+            <!-- Score gauge card -->
+            <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; box-shadow: 0 1px 2px rgba(11,29,38,0.06); padding: 36px 44px; display: flex; align-items: center; gap: 48px">
+              <div role="img" aria-label="{{ gaugeAria }}" style="position: relative; width: 190px; height: 190px; flex: none">
+                <svg viewBox="0 0 200 200" style="width: 190px; height: 190px; transform: rotate(-90deg)">
+                  <circle cx="100" cy="100" r="80" fill="none" stroke="#EAF0F1" stroke-width="15"></circle>
+                  <circle cx="100" cy="100" r="80" fill="none" stroke="{{ bandColor }}" stroke-width="15" stroke-linecap="round" stroke-dasharray="{{ dash }}"></circle>
+                </svg>
+                <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+                  <span style="font-size: 42px; font-weight: 700; letter-spacing: -1px; color: #0C1E28">{{ score }}%</span>
+                  <span style="font-size: 12px; font-weight: 500; letter-spacing: 0.6px; text-transform: uppercase; color: #4E6B78">GEO score</span>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <span style="align-self: flex-start; background: {{ bandSoft }}; color: {{ bandText }}; font-size: 12px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; padding: 5px 12px; border-radius: 999px">{{ bandLabel }}</span>
+                <p style="margin: 0; font-size: 17px; color: #0C1E28">{{ caption }}</p>
+                <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78; max-width: 34em; text-wrap: pretty">This score is intentionally primitive: mentions ÷ answers, nothing hidden. Weighting by position and sentiment is on the roadmap. Every raw answer is below.</p>
+              </div>
+            </div>
+
+            <!-- KYC -->
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 600">Company profile (KYC)</h2>
+              <pre style="margin: 0; background: #0B1D26; color: #C7DBE0; border-radius: 12px; padding: 24px 28px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto">{
+  "company": "Lumapay",
+  "url": "https://lumapay.com",
+  "industry": "Fintech — payment infrastructure",
+  "description": "Payment orchestration for subscription businesses.",
+  "aliases": ["Lumapay", "lumapay"],
+  "products": ["Checkout", "Billing API", "Revenue Recovery"]
+}</pre>
+            </div>
+
+            <!-- Prompts -->
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 600">Generated prompts <span style="font-size: 14px; font-weight: 400; color: #4E6B78">— 10, from templates, no LLM</span></h2>
+              <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column">
+                <div style="display: flex; align-items: center; gap: 14px; padding: 13px 24px">
+                  <span style="flex: none; width: 120px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #0A5B51; background: #E2F3EF; border-radius: 999px; padding: 4px 0; text-align: center">recommend</span>
+                  <span style="font-size: 14px">What payment platform should a subscription business use?</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px; padding: 13px 24px; border-top: 1px solid #EAF0F1">
+                  <span style="flex: none; width: 120px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #0A5B51; background: #E2F3EF; border-radius: 999px; padding: 4px 0; text-align: center">comparison</span>
+                  <span style="font-size: 14px">How does Lumapay compare to other payment orchestration tools?</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px; padding: 13px 24px; border-top: 1px solid #EAF0F1">
+                  <span style="flex: none; width: 120px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #0A5B51; background: #E2F3EF; border-radius: 999px; padding: 4px 0; text-align: center">alternatives</span>
+                  <span style="font-size: 14px">What are the best alternatives to legacy billing systems?</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px; padding: 13px 24px; border-top: 1px solid #EAF0F1">
+                  <span style="flex: none; width: 120px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #0A5B51; background: #E2F3EF; border-radius: 999px; padding: 4px 0; text-align: center">best-of</span>
+                  <span style="font-size: 14px">Best checkout solutions for SaaS companies in 2026?</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 14px; padding: 13px 24px; border-top: 1px solid #EAF0F1">
+                  <span style="flex: none; width: 120px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #0A5B51; background: #E2F3EF; border-radius: 999px; padding: 4px 0; text-align: center">use-case</span>
+                  <span style="font-size: 14px">How can a subscription business reduce failed payments?</span>
+                </div>
+                <div style="padding: 12px 24px; border-top: 1px solid #EAF0F1; font-size: 13px; color: #4E6B78">+ 5 more prompts</div>
+              </div>
+            </div>
+
+            <!-- Responses table -->
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h2 style="margin: 0; font-size: 20px; font-weight: 600">Raw responses <span style="font-size: 14px; font-weight: 400; color: #4E6B78">— every answer, with the matched evidence</span></h2>
+              <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; overflow-x: auto">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+                  <thead>
+                    <tr style="text-align: left">
+                      <th style="padding: 13px 20px 13px 24px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #4E6B78; border-bottom: 1px solid #DCE6E9">Engine</th>
+                      <th style="padding: 13px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #4E6B78; border-bottom: 1px solid #DCE6E9">Model</th>
+                      <th style="padding: 13px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #4E6B78; border-bottom: 1px solid #DCE6E9">Footprint</th>
+                      <th style="padding: 13px 24px 13px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #4E6B78; border-bottom: 1px solid #DCE6E9">Matched snippet</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="padding: 13px 20px 13px 24px; font-weight: 500">Claude</td>
+                      <td style="padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">claude-sonnet-4-5</td>
+                      <td style="padding: 13px 20px"><span style="background: #DDF3E4; color: #116038; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px">✓ Yes</span></td>
+                      <td style="padding: 13px 24px 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28">…platforms like <strong>Lumapay</strong> handle retries and dunning automatically…</td>
+                    </tr>
+                    <tr style="background: #F9FBFB">
+                      <td style="padding: 13px 20px 13px 24px; font-weight: 500">OpenAI</td>
+                      <td style="padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">gpt-4o</td>
+                      <td style="padding: 13px 20px"><span style="background: #DDF3E4; color: #116038; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px">✓ Yes</span></td>
+                      <td style="padding: 13px 24px 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28">…consider <strong>Lumapay</strong> for subscription-heavy revenue models…</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 13px 20px 13px 24px; font-weight: 500">Gemini</td>
+                      <td style="padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">gemini · stub</td>
+                      <td style="padding: 13px 20px"><span style="background: #FBE5E3; color: #9E332E; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px">✕ No</span></td>
+                      <td style="padding: 13px 24px 13px 20px; font-size: 13px; color: #4E6B78">Not mentioned in this answer.</td>
+                    </tr>
+                    <tr style="background: #F9FBFB">
+                      <td style="padding: 13px 20px 13px 24px; font-weight: 500">Perplexity</td>
+                      <td style="padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">sonar · stub</td>
+                      <td style="padding: 13px 20px"><span style="background: #DDF3E4; color: #116038; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px">✓ Yes</span></td>
+                      <td style="padding: 13px 24px 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28">…orchestration layers such as <strong>Lumapay</strong> route around failures…</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 13px 20px 13px 24px; font-weight: 500">Claude</td>
+                      <td style="padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">claude-sonnet-4-5</td>
+                      <td style="padding: 13px 20px"><span style="background: #FBE5E3; color: #9E332E; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px">✕ No</span></td>
+                      <td style="padding: 13px 24px 13px 20px; font-size: 13px; color: #4E6B78">Not mentioned in this answer.</td>
+                    </tr>
+                    <tr style="background: #F9FBFB">
+                      <td style="padding: 13px 20px 13px 24px; font-weight: 500">OpenAI</td>
+                      <td style="padding: 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">gpt-4o</td>
+                      <td style="padding: 13px 20px"><span style="background: #DDF3E4; color: #116038; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 999px">✓ Yes</span></td>
+                      <td style="padding: 13px 24px 13px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0C1E28">…<strong>lumapay</strong>.com's billing API is a common pick for usage-based…</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div style="padding: 12px 24px; border-top: 1px solid #EAF0F1; font-size: 13px; color: #4E6B78">Showing 6 of 40 responses</div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 4: FAILURE ============ -->
+    <div data-screen-label="Failure state" style="display: flex; flex-direction: column; gap: 12px; flex: none">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4E6B78">04 · /analyses/{id} — failed job (partial results kept)</span>
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 900 }}" height="{{ 620 }}" url="yanki.app/analyses/b91d07" hint-size="900px,620px">
+        <div style="background: #F5F8F8; min-height: 100%; display: flex; flex-direction: column">
+          <nav style="display: flex; align-items: center; justify-content: space-between; padding: 20px 40px">
+            <img src="../logo/yanki-logo-horizontal.svg" alt="yankı" style="height: 26px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E6B78">analysis b91d07</span>
+          </nav>
+          <main style="flex: 1; display: flex; flex-direction: column; align-items: center; padding: 48px 40px">
+            <div style="background: #FFFFFF; border: 1px solid #C4403A; border-radius: 12px; padding: 36px 40px; width: 100%; max-width: 560px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <span style="flex: none; width: 36px; height: 36px; border-radius: 999px; background: #FBE5E3; color: #9E332E; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600">✕</span>
+                <h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.3px; color: #9E332E">Analysis failed</h1>
+              </div>
+              <p style="margin: 0; font-size: 15px; line-height: 1.65; color: #0C1E28">We couldn't finish this analysis. We could not read the site — it didn't respond within 15 seconds. Try another URL.</p>
+              <div style="background: #F5F8F8; border-radius: 8px; padding: 14px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E6B78">error: could not read the site (discovery, attempt 2 of 3)</div>
+              <p style="margin: 0; font-size: 13px; color: #4E6B78">Steps that completed before the failure are kept — nothing you can see here is lost.</p>
+              <a href="#1a" style="align-self: flex-start; font-size: 14px; font-weight: 600; color: #0E7569">← Try another URL</a>
+            </div>
+          </main>
+        </div>
+      </x-import>
+    </div>
+
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;geoScore&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 60, &quot;min&quot;: 0, &quot;max&quot;: 100, &quot;step&quot;: 1, &quot;unit&quot;: &quot;%&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Results screen&quot;},
+  &quot;activeStep&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;execute&quot;, &quot;options&quot;: [&quot;discovery&quot;, &quot;kyc&quot;, &quot;prompts&quot;, &quot;execute&quot;, &quot;footprint&quot;, &quot;scoring&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Progress screen&quot;}
+}">
+class Component extends DCLogic {
+  renderVals() {
+    const rawScore = Math.max(0, Math.min(100, Math.round(this.props.geoScore ?? 60)));
+    const stepDefs = [
+      ["discovery", "Discovery", "Crawling the homepage and key pages"],
+      ["kyc", "Company profile", "Extracting a structured profile of the company"],
+      ["prompts", "Prompts", "Generating buyer-style questions from templates"],
+      ["execute", "Engine panel", "Asking Claude, OpenAI, Gemini, and Perplexity"],
+      ["footprint", "Footprint", "Checking each answer for the brand"],
+      ["scoring", "GEO score", "mentions ÷ answers"]
+    ];
+    const activeKey = this.props.activeStep ?? "execute";
+    let ai = stepDefs.findIndex(function (s) { return s[0] === activeKey; });
+    if (ai < 0) ai = 3;
+    const progressMap = [0, 15, 30, 45, 80, 90];
+    const progress = progressMap[ai];
+
+    const circleBase = "flex:none;width:32px;height:32px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;box-sizing:border-box;";
+    const steps = stepDefs.map(function (s, i) {
+      const state = i < ai ? "done" : i === ai ? "active" : "pending";
+      let circleStyle, nameStyle, icon;
+      if (state === "done") {
+        circleStyle = circleBase + "background:#DDF3E4;color:#116038;";
+        nameStyle = "font-size:15px;font-weight:600;color:#0C1E28;";
+        icon = "✓";
+      } else if (state === "active") {
+        circleStyle = circleBase + "background:#0E7569;color:#FFFFFF;animation:yPulse 2s ease-out infinite;";
+        nameStyle = "font-size:15px;font-weight:600;color:#0E7569;";
+        icon = String(i + 1);
+      } else {
+        circleStyle = circleBase + "background:#FFFFFF;color:#4E6B78;border:1px solid #DCE6E9;";
+        nameStyle = "font-size:15px;font-weight:500;color:#4E6B78;";
+        icon = String(i + 1);
+      }
+      return { name: s[1], desc: s[2], circleStyle: circleStyle, nameStyle: nameStyle, icon: icon };
+    });
+
+    const C = 2 * Math.PI * 80;
+    const band = rawScore >= 60
+      ? { c: "#177E4D", label: "Healthy visibility", soft: "#DDF3E4", text: "#116038" }
+      : rawScore >= 30
+      ? { c: "#B45309", label: "Emerging visibility", soft: "#FCEFD8", text: "#8A4B08" }
+      : { c: "#C4403A", label: "Low visibility", soft: "#FBE5E3", text: "#9E332E" };
+    const mentioned = Math.round(rawScore / 100 * 40);
+
+    return {
+      score: rawScore,
+      dash: (C * rawScore / 100).toFixed(1) + " " + C.toFixed(1),
+      bandColor: band.c,
+      bandLabel: band.label,
+      bandSoft: band.soft,
+      bandText: band.text,
+      caption: "GEO score — mentioned in " + mentioned + " of 40 answers.",
+      gaugeAria: "GEO score " + rawScore + " percent — mentioned in " + mentioned + " of 40 answers",
+      steps: steps,
+      progress: progress,
+      progressPct: progress + "%",
+      progressLabel: progress + "%"
+    };
+  }
+}
+</script>
+</body>
+</html>

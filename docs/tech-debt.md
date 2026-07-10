@@ -11,7 +11,9 @@ the real runner (run 29062634057) — and the hygiene tail was **renumbered
 again** (old 11→10, 12→11, 13→12, 14→13, 15→14, 16→15; items 1–9 unchanged;
 the session-4 header carried the previous map, archived logs cite the numbers
 of their day). One new item: #16 (flat config + ESLint 9 deferred to the
-Next 16 bump).)
+Next 16 bump). Post-close: #8 rewritten — deploy retargeted to
+`yanki.beyondkaira.com` on the shared VPS; prod ports parameterized and the
+shared-Caddy network wiring added, all unexercised until P4.2.)
 
 ## Untested / never exercised
 
@@ -48,9 +50,20 @@ Next 16 bump).)
    on the unique key. Single-worker MVP → not reachable today; guard with
    upsert when a second worker ships. **Planned repayment: P5.2**'s
    `ON CONFLICT DO NOTHING` upsert (decomposed session 3, not yet built).
-8. **`docker-compose.prod.yml` host ports are hard-bound** (127.0.0.1:8140/8141,
-   not parameterized like dev). Intentional for the shared-Caddy topology;
-   revisit if the server ever hosts a second Yanki instance.
+8. **The prod Caddy wiring is designed from inspection, never exercised.**
+   Session-5 post-close (deploy retargeted to `yanki.beyondkaira.com` on the
+   shared VPS): the old hard-bound 127.0.0.1:8140/8141 ports were replaced —
+   web/api now join the shared Caddy's network (`pulse-prod_default`,
+   `external:`) as `yanki-web`/`yanki-api`, with parameterized loopback binds
+   (8142/8143) for health checks only. Couplings to know: the Caddy
+   snippet's aliases must match the compose aliases (edited by hand in two
+   repos); the pulse-prod stack must be up or `compose up` fails on the
+   missing external network; the coupling is TWO-WAY — while yanki-prod is
+   attached, a `pulse-prod down`/network recreate is blocked by (or strands)
+   yanki's endpoints; and none of it has run yet — P4.2's supervised deploy
+   proves it (or amends it). The snippet itself `caddy validate`s clean,
+   standalone and concatenated with the live shared Caddyfile (2026-07-10,
+   same caddy:2 image digest as the running container).
 9. **The e2e CI job depends on real runner egress to example.com.** DRY_RUN
    mocks only the LLM providers; pipeline step 1 (discovery) genuinely fetches
    the submitted URL, so the spec's `https://example.com` submission needs

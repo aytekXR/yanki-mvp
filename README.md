@@ -84,8 +84,13 @@ Host ports for `make dev` are parameterized — set `YANKI_WEB_PORT`, `YANKI_API
 or `YANKI_DB_PORT` in `deploy/.env` to dodge conflicts with something already
 running (defaults 8140 / 8141 / 5432; container-internal ports are unaffected).
 
-In production the shared **pulse-prod Caddy** terminates TLS on `test.beyondkaira.com`
-and path-routes `/api/*` + `/healthz` → api (8141) and everything else → web (8140).
+In production the shared **pulse-prod Caddy** terminates TLS on
+`yanki.beyondkaira.com` and path-routes `/api/*` + `/healthz` → api and
+everything else → web, reaching both **over the shared docker network**
+(aliases `yanki-api:8141` / `yanki-web:8140` — a containerized Caddy can't hit
+host-loopback binds). The prod stack's own `127.0.0.1` binds are health-check/
+debug only and parameterized (`YANKI_PROD_WEB_PORT`=8142,
+`YANKI_PROD_API_PORT`=8143 — 8140 is taken by another tenant on the VPS).
 Same origin, so there is no CORS.
 
 ---
@@ -137,12 +142,20 @@ make rollback    # redeploy the last-good SHA if something slips through
 
 1. On the server, create `deploy/.env` from `deploy/.env.example` and fill in real secrets.
    `make deploy` refuses to run without it and never auto-creates secrets.
-2. Point DNS: A record `test.beyondkaira.com → 161.97.172.146`.
-3. Drop `deploy/caddy/test.beyondkaira.com.caddy` into the shared pulse-prod
-   Caddy import dir, then `caddy validate` and reload (never restart) that Caddy.
+2. ~~Point DNS~~ **done:** `yanki.beyondkaira.com → 161.97.172.146` resolves
+   (verified 2026-07-10). Yanki serves from the **same VPS** as the other
+   beyondkaira sites (pulse-prod, Ant Media, brier) — deploys must never
+   disturb them.
+3. Add the site block from `deploy/caddy/yanki.beyondkaira.com.caddy` to the
+   shared Caddy's config (`~/repo/ams-pulse/deploy/config/Caddyfile.prod` — it
+   has **no import dir**), then `caddy validate` and **reload** (never restart)
+   inside `pulse-prod-caddy-1`.
 
-Compose project name is `yanki-prod`. Yanki runs **no** Caddy of its own and
-publishes only 8140/8141 (bound so only the shared Caddy reaches them).
+Compose project name is `yanki-prod`. Yanki runs **no** Caddy of its own: web +
+api join the shared Caddy's network (`pulse-prod_default`) as `yanki-web` /
+`yanki-api`, and the only host binds are loopback health-check ports
+(8142/8143 by default). The pulse-prod stack must be up first (its network is
+`external` to Yanki's compose).
 
 ---
 

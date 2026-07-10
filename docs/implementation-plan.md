@@ -103,7 +103,7 @@ the official codemod is buggy, vercel/next.js#85679).
 
 ➡️ **Next up: the operator-gated pair — P4.1 — real-key smoke + Week-1
 invoice check** (needs keys in `deploy/.env`; the only thing expected from
-the operator), then **P4.2 — deploy to test.beyondkaira.com** (supervised).
+the operator), then **P4.2 — deploy to yanki.beyondkaira.com** (supervised, on this VPS next to the live sites).
 With CI fully green, the Phase-5 build gate is missing only P4.1 + P4.2.
 **No key-free fallback remains** — old tech-debt #10 was the last one and
 session 5 repaid it; a keyless session 6 would be a no-op close.
@@ -591,19 +591,42 @@ happy path renders a score.**
   recorded; no secret is committed.
 - **Status:** todo
 
-### P4.2 — Deploy to test.beyondkaira.com
-- **Goal:** finish and exercise the ams-pulse-style `deploy/` scripts (build, tag
-  by git SHA, `compose -p yanki-prod up`, `/healthz` check, rollback to a
-  last-good-SHA file); drop the Caddy import snippet; first real deploy.
+### P4.2 — Deploy to yanki.beyondkaira.com (this VPS, co-tenant with live sites)
+- **Goal:** first real supervised deploy. Target retargeted by the operator
+  (2026-07-10): **`yanki.beyondkaira.com`, served from the SAME VPS
+  (161.97.172.146) that already hosts live sites** (pulse-prod stack, Ant
+  Media, brier-db) — **the hard constraint is not disturbing them.** Exercise
+  the ams-pulse-style `deploy/` scripts (build, tag by git SHA,
+  `compose -p yanki-prod up`, `/healthz` check, rollback to a last-good-SHA
+  file); publish through the shared pulse-prod Caddy.
 - **Why now:** turns "runs on my laptop" into a shareable URL for design partners.
-- **Dependencies:** P1.8, P4.1.
+- **Dependencies:** P1.8, P4.1. DNS is already met: `yanki.beyondkaira.com →
+  161.97.172.146` verified resolving 2026-07-10.
 - **Complexity:** M
+- **Topology facts (verified on the VPS 2026-07-10, drove the session-5
+  post-close deploy-config changes):**
+  - The shared Caddy is the container `pulse-prod-caddy-1`; it mounts ONE
+    config file read-only (`~/repo/ams-pulse/deploy/config/Caddyfile.prod`) —
+    there is **no import dir**, so publishing Yanki means adding the site
+    block from `deploy/caddy/yanki.beyondkaira.com.caddy` to that file and
+    `caddy validate` + `caddy reload` (NEVER restart — other live sites
+    terminate TLS on it). That edit lives in the ams-pulse repo → operator.
+  - A containerized Caddy cannot reach host-loopback binds, so web + api join
+    its docker network (`pulse-prod_default`, `external:`) under aliases
+    `yanki-web` / `yanki-api` — the same pattern the shared Caddyfile uses for
+    its own app. Consequence: the pulse-prod stack must be up before
+    `make deploy`.
+  - Host ports 8140 (another tenant) and 5432 (brier-db) are taken; the prod
+    compose loopback binds are parameterized (`YANKI_PROD_WEB_PORT`→8142,
+    `YANKI_PROD_API_PORT`→8143) and used only by deploy.sh health checks.
 - **Deliverables:** `deploy/{deploy.sh,rollback.sh,...}`,
-  `deploy/caddy/test.beyondkaira.com.caddy`, README deploy section verified.
+  `deploy/caddy/yanki.beyondkaira.com.caddy`, README deploy section verified.
 - **Acceptance:** `make deploy` builds, migrates, health-checks, and serves
-  `https://test.beyondkaira.com`; `make rollback` restores the last-good SHA.
+  `https://yanki.beyondkaira.com`; `make rollback` restores the last-good SHA;
+  **every pre-existing site on the VPS (pulse, ams.*, etc.) still serves
+  before AND after** — spot-check them around the Caddy reload and the deploy.
   (Scripts are currently marked UNTESTED tech debt — this task clears that.)
-- **Status:** todo
+- **Status:** todo (operator-gated: P4.1 first; deploy is supervised)
 
 ### P4.3 — CI hardening
 - **Goal:** GitHub Actions: `make lint` + `make typecheck` + `make test` (with a
@@ -745,7 +768,7 @@ the boring stack stays boring (NFR-4, ADR-2).
 **Build-start GATE.** Phase 5 stays **frozen** until the MVP is signed off — the
 [02-mvp.md §3](02-mvp.md) in-scope flow, which that doc calls "the sole definition
 of done" — with the Phase-4 gate above: **P4.1** (real-key smoke + Week-1
-invoice check) **and** **P4.2** (deploy to `test.beyondkaira.com`) **and** the
+invoice check) **and** **P4.2** (deploy to `yanki.beyondkaira.com`) **and** the
 **first green CI run** (the
 first push to a GitHub remote, which is what first exercises all five CI jobs and
 the Playwright e2e). No P5 task starts before those three land. This preamble and
@@ -1277,7 +1300,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
   competitors-appeared, and a score; **capture the per-checker-run cost** and check
   it against `CHECKER_DAILY_USD_CAP` and the pricing model (feeds the roadmap 2d
   pricing decision). Verify the kill-switch, both rate limits, and the daily cost cap
-  fire live. Redeploy the existing stack to `test.beyondkaira.com` (the `/checker` +
+  fire live. Redeploy the existing stack to `yanki.beyondkaira.com` (the `/checker` +
   `/methodology` + `/api/v1/checker*` routes need **no** Caddy change — the shared
   Caddy already path-routes `/api/*` → api and everything else → web), then flip
   `CHECKER_ENABLED=1`. Add a `DRY_RUN=1` checker-happy-path e2e job to CI. The
@@ -1306,7 +1329,7 @@ constant **12** (not a knob); 12 × 4 engines = 48 responses ≤ the existing
 - **Acceptance:** a real four-engine checker run completes within the caps with no
   secret committed; the measured per-run cost **and** the demand-test metrics query
   (runs + run→email conversion) are recorded; kill-switch, both rate limits, and the
-  daily cap observed firing live; `https://test.beyondkaira.com/checker`
+  daily cap observed firing live; `https://yanki.beyondkaira.com/checker`
   serves the loop and `/methodology` is reachable; the `DRY_RUN` checker e2e is green
   in CI; the launch go/no-go is recorded with the Turkish sign-off (or the
   named-operator-authorized EN-only deviation) attached.

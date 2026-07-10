@@ -64,16 +64,36 @@ need you first:** real keys (item 1), then the supervised first deploy
 
 ## Later — at first deploy (P4.2, after item 1)
 
-- [ ] **4. Server `deploy/.env`** created on the server from `.env.example`
-  with real secrets — `make deploy` refuses to run without it, and
-  `POSTGRES_PASSWORD` must be set.
-- [ ] **5. DNS A record:** `test.beyondkaira.com → 161.97.172.146`.
-- [ ] **6. Caddy import:** drop `deploy/caddy/test.beyondkaira.com.caddy` into
-  the shared pulse-prod import dir, `caddy validate`, then **reload** (never
-  restart).
+*Retargeted 2026-07-10 at your direction: Yanki serves from **this VPS** at
+**`yanki.beyondkaira.com`**, co-tenant with the live sites (pulse-prod, Ant
+Media, brier) — deploys must never disturb them. The deploy configs were
+updated to match the real topology (shared-Caddy network aliases; loopback
+ports 8142/8143 because 8140/5432 are taken here).*
+
+- [ ] **4. Server `deploy/.env`** — this VPS **is** the server, so the existing
+  `deploy/.env` is it: fill in the real secrets (same file as item 1) and
+  **replace the placeholder `POSTGRES_PASSWORD`** (it currently holds the
+  change-me example value — fine for dev, not for a prod stack); optionally
+  override `YANKI_PROD_WEB_PORT`/`YANKI_PROD_API_PORT` (defaults 8142/8143
+  are free today).
+- [x] **5. DNS A record:** ~~point it~~ **done** — `yanki.beyondkaira.com →
+  161.97.172.146` verified resolving (2026-07-10).
+- [ ] **6. Shared-Caddy edit (in the ams-pulse repo, so it's yours):** add the
+  site block from `deploy/caddy/yanki.beyondkaira.com.caddy` to
+  `~/repo/ams-pulse/deploy/config/Caddyfile.prod` (the shared Caddy mounts that
+  one file read-only — it has **no import dir**), then:
+  ```bash
+  docker exec pulse-prod-caddy-1 caddy validate --config /etc/caddy/Caddyfile
+  docker exec pulse-prod-caddy-1 caddy reload   --config /etc/caddy/Caddyfile
+  ```
+  **Reload, never restart** — the other live sites terminate TLS on it. After
+  the reload, spot-check that pulse + ams.* still serve.
 - [ ] **7. Supervise the first `make deploy`** — `deploy/deploy.sh` and
   `rollback.sh` are written to the ams-pulse pattern and reviewed, but have
-  never run against a real server (tech-debt #1).
+  never run against a real server (tech-debt #1). Note: the pulse-prod stack
+  must be up first (Yanki's prod compose joins its network as `external:`),
+  and P4.2's acceptance now includes the co-tenant check — every pre-existing
+  site still serves before and after.
 
 ## Later — Phase 5, the public checker (only after the MVP is signed off)
 

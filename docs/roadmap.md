@@ -45,11 +45,13 @@ the session; nothing here is negotiable and nothing below it ships first.
 | Deterministic template prompts (no LLM prompt-gen) | Testable and free; LLM/native prompt generation is a Next-phase quality lever, not a loop blocker. |
 | `llm_cache` within a single job's runs | Proves the caching mechanism cheaply; the cross-account version (the real cost lever) is Next. |
 | `DRY_RUN=1` mock provider + cost caps (`PROMPT_COUNT`, `MAX_RESPONSES_PER_JOB`) | CI and first-run cost $0; makes Week-1 invoice validation possible before anything goes public. |
+| **Served at `https://yanki.beyondkaira.com`** from the shared beyondkaira VPS (161.97.172.146; DNS set 2026-07-10), behind the existing pulse-prod Caddy | Zero new infra for the MVP — reuse the box and TLS terminator we already run. **Hard constraint: the VPS's live sites (pulse, Ant Media, brier) must never be disturbed** — deploys are additive (a Caddy *reload*, an isolated compose project, no shared ports). Build detail: P4.2 in [implementation-plan.md](implementation-plan.md). |
 
 **Sequencing:** the pipeline is strictly sequential (discovery must precede KYC,
 etc.); build and test each step behind `DRY_RUN` before wiring a real key. This
 is the whole session — do not start Next-phase work until the happy path renders
-a score.
+a score. Deployment (P4.2) is the last MVP step, after the real-key cost check
+(P4.1), and is supervised.
 
 ---
 

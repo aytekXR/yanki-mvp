@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Yankı — Brand Identity &amp; Design Package</title>
+  <link rel="icon" href="logo/yanki-favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #F5F8F8; }
+    body { font-family: 'Sora', 'Segoe UI', system-ui, sans-serif; color: #0C1E28; -webkit-font-smoothing: antialiased; }
+    a { color: #0E7569; text-decoration: none; }
+    a:hover { color: #0A5B51; }
+  </style>
+</helmet>
+
+<div style="max-width: 1080px; margin: 0 auto; padding: 56px 32px 96px; display: flex; flex-direction: column; gap: 40px">
+
+  <header style="background: #0B1D26; border-radius: 16px; padding: 64px 64px 56px; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 24px">
+    <img src="logo/yanki-symbol-white.svg" alt="" style="position: absolute; right: -130px; top: -110px; width: 520px; opacity: 0.07; pointer-events: none">
+    <img src="logo/yanki-logo-horizontal-white.svg" alt="yankı" style="width: 210px; align-self: flex-start">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h1 style="margin: 0; font-size: 40px; font-weight: 600; letter-spacing: -1.2px; color: #FFFFFF">Brand identity &amp; design package</h1>
+      <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #9FB6BE; max-width: 42em">Everything for Yankı's first public release: strategy, logo system, tokens, MVP screens, design system, marketing site, and assets. Start with the guidelines; hand engineers the brandkit.</p>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+    <a href="brandkit/Brand Guidelines.dc.html" style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px; color: inherit" style-hover="border-color: #0E7569">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">brandkit/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Brand Guidelines</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Strategy, logo system, color, typography, visual language, voice, app icons, do's &amp; don'ts.</p>
+    </a>
+    <a href="brandkit/frontend-brandkit-v2.md" style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px; color: inherit" style-hover="border-color: #0E7569">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">brandkit/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Frontend Brandkit v2</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Engineering handoff: Tailwind tokens (hex + RGB), type scale, component spec deltas.</p>
+    </a>
+    <a href="ui/Product UI.dc.html" style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px; color: inherit" style-hover="border-color: #0E7569">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">ui/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Product UI — MVP screens</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Landing, live pipeline progress, results (gauge + KYC + prompts + responses), failure state.</p>
+    </a>
+    <a href="design-system/Design System.dc.html" style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px; color: inherit" style-hover="border-color: #0E7569">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">design-system/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Design System</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Buttons, forms, badges, tables, tabs, toasts, modals — light theme + dark theme spec.</p>
+    </a>
+    <a href="website/Website.dc.html" style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px; color: inherit" style-hover="border-color: #0E7569">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">website/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Marketing Website</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Landing: hero + product mock, how it works, features, personas, FAQ, CTA, footer.</p>
+    </a>
+    <a href="assets/Marketing Assets.dc.html" style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px; color: inherit" style-hover="border-color: #0E7569">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">assets/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Marketing Assets</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">OG image, social square, banner, pitch cover, email signature, background pattern + PNG exports.</p>
+    </a>
+    <a href="documentation/design-rationale.md" style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px; color: inherit" style-hover="border-color: #0E7569">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">documentation/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Design Rationale</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Every decision explained: strategy, palette change, type, UI principles, contrast validation, scalability.</p>
+    </a>
+    <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0E7569">logo/ · icons/ · uploads/</span>
+      <h2 style="margin: 0; font-size: 19px; font-weight: 600">Source assets</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #4E6B78">Logo SVGs (all lockups + favicon), app icon PNGs (iOS / Android / web, light + dark + gradient), and the source-of-truth product docs.</p>
+    </div>
+  </div>
+
+  <footer style="display: flex; align-items: center; gap: 24px; border-top: 1px solid #DCE6E9; padding-top: 24px">
+    <img src="logo/yanki-symbol.svg" alt="" style="height: 28px">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E6B78">yankı — "echo" · v1.0 · July 2026</span>
+  </footer>
+
+</div>
+
+</x-dc>
+</body>
+</html>

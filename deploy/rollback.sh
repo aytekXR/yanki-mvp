@@ -32,11 +32,14 @@ fi
 $COMPOSE up -d
 
 # Verify the rollback actually came up, so a failed rollback exits non-zero
-# instead of falsely printing "complete".
-echo ">> health check: http://127.0.0.1:8141/healthz"
+# instead of falsely printing "complete". Port must match deploy.sh / the
+# compose loopback bind (YANKI_PROD_API_PORT, default 8143).
+API_PORT="$(grep -E '^YANKI_PROD_API_PORT=' "$HERE/.env" 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]\r' || true)"
+API_PORT="${API_PORT:-8143}"
+echo ">> health check: http://127.0.0.1:${API_PORT}/healthz"
 healthy=0
 for _ in $(seq 1 30); do
-  if curl -fsS http://127.0.0.1:8141/healthz >/dev/null 2>&1; then healthy=1; break; fi
+  if curl -fsS "http://127.0.0.1:${API_PORT}/healthz" >/dev/null 2>&1; then healthy=1; break; fi
   sleep 2
 done
 

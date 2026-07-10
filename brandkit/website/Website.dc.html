@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Yankı — See how AI answers talk about your brand</title>
+  <link rel="icon" href="../logo/yanki-favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #F5F8F8; }
+    body { font-family: 'Sora', 'Segoe UI', system-ui, sans-serif; color: #0C1E28; -webkit-font-smoothing: antialiased; }
+    a { color: #0E7569; text-decoration: none; }
+    a:hover { color: #0A5B51; text-decoration: underline; }
+  </style>
+</helmet>
+
+<div style="display: flex; flex-direction: column">
+
+  <!-- NAV -->
+  <nav data-screen-label="Nav" style="display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; max-width: 1160px; margin: 0 auto; width: 100%; box-sizing: border-box">
+    <img src="../logo/yanki-logo-horizontal.svg" alt="yankı" style="height: 30px">
+    <div style="display: flex; align-items: center; gap: 28px">
+      <a href="#how" style="font-size: 14px; color: #4E6B78">How it works</a>
+      <a href="#features" style="font-size: 14px; color: #4E6B78">Features</a>
+      <a href="#faq" style="font-size: 14px; color: #4E6B78">FAQ</a>
+      <a href="#contact" style="font-size: 14px; color: #4E6B78">Contact</a>
+      <a href="#top" style="display: inline-flex; align-items: center; height: 40px; padding: 0 18px; font-size: 14px; font-weight: 600; color: #FFFFFF; background: #0E7569; border-radius: 6px">Run a free analysis</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header id="top" data-screen-label="Hero" style="padding: 72px 48px 0; text-align: center; display: flex; flex-direction: column; align-items: center">
+    <span style="display: inline-flex; align-items: center; gap: 8px; background: #E2F3EF; color: #0A5B51; font-size: 12px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; padding: 6px 14px; border-radius: 999px">GEO — generative engine visibility</span>
+    <h1 style="margin: 24px 0 0; font-size: 54px; font-weight: 600; letter-spacing: -1.8px; line-height: 1.12; max-width: 14em; text-wrap: pretty">See how AI answers talk about your brand.</h1>
+    <p style="margin: 22px 0 0; font-size: 18px; line-height: 1.6; color: #4E6B78; max-width: 36em; text-wrap: pretty">Your buyers ask ChatGPT, Claude, Gemini, and Perplexity what to buy. Yankı asks the same questions, checks every answer for your brand, and gives you a score you can defend — because every raw answer is one click away.</p>
+    <form style="margin-top: 36px; display: flex; gap: 12px; width: 100%; max-width: 620px">
+      <label for="hero-url" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Company URL</label>
+      <input id="hero-url" type="url" placeholder="https://your-company.com" style="flex: 1; height: 54px; padding: 0 18px; font-family: 'Sora', system-ui, sans-serif; font-size: 15px; color: #0C1E28; background: #FFFFFF; border: 1px solid #4E6B78; border-radius: 8px; outline: none" style-focus="border-color: #0E7569; box-shadow: 0 0 0 3px rgba(14,117,105,0.18)">
+      <button type="button" style="height: 54px; padding: 0 28px; font-family: 'Sora', system-ui, sans-serif; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #0E7569; border: none; border-radius: 6px; cursor: pointer" style-hover="background: #0A5B51">Run analysis</button>
+    </form>
+    <p style="margin: 14px 0 0; font-size: 13px; color: #4E6B78">Free check · no signup · results in ~10 minutes</p>
+
+    <!-- Product mock -->
+    <div style="margin-top: 56px; width: 100%; max-width: 880px; background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 16px 16px 0 0; border-bottom: none; box-shadow: 0 -1px 2px rgba(11,29,38,0.04); padding: 36px 44px 48px; display: flex; align-items: center; gap: 44px; text-align: left">
+      <div style="position: relative; width: 168px; height: 168px; flex: none" role="img" aria-label="GEO score 60 percent">
+        <svg viewBox="0 0 200 200" style="width: 168px; height: 168px; transform: rotate(-90deg)">
+          <circle cx="100" cy="100" r="80" fill="none" stroke="#EAF0F1" stroke-width="15"></circle>
+          <circle cx="100" cy="100" r="80" fill="none" stroke="#177E4D" stroke-width="15" stroke-linecap="round" stroke-dasharray="301.6 502.7"></circle>
+        </svg>
+        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+          <span style="font-size: 36px; font-weight: 700; letter-spacing: -1px">60%</span>
+          <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.6px; text-transform: uppercase; color: #4E6B78">GEO score</span>
+        </div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0">
+        <span style="font-size: 15px; font-weight: 600">GEO score — mentioned in 24 of 40 answers.</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #F5F8F8; border-radius: 8px; padding: 10px 16px">
+          <span style="font-size: 13px; font-weight: 500">Claude</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0C1E28; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">…platforms like Lumapay handle retries…</span>
+          <span style="flex: none; background: #DDF3E4; color: #116038; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px">✓ Yes</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #F5F8F8; border-radius: 8px; padding: 10px 16px">
+          <span style="font-size: 13px; font-weight: 500">Gemini</span>
+          <span style="font-size: 12px; color: #4E6B78">Not mentioned in this answer.</span>
+          <span style="flex: none; background: #FBE5E3; color: #9E332E; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px">✕ No</span>
+        </div>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E6B78">every raw answer, with its matched evidence</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" data-screen-label="How it works" style="background: #0B1D26; padding: 80px 48px">
+    <div style="max-width: 1064px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #3BD1B5">how it works</span>
+        <h2 style="margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.8px; color: #FFFFFF">URL in. GEO score out. Work shown.</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px">
+        <div style="background: #10242F; border: 1px solid #2A4653; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #3BD1B5">01 — read</span>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #E7F0F2">We read your site</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #8CA6B0">Yankı crawls your homepage, extracts what you do and for whom, and builds a structured company profile you can inspect.</p>
+        </div>
+        <div style="background: #10242F; border: 1px solid #2A4653; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #3BD1B5">02 — ask</span>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #E7F0F2">We ask the engines</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #8CA6B0">Buyer-style questions — recommendations, comparisons, alternatives, best-of — run across Claude, OpenAI, Gemini, and Perplexity.</p>
+        </div>
+        <div style="background: #10242F; border: 1px solid #2A4653; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #3BD1B5">03 — score</span>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #E7F0F2">You see every answer</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #8CA6B0">GEO score = mentions ÷ answers. The formula is published, and every raw response sits behind the number with its matched snippet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES / BENEFITS -->
+  <section id="features" data-screen-label="Features" style="padding: 88px 48px">
+    <div style="max-width: 1064px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px">
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 40em">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0E7569">why yankı</span>
+        <h2 style="margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.8px">A score you can defend in front of a client.</h2>
+        <p style="margin: 0; font-size: 16px; line-height: 1.65; color: #4E6B78; text-wrap: pretty">Incumbent tools sell a black-box number at enterprise prices. Yankı is built on the opposite bet: transparency earns trust.</p>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+        <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 32px; display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600">Show-your-work scoring</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">The formula is public: mentions ÷ answers. Click any score and read the exact answers behind it, with the matched snippet highlighted. No mystery weightings.</p>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 32px; display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600">Priced for agencies</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">No per-domain fees. Run it across fifteen clients or thirty — the economics are designed for the person reporting on many brands, not one.</p>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 32px; display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600">Multi-engine panel</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">One run covers Claude, OpenAI, Gemini, and Perplexity — the engines your buyers actually ask. Every response is logged with engine, model, and cost.</p>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #DCE6E9; border-radius: 12px; padding: 32px; display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600">Türkçe, natively <span style="font-size: 12px; font-weight: 500; color: #8A4B08; background: #FCEFD8; border-radius: 999px; padding: 3px 10px; vertical-align: middle">roadmap</span></h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">Turkish as a first-class language — native prompts and suffix-aware brand matching, not machine translation. It's in the name.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERSONAS -->
+  <section data-screen-label="Personas" style="padding: 0 48px 88px">
+    <div style="max-width: 1064px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px">Built for the people who get asked.</h2>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px">
+        <div style="border: 1px solid #DCE6E9; background: #FFFFFF; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 10px">
+          <span style="width: 40px; height: 40px; border-radius: 999px; background: #E2F3EF; color: #0A5B51; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">AG</span>
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Agency owners</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">Client-ready numbers for 15–30 brands, without per-domain pricing. Screenshot the score, link the evidence.</p>
+        </div>
+        <div style="border: 1px solid #DCE6E9; background: #FFFFFF; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 10px">
+          <span style="width: 40px; height: 40px; border-radius: 999px; background: #E2F3EF; color: #0A5B51; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">SEO</span>
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">In-house SEO leads</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">When the VP asks "how do we look in ChatGPT?", answer with one score and the receipts to back it.</p>
+        </div>
+        <div style="border: 1px solid #DCE6E9; background: #FFFFFF; border-radius: 12px; padding: 28px; display: flex; flex-direction: column; gap: 10px">
+          <span style="width: 40px; height: 40px; border-radius: 999px; background: #E2F3EF; color: #0A5B51; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">F</span>
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Founders</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">An AI just recommended your competitor. Check where you stand for free — no signup, no sales call.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" data-screen-label="FAQ" style="padding: 0 48px 88px">
+    <div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px">Questions, answered plainly.</h2>
+      <div style="display: flex; flex-direction: column; border: 1px solid #DCE6E9; background: #FFFFFF; border-radius: 12px; overflow: hidden">
+        <div style="padding: 22px 28px; display: flex; flex-direction: column; gap: 6px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600">How is the GEO score calculated?</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">Mentions ÷ answers. If you appear in 24 of 40 responses, your score is 60%. It's intentionally primitive and fully published; weighting by position and sentiment is on the roadmap.</p>
+        </div>
+        <div style="padding: 22px 28px; border-top: 1px solid #EAF0F1; display: flex; flex-direction: column; gap: 6px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600">Which engines do you check?</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">Claude and OpenAI today, with Gemini and Perplexity in the panel as the rollout completes. Every response shows which engine and model produced it.</p>
+        </div>
+        <div style="padding: 22px 28px; border-top: 1px solid #EAF0F1; display: flex; flex-direction: column; gap: 6px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600">Do I need an account?</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">No. Paste a URL, get a link to your live analysis, and watch it run. Accounts, scheduling, and trends come later.</p>
+        </div>
+        <div style="padding: 22px 28px; border-top: 1px solid #EAF0F1; display: flex; flex-direction: column; gap: 6px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600">How long does an analysis take?</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">About 10 minutes for a full run. The page shows each pipeline step live — crawl, profile, prompts, engine panel, footprint check, score.</p>
+        </div>
+        <div style="padding: 22px 28px; border-top: 1px solid #EAF0F1; display: flex; flex-direction: column; gap: 6px">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600">Can I see the raw answers?</h3>
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78">Always. That's the point. Every response is stored and shown with the exact snippet where your brand matched — or a plain "not mentioned in this answer."</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section data-screen-label="CTA" style="padding: 0 48px 88px">
+    <div style="max-width: 1064px; margin: 0 auto; background: #0B1D26; border-radius: 16px; padding: 64px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; position: relative; overflow: hidden">
+      <img src="../logo/yanki-symbol-white.svg" alt="" style="position: absolute; right: -100px; bottom: -110px; width: 380px; opacity: 0.07; pointer-events: none">
+      <h2 style="margin: 0; font-size: 32px; font-weight: 600; letter-spacing: -0.8px; color: #FFFFFF; max-width: 18em">Your brand has an echo. Measure it.</h2>
+      <p style="margin: 0; font-size: 15px; color: #8CA6B0">One URL. Ten minutes. Every answer shown.</p>
+      <a href="#top" style="display: inline-flex; align-items: center; height: 50px; padding: 0 28px; font-size: 15px; font-weight: 600; color: #06231F; background: #3BD1B5; border-radius: 6px">Run a free analysis</a>
+    </div>
+  </section>
+
+  <!-- CONTACT + FOOTER -->
+  <footer id="contact" data-screen-label="Footer" style="background: #FFFFFF; border-top: 1px solid #DCE6E9; padding: 56px 48px 40px">
+    <div style="max-width: 1064px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px">
+      <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 40px">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <img src="../logo/yanki-logo-horizontal.svg" alt="yankı" style="height: 26px; align-self: flex-start">
+          <p style="margin: 0; font-size: 14px; line-height: 1.65; color: #4E6B78; max-width: 28em">Yankı — "echo" in Turkish. The transparent GEO measurement tool: published methodology, every raw answer visible, priced for agencies.</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #4E6B78">Product</h3>
+          <a href="#how" style="font-size: 14px; color: #0C1E28">How it works</a>
+          <a href="#features" style="font-size: 14px; color: #0C1E28">Features</a>
+          <a href="#faq" style="font-size: 14px; color: #0C1E28">FAQ</a>
+          <a href="#top" style="font-size: 14px; color: #0C1E28">Methodology</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <h3 style="margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #4E6B78">Contact</h3>
+          <a href="#contact" style="font-size: 14px; color: #0C1E28">hello@yanki.app</a>
+          <a href="#contact" style="font-size: 14px; color: #0C1E28">Support</a>
+          <a href="#contact" style="font-size: 14px; color: #0C1E28">Press kit</a>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid #DCE6E9; padding-top: 24px">
+        <span style="font-size: 13px; color: #4E6B78">© 2026 Yankı. All rights reserved.</span>
+        <div style="display: flex; gap: 24px">
+          <a href="#contact" style="font-size: 13px; color: #4E6B78">Privacy policy</a>
+          <a href="#contact" style="font-size: 13px; color: #4E6B78">Terms of service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+</x-dc>
+</body>
+</html>

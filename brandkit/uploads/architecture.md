@@ -285,10 +285,8 @@ proxies `/api/:path*` and `/healthz` to the api (`API_ORIGIN`, default
 
 The three published **host** ports are overridable to dodge local conflicts
 (container ports stay fixed): `YANKI_WEB_PORT` (→8140), `YANKI_API_PORT` (→8141),
-`YANKI_DB_PORT` (→5432). Prod has its own pair — `YANKI_PROD_WEB_PORT` (→8142)
-and `YANKI_PROD_API_PORT` (→8143), loopback-bound, health-check/debug only
-(the prod VPS already uses 8140; the shared Caddy reaches the containers over
-the docker network, not these binds).
+`YANKI_DB_PORT` (→5432). Prod does **not** parameterize these — it hard-binds
+8140/8141 to `127.0.0.1`.
 
 ```
  laptop
@@ -299,32 +297,24 @@ the docker network, not these binds).
                                           └── db :5432 ┘  (same compose network)
 ```
 
-### Prod (shared pulse-prod Caddy on `yanki.beyondkaira.com`)
+### Prod (shared pulse-prod Caddy on `test.beyondkaira.com`)
 
-Yanki runs **no Caddy of its own**. It deploys onto the **same VPS**
-(161.97.172.146) that already serves the other beyondkaira sites (pulse-prod,
-Ant Media, brier) — **those must never be disturbed**. The shared
-**pulse-prod Caddy** (container `pulse-prod-caddy-1`) terminates TLS on
-`yanki.beyondkaira.com` and **path-routes** on one origin (so still no CORS).
-Because that Caddy is itself a container, it reaches Yanki over the shared
-docker network (`pulse-prod_default`) via aliases — not host ports:
+Yanki runs **no Caddy of its own**. The shared **pulse-prod Caddy** terminates
+TLS on `test.beyondkaira.com` and **path-routes** on one origin (so still no
+CORS):
 
 ```
- Internet ──TLS──▶ yanki.beyondkaira.com  (shared pulse-prod Caddy, container)
-                        │            (over docker network pulse-prod_default)
-                        ├─ /api/*  + /healthz ──▶ yanki-api :8141
-                        └─ everything else ──────▶ yanki-web :8140
+ Internet ──TLS──▶ test.beyondkaira.com  (shared pulse-prod Caddy)
+                        │
+                        ├─ /api/*  + /healthz ──▶ api  :8141
+                        └─ everything else ──────▶ web  :8140
                                                     api + worker + db
                                                     (compose project yanki-prod)
 ```
 
-- Compose project name is **`yanki-prod`**. Only web + api join the shared
-  network (aliases `yanki-web` / `yanki-api`); db + worker stay on the
-  project-internal network and Postgres is never published in prod. The only
-  host binds are loopback health-check ports (`YANKI_PROD_WEB_PORT`→8142,
-  `YANKI_PROD_API_PORT`→8143 — parameterized because the VPS already uses
-  8140). The shared network is `external:` — the pulse-prod stack must be up
-  before `make deploy`.
+- Compose project name is **`yanki-prod`**. Yanki publishes only 8140/8141,
+  bound so **only the shared Caddy** can reach them; Postgres is never published
+  in prod (internal network only).
 - `make deploy` / `make rollback` follow the ams-pulse pattern: build, tag by git
   SHA, `compose -p yanki-prod up`, `/healthz` check, roll back to the last-good
   SHA file on failure. **Marked UNTESTED tech debt.**
@@ -333,13 +323,10 @@ docker network (`pulse-prod_default`) via aliases — not host ports:
 
 1. On the server, `cp deploy/.env.example deploy/.env` and fill in real secrets.
    `make deploy` refuses to run without it and never auto-creates secrets.
-2. ~~Point DNS~~ **done:** `yanki.beyondkaira.com → 161.97.172.146` resolves
-   (verified 2026-07-10).
-3. Add the site block from `deploy/caddy/yanki.beyondkaira.com.caddy` to the
-   shared Caddy's single config file
-   (`~/repo/ams-pulse/deploy/config/Caddyfile.prod` — there is **no import
-   dir**; verified from the container's mounts), then `caddy validate` and
-   **reload** (never restart) inside `pulse-prod-caddy-1`.
+2. Point DNS: A record `test.beyondkaira.com → 161.97.172.146`.
+3. Drop `deploy/caddy/test.beyondkaira.com.caddy` into the shared pulse-prod
+   Caddy import dir, then `caddy validate` and **reload** (never restart) that
+   Caddy.
 
 ---
 
@@ -353,7 +340,7 @@ docker network (`pulse-prod_default`) via aliases — not host ports:
 | `max retries exceeded` | Job hit `attempts > 3` — a poison job. Inspect its `url` / `error`; don't just re-queue. |
 | Unexpected LLM spend | Confirm `DRY_RUN` and `PANEL_ENGINES`; check `MAX_RESPONSES_PER_JOB` and `llm_cache` hit rate. CI/tests must stay `DRY_RUN`. |
 | 404 on a valid-looking id | Unknown/never-created id. 422 instead means URL validation rejected the submit. |
-| Frontend can't reach api | Dev: `rewrites()` / `API_ORIGIN`. Prod: shared Caddy path-routing + the `yanki-api`/`yanki-web` aliases on `pulse-prod_default`. |
+| Frontend can't reach api | Dev: `rewrites()` / `API_ORIGIN`. Prod: shared Caddy path-routing + the 8140/8141 bind. |
 
 ---
 
