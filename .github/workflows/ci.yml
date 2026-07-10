@@ -125,6 +125,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      # Both installs MUST run before the stack boots: the compose web service
+      # bind-mounts ../frontend with anonymous volumes at /app/node_modules and
+      # /app/.next, and dockerd creates a missing host-side mountpoint dir as
+      # root — a later npm ci then dies with EACCES (first CI run, 2026-07-10).
+      # With node_modules already present and runner-owned, dockerd reuses it
+      # and ownership is preserved. (.next stays root-owned; nothing host-side
+      # touches it in this job — do not add a step that writes frontend/.next.)
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci || npm install
+      - name: Install Playwright chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
       - name: Pin the stack to DRY_RUN (mock providers, no keys)
         # deploy/.env is gitignored; the compose file reads it via env_file.
         # DRY_RUN=1 is already the backend default, but set it explicitly so the
@@ -152,18 +165,16 @@ jobs:
             sleep 5
           done
           echo "web never came up"; exit 1
-      - name: Install frontend deps
-        working-directory: frontend
-        run: npm ci || npm install
-      - name: Install Playwright chromium
-        working-directory: frontend
-        run: npx playwright install --with-deps chromium
       - name: Run happy-path e2e
         working-directory: frontend
         env:
           # The spec skips itself unless E2E_BASE_URL is set; point it at the web
           # container so the run is real, not skipped.
           E2E_BASE_URL: http://localhost:8140
+        # DRY_RUN mocks only the LLM providers; pipeline step 1 (discovery)
+        # really fetches the submitted URL, so this needs runner egress to
+        # example.com — treat a red here after green health waits as a
+        # possible network flake before suspecting the app.
         run: npx playwright test e2e/happy-path.spec.ts
       - name: Dump stack logs on failure
         if: failure()
